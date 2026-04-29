@@ -60,6 +60,20 @@ If command parsing fails, use this sentence:
 
 `Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`
 
+### Why manual mode merges two steps into one
+
+In normal tool mode, commands are intentionally separated:
+
+- `/project-bootstrap <projectKey>` creates/initializes branch context files.
+- `/project-refresh <projectKey>` reads current state and returns refresh recommendations.
+
+In manual mode, `/manual-refresh <projectKey>` combines both behaviors on purpose:
+
+- if branch context is missing, it bootstraps first,
+- then it runs refresh.
+
+This keeps outages simple for users (one command to continue work), while preserving explicit two-step commands for stable/tool-enabled environments.
+
 ## Where to read details
 
 - Full conceptual guide: `OPENCODE_HANDOFF_GENERIC.md`
