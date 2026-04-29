@@ -290,3 +290,29 @@ If you disabled tools due to provider/runtime issues, use this recovery path:
    - `/project-bootstrap <projectKey>`
 5. If tool validation errors reappear, remove those tool permissions and use manual mode until upstream fix is available.
 
+## Bedrock compatibility notes
+
+Some provider paths backed by Bedrock can fail before command/tool logic runs, with errors like:
+
+- `toolConfig.tools.N.member.toolSpec.description must have length greater than or equal to 1`
+
+What this means:
+
+- The request payload tool registry is being rejected by provider validation.
+- This can happen even when your command text is valid, because validation happens before the tool executes.
+
+Recommended response:
+
+1. Switch to manual mode (`/manual-refresh <projectKey>`) so work can continue.
+2. Keep tool permissions disabled until provider/runtime path is stable.
+3. Re-enable tools later and smoke test incrementally.
+
+References:
+
+- AWS Bedrock tool spec constraints:  
+  [ToolSpecification - Amazon Bedrock](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ToolSpecification.html)
+- OpenCode custom-tool metadata discussion/fixes:  
+  [anomalyco/opencode PR #15957](https://github.com/anomalyco/opencode/pull/15957)
+- Example upstream symptom in another agent stack:  
+  [cline/cline issue #7696](https://github.com/cline/cline/issues/7696)
+
