@@ -50,6 +50,27 @@ Examples:
 5. If branch gets large: `/project-phases <projectKey>`
 6. On branch switch/rebase/new session: refresh again
 
+### Visual workflow (tool mode)
+
+```mermaid
+flowchart TD
+  A["Start session"] --> B["/project-refresh <projectKey>"]
+  B --> C{"Branch context exists?"}
+  C -- no --> D["/project-bootstrap <projectKey>"]
+  C -- yes --> E["Use reread_files + recommendations"]
+  D --> F["Branch files created/seeded"]
+  F --> G["/project-refresh <projectKey>"]
+  G --> E
+  E --> H["Implement work"]
+  H --> I["Append LOG.md after substantial work"]
+  I --> J{"Large/staged branch?"}
+  J -- yes --> K["/project-phases <projectKey>"]
+  J -- no --> L{"Branch switch/rebase/new session?"}
+  K --> L
+  L -- yes --> B
+  L -- no --> H
+```
+
 ## Manual Mode (when tools are unavailable)
 
 Primary entry:
@@ -73,6 +94,24 @@ In manual mode, `/manual-refresh <projectKey>` combines both behaviors on purpos
 - then it runs refresh.
 
 This keeps outages simple for users (one command to continue work), while preserving explicit two-step commands for stable/tool-enabled environments.
+
+### Visual workflow (manual mode)
+
+```mermaid
+flowchart TD
+  A["Start session on branch"] --> B["/manual-refresh <projectKey>"]
+  B --> C{"Branch context exists?"}
+  C -- no --> D["Seed MR/LOG/PHASES from templates"]
+  C -- yes --> E["Read project/area/package and branch files"]
+  D --> E
+  E --> F["Compute git delta checkpoint to HEAD"]
+  F --> G["Return changed_areas, reread_files, and recommendations"]
+  G --> H["Implement work"]
+  H --> I["Append LOG.md after substantial work"]
+  I --> J{"Branch switch or rebase?"}
+  J -- yes --> B
+  J -- no --> H
+```
 
 ## Where to read details
 
