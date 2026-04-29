@@ -267,6 +267,23 @@ Do not auto-update shared package AGENTS.md; propose updates instead.
 - Add language-specific packs (frontend/backend/python/go) as optional rule modules.
 - Add health checks for stale checkpoints or missing branch templates.
 
+### Template authoring guidance
+
+When adding or improving templates in `templates/mr/`:
+
+- Keep `MERGE_REQUEST.md` focused on goal, scope, constraints, and acceptance criteria.
+- Keep `LOG.md` append-only and checkpoint-friendly (`reviewed_through` style fields).
+- Keep `PHASES.md` optional and phase-oriented (active phase + exit criteria).
+- Avoid project-specific identifiers in generic templates.
+- Prefer explicit placeholders (for example `<branch-name>`) over hidden assumptions.
+
+Template change checklist:
+
+1. Update template file(s) under `templates/mr/`.
+2. Verify descriptor filenames still match template filenames.
+3. Run manual bootstrap on a throwaway branch and inspect generated files.
+4. Confirm docs/examples reflect the new template structure.
+
 ## Rule vs Skill guidance
 
 - Put persistent policy in rules (for example: required reading order, branch isolation, fallback required when tools fail).
