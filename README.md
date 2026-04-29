@@ -122,16 +122,16 @@ The long prompt remains relevant as the canonical fallback spec, but it should n
 
 ```mermaid
 flowchart TD
-  A[Start session on branch] --> B[/manual-refresh projectKey]
-  B --> C{Branch context exists?}
-  C -- no --> D[Seed MR/LOG/PHASES from templates]
-  C -- yes --> E[Read project/area/package + branch files]
+  A["Start session on branch"] --> B["/manual-refresh <projectKey>"]
+  B --> C{"Branch context exists?"}
+  C -- no --> D["Seed MR/LOG/PHASES from templates"]
+  C -- yes --> E["Read project/area/package and branch files"]
   D --> E
-  E --> F[Compute git delta checkpoint to HEAD]
-  F --> G[Return changed_areas + reread_files + recommendations]
-  G --> H[Implement work]
-  H --> I[Append LOG.md after substantial work]
-  I --> J{Branch switch or rebase?}
+  E --> F["Compute git delta checkpoint to HEAD"]
+  F --> G["Return changed_areas, reread_files, and recommendations"]
+  G --> H["Implement work"]
+  H --> I["Append LOG.md after substantial work"]
+  I --> J{"Branch switch or rebase?"}
   J -- yes --> B
   J -- no --> H
 ```
