@@ -46,6 +46,18 @@ Recommended branch-local layout:
 4. Keep branch-local details in `LOG.md`.
 5. Promote durable insights to shared guides only when stable.
 
+## Manual fallback workflow (when tool-calling is unstable)
+
+Use this order:
+
+1. `/manual-refresh <projectKey>` (preferred)
+2. quick sentence fallback (if command parsing fails)
+3. long-form prompt fallback
+
+Quick sentence fallback:
+
+`Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`
+
 ## Descriptor generation
 
 The abstraction is intended to generate an exact project descriptor after repository scanning plus user confirmation.

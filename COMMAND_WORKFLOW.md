@@ -8,6 +8,7 @@ This file explains when to invoke each command in a descriptor-driven setup.
   - `/project-refresh <projectKey>`
   - `/project-bootstrap <projectKey>`
   - `/project-phases <projectKey>`
+  - `/manual-refresh <projectKey>` (no tool-calling)
 
 ## When to call which command
 
@@ -59,7 +60,12 @@ This file explains when to invoke each command in a descriptor-driven setup.
 
 If command/tool-calling is unavailable:
 
-1. create/seed branch files from templates when missing
-2. read project/area/package/branch context files
-3. ask agent to perform manual refresh from git delta
-4. append branch `LOG.md` with decisions and checkpoints
+1. run `/manual-refresh <projectKey>` first
+2. create/seed branch files from templates when missing
+3. read project/area/package/branch context files
+4. perform manual refresh from git delta
+5. append branch `LOG.md` with decisions and checkpoints
+
+Fallback quick sentence (if command parsing fails):
+
+`Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`
