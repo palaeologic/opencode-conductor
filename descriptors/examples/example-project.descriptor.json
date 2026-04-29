@@ -1,0 +1,60 @@
+{
+  "projectKey": "example-project",
+  "projectRootPath": "~/projects/example-project",
+  "opencodeProjectRootPath": "~/.config/opencode/projects/example-project",
+  "baselineBranchForMaterialChanges": "main",
+  "areas": {
+    "frontend": {
+      "pathPrefix": "frontend",
+      "areaAgentsPath": "~/.config/opencode/projects/example-project/frontend/AGENTS.md",
+      "commandsRoot": "frontend"
+    },
+    "backend": {
+      "pathPrefix": "backend",
+      "areaAgentsPath": "~/.config/opencode/projects/example-project/backend/AGENTS.md",
+      "commandsRoot": "backend"
+    },
+    "cli": {
+      "pathPrefix": "cli",
+      "areaAgentsPath": "~/.config/opencode/projects/example-project/cli/AGENTS.md",
+      "commandsRoot": "cli"
+    }
+  },
+  "pseudoPackageDetection": {
+    "kind": "pathAndAlias",
+    "pathPattern": "frontend/src/{packageName}/**/*",
+    "aliases": ["@org/{packageName}", "@platform/{packageName}"]
+  },
+  "trackedKnowledgeTargets": {
+    "sharedPackageKnowledge": {
+      "forms": "~/.config/opencode/projects/example-project/frontend/packages/forms/AGENTS.md",
+      "reports": "~/.config/opencode/projects/example-project/frontend/packages/reports/AGENTS.md",
+      "table": "~/.config/opencode/projects/example-project/frontend/packages/table/AGENTS.md"
+    },
+    "trackedAreas": ["frontend", "backend", "cli"]
+  },
+  "branchHandoff": {
+    "contextDirTemplate": "~/.config/opencode/projects/{projectKey}/branches/{branchName}",
+    "mrFilename": "MERGE_REQUEST.md",
+    "logFilename": "LOG.md",
+    "phasesFilename": "PHASES.md",
+    "phasesOptional": true,
+    "checkpointField": "reviewed_through",
+    "templatesDir": "~/.config/opencode/projects/{projectKey}/_templates/mr",
+    "mrTemplateFilename": "MERGE_REQUEST.md",
+    "logTemplateFilename": "LOG.md",
+    "phasesTemplateFilename": "PHASES.md",
+    "mrBranchPlaceholder": "<branch-name>"
+  },
+  "refreshToolHeuristics": {
+    "changedFilesAreaPrefixes": ["frontend/", "backend/", "cli/"],
+    "highSignalChangedSubstrings": [
+      "frontend/package.json",
+      "frontend/eslint.config",
+      "frontend/tsconfig.json",
+      "frontend/src/app.tsx",
+      "frontend/src/providers/Providers.tsx",
+      "frontend/src/router.tsx"
+    ]
+  }
+}
