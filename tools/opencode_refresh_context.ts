@@ -9,6 +9,7 @@ export default tool({
     maxCommits: tool.schema.number().optional(),
     checkpointCommit: tool.schema.string().optional(),
     writeLog: tool.schema.boolean().optional(),
+    handoffMode: tool.schema.union([tool.schema.literal("tracked"), tool.schema.literal("lite")]).optional(),
   },
   async execute(args, context) {
     if (!args.projectKey) {
@@ -25,6 +26,7 @@ export default tool({
         maxCommits: args.maxCommits,
         checkpointCommit: args.checkpointCommit,
         writeLog: args.writeLog,
+        handoffMode: args.handoffMode,
       },
       context,
     );

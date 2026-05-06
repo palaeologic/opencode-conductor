@@ -3,6 +3,14 @@
   "projectRootPath": "~/projects/my-project",
   "opencodeProjectRootPath": "~/.config/opencode/projects/my-project",
   "baselineBranchForMaterialChanges": "main",
+  "handoffModeDefault": "tracked",
+  "subtaskModels": {
+    "refresh": "your-provider/your-model-id",
+    "bootstrap": "your-provider/your-model-id",
+    "checkpoint": "your-provider/your-model-id",
+    "close": "your-provider/your-model-id",
+    "knowledge": "your-provider/your-model-id"
+  },
   "areas": {
     "frontend": {
       "pathPrefix": "frontend",
@@ -31,6 +39,7 @@
   },
   "branchHandoff": {
     "contextDirTemplate": "~/.config/opencode/projects/{projectKey}/branches/{branchName}",
+    "mrFilenames": ["MERGE_REQUEST.md", "MR.md"],
     "mrFilename": "MERGE_REQUEST.md",
     "logFilename": "LOG.md",
     "phasesFilename": "PHASES.md",

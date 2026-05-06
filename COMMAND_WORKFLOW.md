@@ -1,71 +1,65 @@
 # OpenCode Handoff Command Workflow
 
-This file explains when to invoke each command in a descriptor-driven setup.
+When to run which command in a descriptor-driven setup.
 
-## Available commands
+## Commands
 
-- Generic:
-  - `/project-refresh <projectKey>`
-  - `/project-bootstrap <projectKey>`
-  - `/project-phases <projectKey>`
-  - `/manual-refresh <projectKey>` (no tool-calling)
+| Command | Subtask | Typical model binding |
+|---------|---------|------------------------|
+| `/project-refresh <projectKey>` | yes | smaller / default |
+| `/project-bootstrap <projectKey>` | yes | default |
+| `/project-phases <projectKey>` | yes | default or stronger |
+| `/project-checkpoint <projectKey>` | yes | smaller |
+| `/project-close <projectKey>` | yes | smaller |
+| `/project-cleanup-candidates <projectKey>` | yes | smaller |
+| `/project-knowledge-refresh <projectKey>` | yes | stronger |
+| `/manual-refresh <projectKey>` | yes | default |
 
-## When to call which command
+Bind models in `opencode.json` `command.*.model` (and/or document IDs under `descriptor.subtaskModels`).
 
-- **Session start**
-  - Call: `refresh`
-  - Goal: synchronize branch context before coding
-- **First visit to a branch**
-  - Call: `bootstrap`
-  - Goal: create branch-local context files under `branches/<branch-name>/`
-- **Branch switch**
-  - Call: `refresh`
-  - Goal: avoid context carry-over from previous branch
-- **After rebase/squash/history rewrite**
-  - Call: `refresh`
-  - Goal: re-anchor checkpoint and recommendations
-- **When branch scope gets large**
-  - Call: `phases`
-  - Goal: create/refine phased plan with clear milestones
-- **Before handing off to a new agent**
-  - Call: `refresh`, then append branch `LOG.md`
-  - Goal: preserve continuity with minimal context load
+## When to call which
 
-## Command outcomes
+| Situation | Command | Notes |
+|-----------|---------|--------|
+| Session start | `refresh` | Use `handoffMode: lite` in tool args only when descriptor or user requests lite |
+| First visit to branch (tracked) | `bootstrap` then `refresh` | Creates MR/LOG (+ optional PHASES) |
+| Branch switch | `refresh` | Avoid carry-over |
+| After rebase / squash | `refresh` | Re-anchor checkpoint; append HISTORY note in `LOG.md` |
+| Large branch | `phases` | Milestones in `PHASES.md` |
+| Pausing mid-task (tracked) | `checkpoint` | Structured `LOG.md` entry |
+| Ending session (tracked) | `close` | Summary + next step; skip if zero meaningful work unless user insists |
+| Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |
+| Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file |
+| Tools unavailable | `manual-refresh` | Bootstraps if needed, then delta |
 
-- **refresh** returns:
-  - checkpoint/head range
-  - changed areas
-  - `reread_files`
-  - recommendations for MR/log updates
-- **bootstrap** returns:
-  - created/seeded context files
-  - branch-local context paths
-  - optional phases creation status
-- **phases** returns:
-  - active phase
-  - next suggested phase task
-  - whether phases file was newly created
+## Refresh outcomes (tool)
 
-## Typical flow
+On success, expect at least: `branch`, `handoff_mode`, checkpoint range, `changed_areas`, `reread_files`, `log_append_recommended`, `mr_update_recommended`, `needs_checkpoint`, `context_staleness`, optional `agents_stale_vs_branch`.
+
+On failure: `reason` (e.g. `missing_branch_context`, `workspace_not_in_project`, `detached_head`) and `recommended_next_step` when provided.
+
+## Typical tracked flow
 
 1. `refresh`
-2. if branch context missing -> `bootstrap`
-3. implement
-4. `refresh` before next major chunk
-5. if needed -> `phases`
-6. append branch `LOG.md`
+2. If `missing_branch_context` → `bootstrap` → `refresh`
+3. Implement; append `LOG.md` when `log_append_recommended` or after substantial work
+4. `checkpoint` before context switch; `close` when stopping
+5. `cleanup-candidates` occasionally
 
-## Manual fallback flow
+## Lite flow
 
-If command/tool-calling is unavailable:
+1. Set `handoffModeDefault: lite` (or pass `handoffMode: lite` to refresh tool)
+2. `refresh` only — no bootstrap required
+3. Optional: later run `bootstrap` + switch descriptor to `tracked` if the branch becomes serious
 
-1. run `/manual-refresh <projectKey>` first
-2. create/seed branch files from templates when missing
-3. read project/area/package/branch context files
-4. perform manual refresh from git delta
-5. append branch `LOG.md` with decisions and checkpoints
+## Manual fallback
 
-Fallback quick sentence (if command parsing fails):
+1. `/manual-refresh <projectKey>`
+2. Seed templates if files missing (tracked)
+3. Read layers: project `AGENTS.md` → area agents → MR files that exist → `LOG.md` tail → optional `PHASES.md`
+4. Git delta from checkpoint or recent window (lite)
+5. Return same fields as tool refresh where possible
+
+Quick sentence if command parsing fails:
 
 `Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`

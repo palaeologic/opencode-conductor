@@ -1,65 +1,56 @@
 # OpenCode Handoff System (Generic)
 
-This is the reusable documentation for descriptor-driven OpenCode handoff setups.
+Reusable documentation for **descriptor-driven** OpenCode handoffs with **tracked** and **lite** modes.
 
-## Key idea
+## Key ideas
 
-Keep project-specific assumptions in `descriptor.json`, and keep tools generic.
+- Project facts live in **`descriptor.json`**; tools stay generic.
+- OpenCode has **no hooks** — use **commands** for lifecycle (`checkpoint`, `close`) instead of idle/session automation.
+- **Subtasks** isolate heavy reads; combine with **`opencode.json` `command.*.model`** for cost-aware routing.
 
 ## Components
 
-- `descriptors/descriptor.template.json`
-- `descriptors/examples/example-project.descriptor.json`
-- `tools/_opencode_engine.ts`
-- `tools/opencode_bootstrap_branch.ts`
-- `tools/opencode_refresh_context.ts`
-- `commands/project-bootstrap.md`
-- `commands/project-refresh.md`
-- `commands/project-phases.md`
-- `templates/mr/*`
+- [`descriptors/descriptor.template.json`](descriptors/descriptor.template.json) — schema baseline (`handoffModeDefault`, `subtaskModels`, `branchHandoff.mrFilenames`, …)
+- [`descriptors/examples/example-project.descriptor.json`](descriptors/examples/example-project.descriptor.json)
+- [`tools/_opencode_engine.ts`](tools/_opencode_engine.ts) — bootstrap + refresh engine
+- [`tools/opencode_bootstrap_branch.ts`](tools/opencode_bootstrap_branch.ts), [`tools/opencode_refresh_context.ts`](tools/opencode_refresh_context.ts)
+- Commands under [`commands/`](commands/) — refresh, bootstrap, phases, checkpoint, close, cleanup, knowledge, manual
+- [`templates/mr/*`](templates/mr/) — `MERGE_REQUEST.md`, `LOG.md`, optional `PHASES.md`, optional **`MR.md`**
+- [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md) — short MUST/SHOULD rule baseline
+- [`docs/presentations/handoff-kit-v2.pptx`](docs/presentations/handoff-kit-v2.pptx) — teammate deck (edit + commit)
 
 ## Descriptor responsibilities
 
-The descriptor should define:
-
-- project root
-- areas and area paths
-- baseline branch
-- module or package detection
-- branch handoff filenames and template locations
-- tracked knowledge targets
-- refresh heuristics
+- `projectRootPath`, `opencodeProjectRootPath`, `baselineBranchForMaterialChanges`
+- `handoffModeDefault`: `tracked` | `lite`
+- `areas` and optional `trackedKnowledgeTargets`
+- `branchHandoff`: templates, filenames, optional **`mrFilenames`** (ordered; first existing MR wins for primary read), `checkpointField`
+- `refreshToolHeuristics` for `mr_update_recommended`
+- `subtaskModels`: optional map of role → `provider/model` string for documentation / pairing with `opencode.json`
 
 ## Branch layout
 
-Recommended branch-local layout:
+```
+~/.config/opencode/projects/<projectKey>/
+  AGENTS.md
+  <area>/AGENTS.md
+  _templates/mr/
+  branches/<branch-name>/
+    MERGE_REQUEST.md
+    MR.md            (optional)
+    LOG.md
+    PHASES.md        (optional)
+```
 
-- `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/MERGE_REQUEST.md`
-- `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/LOG.md`
-- optional `PHASES.md` in the same folder
+## Workflows
 
-## Generic workflow
+1. **tracked**: bootstrap once per branch → refresh often → checkpoint/close → optional knowledge promotion with approval.
+2. **lite**: refresh without persistent branch files → upgrade to tracked later if needed.
 
-1. Bootstrap branch context.
-2. Refresh before substantial work.
-3. Follow returned `reread_files`.
-4. Keep branch-local details in `LOG.md`.
-5. Promote durable insights to shared guides only when stable.
+## Manual fallback
 
-## Manual fallback workflow (when tool-calling is unstable)
-
-Use this order:
-
-1. `/manual-refresh <projectKey>` (preferred)
-2. quick sentence fallback (if command parsing fails)
-3. long-form prompt fallback
-
-Quick sentence fallback:
-
-`Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`
+When tool-calling is unstable, `/manual-refresh` is first-class: same information goals, no tool dependency.
 
 ## Descriptor generation
 
-The abstraction is intended to generate an exact project descriptor after repository scanning plus user confirmation.
-
-See `descriptors/examples/example-project.descriptor.json` for a concrete instance generated from the same abstraction.
+The abstraction is intended to be generated from repository scanning plus user confirmation. See the example descriptor for a filled-in instance.

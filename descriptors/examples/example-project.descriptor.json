@@ -3,6 +3,8 @@
   "projectRootPath": "~/projects/example-project",
   "opencodeProjectRootPath": "~/.config/opencode/projects/example-project",
   "baselineBranchForMaterialChanges": "main",
+  "handoffModeDefault": "tracked",
+  "subtaskModels": {},
   "areas": {
     "frontend": {
       "pathPrefix": "frontend",
@@ -35,6 +37,7 @@
   },
   "branchHandoff": {
     "contextDirTemplate": "~/.config/opencode/projects/{projectKey}/branches/{branchName}",
+    "mrFilenames": ["MERGE_REQUEST.md", "MR.md"],
     "mrFilename": "MERGE_REQUEST.md",
     "logFilename": "LOG.md",
     "phasesFilename": "PHASES.md",

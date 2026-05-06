@@ -3,6 +3,7 @@ import os from "os";
 import path from "path";
 
 type JsonObject = Record<string, any>;
+type HandoffMode = "tracked" | "lite";
 
 function homePath(p: string): string {
   if (p.startsWith("~/")) return path.join(os.homedir(), p.slice(2));
@@ -38,6 +39,21 @@ async function loadDescriptor(projectKey: string): Promise<JsonObject> {
   return parsed;
 }
 
+function getMrFilenames(handoff: JsonObject): string[] {
+  if (Array.isArray(handoff.mrFilenames) && handoff.mrFilenames.length) {
+    return handoff.mrFilenames.map((x: unknown) => String(x));
+  }
+  const single = handoff.mrFilename ?? "MERGE_REQUEST.md";
+  return [String(single)];
+}
+
+function resolveHandoffMode(descriptor: JsonObject, override?: HandoffMode): HandoffMode {
+  if (override === "tracked" || override === "lite") return override;
+  const d = descriptor.handoffModeDefault ?? descriptor.handoffMode;
+  if (d === "lite") return "lite";
+  return "tracked";
+}
+
 function inferArea(descriptor: JsonObject, absPath: string): string {
   const p = normalizeSlashes(absPath);
   const areas = descriptor.areas ?? {};
@@ -56,13 +72,61 @@ function inferArea(descriptor: JsonObject, absPath: string): string {
   return best;
 }
 
+function inferAreaFromRepoRelativePath(descriptor: JsonObject, repoRoot: string, relPath: string): string {
+  const joined = normalizeSlashes(path.join(repoRoot, relPath));
+  return inferArea(descriptor, joined);
+}
+
 function extractCheckpoint(logText: string, field: string): string | null {
-  const re = new RegExp(`${field}:\\s*([0-9a-f]{7,40})`, "gi");
-  let m: RegExpExecArray | null = null;
+  const escapedField = field.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`${escapedField}:\\s*([0-9a-f]{7,40})`, "gi");
+  let last: string | null = null;
+  let m: RegExpExecArray | null;
   while ((m = re.exec(logText))) {
-    // last match wins
+    if (m[1]) last = m[1];
   }
-  return m?.[1] ?? null;
+  return last;
+}
+
+function uniqueAreas(areas: string[]): string[] {
+  return [...new Set(areas.filter((a) => a && a !== "unknown"))];
+}
+
+function heuristicsHit(changed: string[], heuristics: JsonObject | undefined): boolean {
+  if (!heuristics) return false;
+  const subs: string[] = Array.isArray(heuristics.highSignalChangedSubstrings)
+    ? heuristics.highSignalChangedSubstrings.map(String)
+    : [];
+  for (const c of changed) {
+    const lower = c.toLowerCase();
+    for (const s of subs) {
+      if (lower.includes(s.toLowerCase())) return true;
+    }
+  }
+  return false;
+}
+
+async function resolveExistingMrPaths(branchDir: string, handoff: JsonObject): Promise<string[]> {
+  const found: string[] = [];
+  for (const name of getMrFilenames(handoff)) {
+    const p = path.join(branchDir, name);
+    try {
+      await fs.access(p);
+      found.push(p);
+    } catch {
+      /* skip */
+    }
+  }
+  return found;
+}
+
+async function fileMtimeMinutes(filePath: string): Promise<number | null> {
+  try {
+    const st = await fs.stat(filePath);
+    return Math.round((Date.now() - st.mtimeMs) / 60_000);
+  } catch {
+    return null;
+  }
 }
 
 export async function bootstrapBranchEngine(
@@ -91,7 +155,7 @@ export async function bootstrapBranchEngine(
       branchName,
     }),
   );
-  const mrFile = path.join(branchDir, handoff.mrFilename ?? "MERGE_REQUEST.md");
+  const mrNames = getMrFilenames(handoff);
   const logFile = path.join(branchDir, handoff.logFilename ?? "LOG.md");
   const phasesFile = path.join(branchDir, handoff.phasesFilename ?? "PHASES.md");
 
@@ -104,17 +168,35 @@ export async function bootstrapBranchEngine(
 
   await fs.mkdir(branchDir, { recursive: true });
 
-  let createdMr = false;
+  const createdMr: string[] = [];
   let createdLog = false;
   let createdPhases = false;
 
-  try {
-    await fs.access(mrFile);
-  } catch {
-    const tpl = await fs.readFile(path.join(templatesDir, handoff.mrTemplateFilename ?? "MERGE_REQUEST.md"), "utf8");
-    await fs.writeFile(mrFile, tpl.replaceAll(handoff.mrBranchPlaceholder ?? "<branch-name>", branchName), "utf8");
-    createdMr = true;
+  for (let i = 0; i < mrNames.length; i++) {
+    const mrName = mrNames[i];
+    const mrFile = path.join(branchDir, mrName);
+    try {
+      await fs.access(mrFile);
+    } catch {
+      const tplName = i === 0 ? (handoff.mrTemplateFilename ?? "MERGE_REQUEST.md") : mrName;
+      try {
+        const tpl = await fs.readFile(path.join(templatesDir, tplName), "utf8");
+        await fs.writeFile(mrFile, tpl.replaceAll(handoff.mrBranchPlaceholder ?? "<branch-name>", branchName), "utf8");
+        createdMr.push(mrFile);
+      } catch (e) {
+        if (i === 0) {
+          return {
+            applicable: false,
+            reason: "missing_mr_template",
+            template_path: path.join(templatesDir, tplName),
+            detail: String(e),
+          };
+        }
+      }
+    }
   }
+
+  const primaryMr = path.join(branchDir, mrNames[0]);
 
   try {
     await fs.access(logFile);
@@ -144,24 +226,40 @@ export async function bootstrapBranchEngine(
     }
   }
 
+  const mrPaths = await resolveExistingMrPaths(branchDir, handoff);
+
   return {
     applicable: true,
     projectKey,
     branch: branchName,
     headCommit: headSha,
-    mr_context_path: mrFile,
+    mr_context_path: primaryMr,
+    mr_context_paths: mrPaths.length ? mrPaths : [primaryMr],
     log_context_path: logFile,
     phases_context_path: phasesFile,
-    created: { mergeRequestFile: createdMr, logFile: createdLog, phasesFile: createdPhases },
+    created: {
+      mergeRequestFile: createdMr.length > 0,
+      mergeRequestPaths: createdMr,
+      logFile: createdLog,
+      phasesFile: createdPhases,
+    },
   };
 }
 
 export async function refreshContextEngine(
   projectKey: string,
-  args: { refreshMode?: "fast" | "full"; maxCommits?: number; checkpointCommit?: string; writeLog?: boolean } = {},
+  args: {
+    refreshMode?: "fast" | "full";
+    maxCommits?: number;
+    checkpointCommit?: string;
+    writeLog?: boolean;
+    handoffMode?: HandoffMode;
+  } = {},
   context: any,
 ) {
   const descriptor = await loadDescriptor(projectKey);
+  const mode = resolveHandoffMode(descriptor, args.handoffMode);
+
   const repoRoot = normalizeSlashes((await Bun.$`git rev-parse --show-toplevel`.text()).trim());
   const projectRoot = normalizeSlashes(descriptor.projectRootPath ?? "");
   if (!repoRoot.endsWith(projectRoot) && repoRoot !== projectRoot) {
@@ -174,52 +272,147 @@ export async function refreshContextEngine(
 
   const handoff = descriptor.branchHandoff ?? {};
   const dir = homePath(expandTemplate(handoff.contextDirTemplate, { projectKey, branchName: branch }));
-  const mr = path.join(dir, handoff.mrFilename ?? "MERGE_REQUEST.md");
-  const log = path.join(dir, handoff.logFilename ?? "LOG.md");
+  const logPath = path.join(dir, handoff.logFilename ?? "LOG.md");
   const phases = path.join(dir, handoff.phasesFilename ?? "PHASES.md");
 
+  const mrPathsResolved = await resolveExistingMrPaths(dir, handoff);
   let mrText: string | null = null;
+  let primaryMr: string | null = mrPathsResolved[0] ?? null;
+  if (primaryMr) {
+    try {
+      mrText = await fs.readFile(primaryMr, "utf8");
+    } catch {
+      primaryMr = null;
+      mrText = null;
+    }
+  }
+
   let logText: string | null = null;
-  try { mrText = await fs.readFile(mr, "utf8"); } catch {}
-  try { logText = await fs.readFile(log, "utf8"); } catch {}
-  if (!mrText || !logText) {
+  try {
+    logText = await fs.readFile(logPath, "utf8");
+  } catch {
+    logText = null;
+  }
+
+  const hasTrackedContext = Boolean(mrText && logText);
+
+  if (!hasTrackedContext && mode === "tracked") {
     return {
       applicable: false,
       reason: "missing_branch_context",
       recommended_next_step: "opencode_bootstrap_branch",
-      mr_context_path: mr,
-      log_context_path: log,
-      phases_context_path: phases
+      handoff_mode: mode,
+      mr_context_path: path.join(dir, getMrFilenames(handoff)[0]),
+      mr_context_paths: mrPathsResolved,
+      log_context_path: logPath,
+      phases_context_path: phases,
     };
   }
 
   const field = handoff.checkpointField ?? "reviewed_through";
-  let baseline = args.checkpointCommit ?? extractCheckpoint(logText, field);
-  if (!baseline) baseline = ((await Bun.$`git rev-parse HEAD~${args.maxCommits ?? 10}`.text()).trim());
+  const maxCommits = args.maxCommits ?? 10;
+  let baseline: string;
+  let checkpointSource: string;
+
+  if (hasTrackedContext && logText) {
+    baseline = args.checkpointCommit ?? extractCheckpoint(logText, field) ?? "";
+    checkpointSource = args.checkpointCommit ? "arg" : extractCheckpoint(logText, field) ? "log" : "fallback";
+    if (!baseline) {
+      baseline = (await Bun.$`git rev-parse HEAD~${maxCommits}`.text()).trim();
+      checkpointSource = "fallback";
+    }
+  } else {
+    baseline = (await Bun.$`git rev-parse HEAD~${maxCommits}`.text()).trim();
+    checkpointSource = "lite_window";
+  }
 
   const diffRange = `${baseline}..HEAD`;
-  const changed = (await Bun.$`git diff --name-only ${diffRange}`.text())
-    .split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+  let changed: string[] = [];
+  try {
+    changed = (await Bun.$`git diff --name-only ${diffRange}`.text())
+      .split(/\r?\n/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  } catch {
+    changed = [];
+  }
 
-  const reread = [
-    path.join(descriptor.opencodeProjectRootPath, "AGENTS.md"),
-    mr,
-    log
-  ];
-  try { await fs.access(phases); reread.push(phases); } catch {}
+  const areaHits = changed.map((rel) => inferAreaFromRepoRelativePath(descriptor, repoRoot, rel));
+  const changed_areas = uniqueAreas(areaHits);
+
+  const opencodeRoot = descriptor.opencodeProjectRootPath as string;
+  const reread: string[] = [path.join(opencodeRoot, "AGENTS.md")];
+  for (const [, def] of Object.entries<any>(descriptor.areas ?? {})) {
+    const ap = typeof def.areaAgentsPath === "string" ? homePath(def.areaAgentsPath) : "";
+    if (ap) {
+      try {
+        await fs.access(ap);
+        reread.push(ap);
+      } catch {
+        /* optional layer */
+      }
+    }
+  }
+  for (const mp of mrPathsResolved) {
+    if (!reread.includes(mp)) reread.push(mp);
+  }
+  if (hasTrackedContext) {
+    reread.push(logPath);
+    try {
+      await fs.access(phases);
+      reread.push(phases);
+    } catch {
+      /* optional */
+    }
+  }
+
+  const last_log_age_minutes = hasTrackedContext ? await fileMtimeMinutes(logPath) : null;
+  const needs_checkpoint =
+    changed.length > 8 || (last_log_age_minutes !== null && last_log_age_minutes > 180 && changed.length > 0);
+  const log_append_recommended = changed.length > 0 || needs_checkpoint;
+  const mr_update_recommended = heuristicsHit(changed, descriptor.refreshToolHeuristics);
+
+  let context_staleness: "fresh" | "aging" | "unknown" = "unknown";
+  if (last_log_age_minutes !== null) {
+    if (last_log_age_minutes < 120) context_staleness = "fresh";
+    else context_staleness = "aging";
+  }
+
+  const agentsPath = path.join(opencodeRoot, "AGENTS.md");
+  let agents_stale_vs_branch: boolean | null = null;
+  try {
+    const baselineBranch = String(descriptor.baselineBranchForMaterialChanges ?? "main");
+    const mergeBase = (await Bun.$`git merge-base HEAD ${baselineBranch}`.text()).trim();
+    const agentsMtime = (await fs.stat(agentsPath)).mtimeMs;
+    const mbTime = (await Bun.$`git show -s --format=%ct ${mergeBase}`.text()).trim();
+    const mbMs = Number(mbTime) * 1000;
+    if (!Number.isNaN(mbMs)) agents_stale_vs_branch = agentsMtime > mbMs;
+  } catch {
+    agents_stale_vs_branch = null;
+  }
 
   return {
     applicable: true,
     projectKey,
     branch,
+    handoff_mode: mode,
     area: inferArea(descriptor, context.directory ?? repoRoot),
     checkpoint_commit: baseline,
+    checkpoint_source: checkpointSource,
     head_commit: head,
     changed_files_preview: changed.slice(0, args.refreshMode === "full" ? 150 : 40),
+    changed_areas,
     reread_files: reread,
-    mr_context_path: mr,
-    log_context_path: log,
-    phases_context_path: phases
+    mr_context_path: primaryMr ?? path.join(dir, getMrFilenames(handoff)[0]),
+    mr_context_paths: mrPathsResolved,
+    log_context_path: logPath,
+    phases_context_path: phases,
+    last_log_age_minutes,
+    needs_checkpoint,
+    context_staleness,
+    log_append_recommended,
+    mr_update_recommended,
+    agents_stale_vs_branch,
+    subtaskModels: descriptor.subtaskModels ?? {},
   };
 }
-
