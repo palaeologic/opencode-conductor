@@ -32,6 +32,21 @@ Branch-local context outside the repo, **tracked** vs **lite** modes, optional `
   - Allow `external_directory` for `~/.config/opencode/projects/**`
   - Register tools when provider path is stable
 
+### Local OpenCode home hygiene (upgrading from v1 or ad-hoc setups)
+
+When aligning an existing `~/.config/opencode/` with this kit, prefer **review + diff** over blind overwrite. **Never commit** API keys or tokens from `opencode.json`.
+
+**Typical legacy layout (what to fix):**
+
+- **Rules**: only `HANDOFF.md` (or one monolithic handoff file) — add [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md) and keep `HANDOFF.md` as a **thin project overlay** (tool names, package detection, org conventions).
+- **Commands**: only refresh/bootstrap/phases/manual — replace the whole `commands/` folder from this repo so new lifecycle, verification, review, init, and scaffold commands exist.
+- **Stale paths under `~/.config/opencode/`** (safe to remove once you use kit commands + README): redundant top-level runbooks such as `COMMAND_WORKFLOW.md`, `OPENCODE_HANDOFF_GENERIC.md`, `OPENCODE_HANDOFF_<PROJECT>.md` if you still have copies there.
+- **Wrong skills location**: delete `~/.config/opencode/projects/<projectKey>/skills/` — procedural guides belong in OpenCode’s global [`skills/`](skills/) (or this kit’s `skills/`), not under a project folder.
+- **Descriptor drift**: ensure `handoffModeDefault` is set; use `mrFilenames` (array) instead of legacy `mrFilename` (string); add `subtaskModels` (can start as `{}`); add optional `MR.md` to `mrFilenames` only if you copy [`templates/mr/MR.md`](templates/mr/MR.md) into `_templates/mr/`.
+- **Tools**: if you keep plugins disabled, a `tools-off/` folder is fine — move wrappers back to `tools/` when provider/tool-calling is stable (see [Manual mode (tools disabled)](#manual-mode-tools-disabled) below).
+
+**Suggested order:** copy `commands/` → layer `HANDOFF_GENERIC.md` + trim overlay → delete stale files above → upgrade descriptor fields → register commands/models in `opencode.json`.
+
 ## Architecture
 
 ### Components

@@ -92,7 +92,7 @@ New fields returned by `opencode_refresh_context`:
 | `COMMAND_WORKFLOW.md` | Trimmed to pure decision matrix (when to call which command) |
 | `TEST_PLAN.md` | Added sections for lite mode, MR.md, lifecycle commands; fixed active-area wording |
 | `rules/HANDOFF_GENERIC.md` | Rewritten as concise MUST/SHOULD behavioral contract |
-| `docs/ALIGNMENT_OPENCODE_HOME.md` | New: guides local `~/.config/opencode` alignment with v2 |
+| `README.md` | “Local OpenCode home hygiene” subsection consolidates former `docs/ALIGNMENT_OPENCODE_HOME.md` guidance |
 | `commands/project-init.md` | New command definition |
 | `commands/project-checkpoint.md` | New (with manual fallback) |
 | `commands/project-close.md` | New (with manual fallback) |
