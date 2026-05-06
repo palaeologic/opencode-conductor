@@ -7,18 +7,21 @@ Apply these rules to frontend code unless a project-specific layer refines them.
 - Respect project package and module boundaries.
 - Within the same package or module, prefer relative imports unless the project says otherwise.
 - Across packages or modules, prefer the project's canonical alias style.
-- Do not import from absolute filesystem paths, `node_modules` internals, `index` barrels, `/src`, `/lib`, or similar unstable internal paths unless the project explicitly allows it.
+- Do not use relative imports to cross package/module boundaries.
+- Do not import from absolute filesystem paths, `node_modules` internals, `index` barrels, `/src`, `/lib`, `lib-commonjs`, or similar unstable internal paths unless the project explicitly allows it.
 - Normalize import paths instead of leaving redundant traversal segments.
 
 ## React imports
 
 - Prefer named imports from `react` and `react-dom`.
 - Avoid default `React` imports unless the project explicitly requires them.
+- Do not reference React types through the `React.` namespace when direct type imports are available.
 - Prefer direct type imports over namespace-qualified React types when the project supports them.
 
 ## TypeScript typing
 
-- Avoid unsafe type assertions and non-null assertions unless there is a justified local pattern.
+- Avoid unsafe type assertions and non-null assertions.
+- If assertions are unavoidable, prefer narrow exceptions such as `as const` and `as unknown`, and keep usage local and justified.
 - Prefer narrowing, validation, and clearer function signatures over asserting types.
 - Prefer explicit type imports when they improve clarity and tooling behavior.
 
@@ -26,10 +29,12 @@ Apply these rules to frontend code unless a project-specific layer refines them.
 
 - Use project conventions for schema and model naming.
 - Keep exported schema names descriptive and consistently cased.
+- For Zod-heavy projects, prefer PascalCase schema variable names.
 
 ## Import hygiene
 
 - Merge duplicate imports from the same module when safe.
+- If both value and type imports come from the same module, combine them using inline `type` specifiers or `import type` when appropriate.
 - Preserve renamed imports and type-only semantics when reorganizing imports.
 - Use inline `type` specifiers or `import type` when appropriate.
 
