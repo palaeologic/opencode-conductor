@@ -22,6 +22,7 @@ Use with `~/.config/opencode/projects/<projectKey>/descriptor.json`. OpenCode ha
 
 ## SHOULD
 
+- Run `/project-review <projectKey>` after refresh when the branch has reviewable changes — generates a checklist, diff summary, or both (user chooses).
 - Run `/project-checkpoint <projectKey>` before pausing on a long task; `/project-close <projectKey>` when wrapping a session (tracked).
 - Run `/project-cleanup-candidates <projectKey>` periodically to review stale branch folders.
 - Run `/project-knowledge-refresh <projectKey>` when you have stable, merge-worthy knowledge to promote (proposal-first).

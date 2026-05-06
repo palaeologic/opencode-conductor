@@ -150,6 +150,7 @@ flowchart TD
 | `/project-phases <projectKey>`             | Create or refine `PHASES.md`                                                                          |
 | `/project-checkpoint <projectKey>`         | Append checkpoint to `LOG.md`                                                                         |
 | `/project-close <projectKey>`              | Session-close summary in `LOG.md`                                                                     |
+| `/project-review <projectKey>`             | Generate review artifact (checklist, diff summary, or both — user chooses)                            |
 | `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
 | `/manual-refresh <projectKey>`             | No tool-calling; merges bootstrap+refresh behavior when needed                                        |

@@ -286,7 +286,26 @@ Modify the project or area `AGENTS.md` with a timestamp significantly older than
 
 ---
 
-## 11) Rule layering validation
+## 11) Review artifact generation
+
+### Steps
+
+1. On a branch with changes, run `/project-review <projectKey>`.
+2. Agent should ask which type: checklist (A), diff summary (B), or both (C).
+3. Choose one.
+
+### Expected result
+
+- `REVIEW.md` written to `branches/<branch-name>/REVIEW.md`.
+- Structured output block with `artifact_type`, `path`, and `suggested_verifications`.
+- Suggested verifications are listed but NOT executed.
+- Content is branch-specific (references actual files/areas from the diff, not generic placeholders).
+
+**Pass**: review file generated, suggestions listed, nothing executed.
+
+---
+
+## 12) Rule layering validation
 
 ### Steps
 
@@ -336,4 +355,5 @@ Modify the project or area `AGENTS.md` with a timestamp significantly older than
 - [ ] History rewrite: refresh survives stale SHAs
 - [ ] Merge closure: respects user choice
 - [ ] agents_stale_vs_branch: nudge present when applicable
+- [ ] Review artifact: generated correctly, suggestions not executed
 - [ ] Rule layering: both generic + overlay loaded correctly

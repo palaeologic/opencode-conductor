@@ -46,8 +46,8 @@ After completing the procedure, output the following block. The receiving agent 
   - <risk 2>
   - ...
 - next_steps:
-  - <recommendation 1>
-  - <recommendation 2>
+  - Run /project-review $ARGUMENTS to generate a review artifact
+  - <other recommendations>
   - ...
 ```
 
