@@ -28,4 +28,4 @@ Maintain the `.pptx` in PowerPoint / Keynote / Google Slides (export) and commit
 - Canonical documentation: [`README.md`](../../README.md)
 - Behavioral contract: [`../../rules/HANDOFF_GENERIC.md`](../../rules/HANDOFF_GENERIC.md)
 
-For the **aimos / Anocca** snapshot deck, see the sibling repo **anocca-opencode-conductor** under `docs/presentations/`.
+For a project-specific snapshot deck, see your project's own conductor repository under `docs/presentations/`.
