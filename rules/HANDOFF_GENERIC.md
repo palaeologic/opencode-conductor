@@ -17,6 +17,8 @@ Use with `~/.config/opencode/projects/<projectKey>/descriptor.json`. OpenCode ha
 8. **If `agents_stale_vs_branch` is true**: re-read project `AGENTS.md` carefully; shared conventions may have moved on `main` (or `baselineBranchForMaterialChanges`).
 9. **Logging (tracked only)**: append `LOG.md` after substantial work, verification, or refresh when `log_append_recommended` is true. Keep `LOG.md` append-only.
 10. **Promotion**: keep discoveries in branch `LOG.md` first; update shared package/area `AGENTS.md` only when durable and user-approved.
+11. **Refresh is read-only**: `/project-refresh` and `/manual-refresh` MUST only gather and report context. NEVER execute actions (run tests, make code changes, run commands) based on what you read during refresh. Wait for the user to tell you what to do next.
+12. **Structured output**: when executing `/project-refresh` or `/manual-refresh`, output the `## Handoff refresh result` structured block FIRST (as defined in the command template), then optionally add narrative. Never skip or reorganize the structured block.
 
 ## SHOULD
 
