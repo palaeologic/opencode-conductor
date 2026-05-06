@@ -12,6 +12,7 @@ Quick reference for **which command** to run and **when**. For workflow diagrams
 | `/project-phases <projectKey>` | yes | default or stronger |
 | `/project-checkpoint <projectKey>` | yes | smaller |
 | `/project-close <projectKey>` | yes | smaller |
+| `/project-review <projectKey>` | yes | default |
 | `/project-cleanup-candidates <projectKey>` | yes | smaller |
 | `/project-knowledge-refresh <projectKey>` | yes | stronger |
 | `/manual-refresh <projectKey>` | yes | default |
@@ -30,6 +31,7 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Large branch | `phases` | Milestones in `PHASES.md` |
 | Pausing mid-task (tracked) | `checkpoint` | Structured `LOG.md` entry |
 | Ending session (tracked) | `close` | Summary + next step |
+| Before code review | `review` | Generates checklist, diff summary, or both (user picks) |
 | Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |
 | Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file |
 | Tools unavailable | `manual-refresh` | Bootstraps if needed, then delta |
