@@ -3,12 +3,21 @@ description: Generic context refresh via descriptor-driven tool
 subtask: true
 ---
 
-Refresh context for project key `$ARGUMENTS`.
+Refresh context for the current project.
+
+## Project key resolution
+
+If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
+
+1. Get cwd via `pwd` or workspace root.
+2. Scan `~/.config/opencode/projects/*/descriptor.json` files.
+3. Match cwd against each descriptor's `projectRootPath`.
+4. If exactly one matches, use that `projectKey`. If zero or multiple match, ask the user.
 
 ## Procedure
 
 1. Call the OpenCode tool `opencode_refresh_context` with:
-   - `projectKey: $ARGUMENTS`
+   - `projectKey: <resolved key>`
    - `refreshMode: fast`
    - `maxCommits: 10`
    - `writeLog: false`

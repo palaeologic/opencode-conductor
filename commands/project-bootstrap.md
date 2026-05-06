@@ -3,7 +3,16 @@ description: Generic branch bootstrap via descriptor-driven tool
 subtask: true
 ---
 
-Workflow:
+## Project key resolution
+
+If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
+1. Get cwd via `pwd` or workspace root.
+2. Scan `~/.config/opencode/projects/*/descriptor.json` files.
+3. Match cwd against each descriptor's `projectRootPath`.
+4. If exactly one matches, use that `projectKey`. If zero or multiple match, ask the user.
+
+## Workflow
+
 1. Ask the user exactly this yes/no question before bootstrapping:
    - `Do you want phased delivery for this branch?`
    - Allowed answers: `yes` or `no`

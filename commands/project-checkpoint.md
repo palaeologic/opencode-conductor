@@ -3,7 +3,15 @@ description: Append a checkpoint entry to branch LOG.md (tracked mode)
 subtask: true
 ---
 
-Tracked handoff: append a **checkpoint** to the branch `LOG.md` for project key `$ARGUMENTS`.
+## Project key resolution
+
+If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
+1. Get cwd via `pwd` or workspace root.
+2. Scan `~/.config/opencode/projects/*/descriptor.json` files.
+3. Match cwd against each descriptor's `projectRootPath`.
+4. If exactly one matches, use that `projectKey`. If zero or multiple match, ask the user.
+
+Tracked handoff: append a **checkpoint** to the branch `LOG.md`.
 
 Workflow:
 1. Call `opencode_refresh_context` with `projectKey: $ARGUMENTS` (optional `handoffMode: tracked` if the descriptor defaults to lite).

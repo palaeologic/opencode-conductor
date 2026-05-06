@@ -1,20 +1,29 @@
 ---
-description: Generate a review artifact for the current branch
-subtask: true
----
 
-Generate a review artifact for project key `$ARGUMENTS`.
+## description: Generate a review artifact for the current branch
+subtask: true
+
+Generate a review artifact for the current project.
+
+## Project key resolution
+
+If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
+
+1. Get cwd via `pwd` or workspace root.
+2. Scan `~/.config/opencode/projects/*/descriptor.json` files.
+3. Match cwd against each descriptor's `projectRootPath`.
+4. If exactly one matches, use that `projectKey`. If zero or multiple match, ask the user.
 
 ## Procedure
 
 1. Run refresh internally (call `opencode_refresh_context` or manual refresh steps) to gather: branch, changed_areas, changed_files, risks from `LOG.md`, MR acceptance criteria from `MERGE_REQUEST.md`.
 2. Ask the user which artifact type to generate:
-   - **A) Review checklist** — areas to review, tests to run, risks to verify, acceptance criteria status
-   - **B) Diff summary** — changes grouped by area with inline reviewer questions and notes
-   - **C) Both** — combined into a single file
+  - **A) Review checklist** — areas to review, tests to run, risks to verify, acceptance criteria status
+  - **B) Diff summary** — changes grouped by area with inline reviewer questions and notes
+  - **C) Both** — combined into a single file
 3. Generate the chosen artifact based on actual branch state (not generic templates).
 4. Write it to the branch context folder as `REVIEW.md`:
-   `~/.config/opencode/projects/$ARGUMENTS/branches/<branch-name>/REVIEW.md`
+  `~/.config/opencode/projects/$ARGUMENTS/branches/<branch-name>/REVIEW.md`
 5. Suggest verification commands the user may want to run (do NOT execute them).
 
 ## Output format (MUST use exactly)
@@ -37,12 +46,12 @@ After the structured block, display the generated `REVIEW.md` content inline for
 
 When generating a checklist, include:
 
-- [ ] Areas touched (list each with key files)
-- [ ] Tests to run (specific commands per area)
-- [ ] Risks to verify (from LOG.md and git delta analysis)
-- [ ] Acceptance criteria (from MERGE_REQUEST.md — tick those already met)
-- [ ] Snapshot/schema sync (if applicable)
-- [ ] Cross-area concerns (e.g. GQL types matching backend mutations)
+- Areas touched (list each with key files)
+- Tests to run (specific commands per area)
+- Risks to verify (from LOG.md and git delta analysis)
+- Acceptance criteria (from MERGE_REQUEST.md — tick those already met)
+- Snapshot/schema sync (if applicable)
+- Cross-area concerns (e.g. GQL types matching backend mutations)
 
 ## Diff summary format (type B)
 
@@ -68,7 +77,9 @@ Key concern: <area-specific risk or note>
 ## Manual fallback
 
 When tools are unavailable:
+
 1. Resolve branch and branch context folder manually.
 2. Read `MERGE_REQUEST.md`, `LOG.md`, and run `git diff --stat` against baseline.
 3. Ask user for artifact type choice.
 4. Generate and write `REVIEW.md` to the branch folder.
+
