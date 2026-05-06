@@ -3,6 +3,8 @@ description: Manual fallback refresh without tool-calling
 subtask: true
 ---
 
+CRITICAL: Your output MUST begin with the structured block defined in "Output format" below. No prose before it.
+
 Tool-calling is disabled. Run manual handoff refresh for project key `$ARGUMENTS`.
 
 ## Procedure
@@ -49,4 +51,7 @@ After completing the procedure, output the following block. The receiving agent 
   - ...
 ```
 
-After the structured block, you MAY add a brief narrative summary for human readability, but the structured block MUST come first and MUST be complete.
+RULES:
+- The structured block MUST be the FIRST thing you output. No preamble, no greeting, no summary before it.
+- Every field MUST be present. Use `unknown` or `0` when a value cannot be determined.
+- After the structured block, you MAY add a brief narrative summary for human readability.
