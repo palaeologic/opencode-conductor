@@ -1,6 +1,6 @@
 # OpenCode Handoff Kit (Reusable)
 
-Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context outside the repo, **tracked** vs **lite** modes, optional **`MR.md`**, richer refresh metadata, **lifecycle commands** (no hooks), and optional **per-role model** hints.
+Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context outside the repo, **tracked** vs **lite** modes, optional `**MR.md`**, richer refresh metadata, **lifecycle commands** (no hooks), and optional **per-role model** hints.
 
 ## What this repo is for
 
@@ -10,39 +10,37 @@ Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context o
 
 ## Quick start
 
-1. **Clone** this repo and copy kit assets into your OpenCode home:
-   ```bash
-   cp commands/*.md   ~/.config/opencode/commands/
-   cp rules/*.md      ~/.config/opencode/rules/
-   # Optional: copy tools when tool-calling is stable
-   cp tools/*.ts      ~/.config/opencode/tools/
-   ```
-2. **Update `~/.config/opencode/opencode.json`**:
-   - Include `HANDOFF_GENERIC.md` in `instructions` (plus your project overlay rule if needed)
-   - Allow `external_directory` for `~/.config/opencode/projects/**`
-   - Register tools when provider path is stable
-3. **Open your project** in OpenCode and run:
-   ```
-   /project-init <projectKey>
-   ```
-   This scans your repo, drafts a `descriptor.json`, and on approval writes the full project structure (`descriptor.json` + templates + `AGENTS.md`). No manual folder creation needed.
-
-**Manual alternative** (skip step 3): copy [`descriptors/descriptor.template.json`](descriptors/descriptor.template.json) to `~/.config/opencode/projects/<projectKey>/descriptor.json`, fill it in, and copy `templates/mr/*` into `_templates/mr/` yourself.
+1. **Pull latest** from GitHub, then copy kit assets into your OpenCode home:
+  - `rules/*` → `~/.config/opencode/rules/`
+  - `commands/*` → `~/.config/opencode/commands/`
+  - `tools/*` → `~/.config/opencode/tools/` (when tool-calling is stable)
+2. Create `**descriptor.json`** (choose one):
+  - **Guided**: run `/project-init <projectKey>` — scans repo, drafts descriptor, you approve
+  - **Manual**: copy `[descriptors/descriptor.template.json](descriptors/descriptor.template.json)` to `~/.config/opencode/projects/<projectKey>/descriptor.json` and fill in
+3. Copy branch templates:
+  `templates/mr/*` → `~/.config/opencode/projects/<projectKey>/_templates/mr/`  
+   (include optional `[templates/mr/MR.md](templates/mr/MR.md)` if you use `mrFilenames`.)
+4. Update `**~/.config/opencode/opencode.json`**:
+  - Include `[rules/HANDOFF_GENERIC.md](rules/HANDOFF_GENERIC.md)` in `instructions` (plus your project overlay rule if needed)
+  - Allow `external_directory` for `~/.config/opencode/projects/**`
+  - Register tools when provider path is stable
 
 ## Architecture
 
 ### Components
 
-| Component | Path | Role |
-|-----------|------|------|
-| Descriptor template | [`descriptors/descriptor.template.json`](descriptors/descriptor.template.json) | Schema baseline |
-| Example descriptor | [`descriptors/examples/example-project.descriptor.json`](descriptors/examples/example-project.descriptor.json) | Filled-in reference |
-| Engine | [`tools/_opencode_engine.ts`](tools/_opencode_engine.ts) | Bootstrap + refresh logic |
-| Tool wrappers | [`tools/opencode_*.ts`](tools/) | OpenCode plugin interface |
-| Commands | [`commands/`](commands/) | Slash-command markdown templates |
-| Branch templates | [`templates/mr/*`](templates/mr/) | `MERGE_REQUEST.md`, `LOG.md`, optional `PHASES.md`, `MR.md` |
-| Rule baseline | [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md) | MUST/SHOULD behavioral contract |
-| Presentations | [`docs/presentations/`](docs/presentations/) | Teammate deck |
+
+| Component           | Path                                                                                                           | Role                                                        |
+| ------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| Descriptor template | `[descriptors/descriptor.template.json](descriptors/descriptor.template.json)`                                 | Schema baseline                                             |
+| Example descriptor  | `[descriptors/examples/example-project.descriptor.json](descriptors/examples/example-project.descriptor.json)` | Filled-in reference                                         |
+| Engine              | `[tools/_opencode_engine.ts](tools/_opencode_engine.ts)`                                                       | Bootstrap + refresh logic                                   |
+| Tool wrappers       | `[tools/opencode_*.ts](tools/)`                                                                                | OpenCode plugin interface                                   |
+| Commands            | `[commands/](commands/)`                                                                                       | Slash-command markdown templates                            |
+| Branch templates    | `[templates/mr/*](templates/mr/)`                                                                              | `MERGE_REQUEST.md`, `LOG.md`, optional `PHASES.md`, `MR.md` |
+| Rule baseline       | `[rules/HANDOFF_GENERIC.md](rules/HANDOFF_GENERIC.md)`                                                         | MUST/SHOULD behavioral contract                             |
+| Presentations       | `[docs/presentations/](docs/presentations/)`                                                                   | Teammate deck                                               |
+
 
 ### Disk layout (per project)
 
@@ -69,16 +67,18 @@ Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context o
 - `projectRootPath`, `opencodeProjectRootPath`, `baselineBranchForMaterialChanges`
 - `handoffModeDefault`: `tracked` | `lite`
 - `areas` and optional `trackedKnowledgeTargets`
-- `branchHandoff`: templates, filenames, optional **`mrFilenames`** (ordered; first existing MR wins for primary read), `checkpointField`
+- `branchHandoff`: templates, filenames, optional `**mrFilenames**` (ordered; first existing MR wins for primary read), `checkpointField`
 - `refreshToolHeuristics` for `mr_update_recommended`
 - `subtaskModels`: optional map of role → `provider/model` string
 
 ## Handoff modes
 
-| Mode | When to use | Branch files | Refresh if files missing |
-|------|-------------|--------------|---------------------------|
-| **tracked** (default) | Long branches, MR workflow, handoffs | MR (+ optional MR.md), LOG, optional PHASES | `missing_branch_context` → bootstrap |
-| **lite** | Quick fixes, spikes, low-risk | Optional | Git window + minimal reread; no bootstrap required |
+
+| Mode                  | When to use                          | Branch files                                | Refresh if files missing                           |
+| --------------------- | ------------------------------------ | ------------------------------------------- | -------------------------------------------------- |
+| **tracked** (default) | Long branches, MR workflow, handoffs | MR (+ optional MR.md), LOG, optional PHASES | `missing_branch_context` → bootstrap               |
+| **lite**              | Quick fixes, spikes, low-risk        | Optional                                    | Git window + minimal reread; no bootstrap required |
+
 
 Set `handoffModeDefault` in `descriptor.json` to `lite` or `tracked`. Override per call by passing `handoffMode` to `opencode_refresh_context`.
 
@@ -102,6 +102,8 @@ flowchart TD
   WriteDescriptor --> Ready["Ready: /project-refresh projectKey"]
 ```
 
+
+
 ### Tracked workflow
 
 ```mermaid
@@ -123,6 +125,8 @@ flowchart TD
   Close --> EndNode["Done"]
 ```
 
+
+
 ### Lite workflow
 
 ```mermaid
@@ -133,23 +137,27 @@ flowchart TD
   L4 --> L5["Optional: switch to tracked later via /project-bootstrap"]
 ```
 
+
+
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `/project-init <projectKey>` | **First-time setup**: scan repo, draft descriptor.json, present for approval, write project structure |
-| `/project-refresh <projectKey>` | Sync context; returns `changed_areas`, `reread_files`, nudges. Auto-suggests init if no descriptor |
-| `/project-bootstrap <projectKey>` | Seed tracked branch files (asks phases yes/no) |
-| `/project-phases <projectKey>` | Create or refine `PHASES.md` |
-| `/project-checkpoint <projectKey>` | Append checkpoint to `LOG.md` |
-| `/project-close <projectKey>` | Session-close summary in `LOG.md` |
-| `/project-cleanup-candidates <projectKey>` | Stale `branches/*` report (read-only) |
-| `/project-knowledge-refresh <projectKey>` | Propose durable knowledge updates (user approves) |
-| `/manual-refresh <projectKey>` | No tool-calling; merges bootstrap+refresh behavior when needed |
+
+| Command                                    | Purpose                                                                                               |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `/project-init <projectKey>`               | **First-time setup**: scan repo, draft descriptor.json, present for approval, write project structure |
+| `/project-refresh <projectKey>`            | Sync context; returns `changed_areas`, `reread_files`, nudges. Auto-suggests init if no descriptor    |
+| `/project-bootstrap <projectKey>`          | Seed tracked branch files (asks phases yes/no)                                                        |
+| `/project-phases <projectKey>`             | Create or refine `PHASES.md`                                                                          |
+| `/project-checkpoint <projectKey>`         | Append checkpoint to `LOG.md`                                                                         |
+| `/project-close <projectKey>`              | Session-close summary in `LOG.md`                                                                     |
+| `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
+| `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
+| `/manual-refresh <projectKey>`             | No tool-calling; merges bootstrap+refresh behavior when needed                                        |
+
 
 Examples: `/project-init myapp`, `/project-refresh myapp`, `/project-close myapp`
 
-For **when to use which command** and model binding, see [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md).
+For **when to use which command** and model binding, see `[COMMAND_WORKFLOW.md](COMMAND_WORKFLOW.md)`.
 
 ## Refresh tool output
 
@@ -166,7 +174,7 @@ On failure: `reason` + `recommended_next_step` (e.g. `descriptor_not_found` → 
 
 ## Optional `MR.md`
 
-If `branchHandoff.mrFilenames` lists `MR.md` after `MERGE_REQUEST.md`, bootstrap seeds a short **goals / deliverables** file from [`templates/mr/MR.md`](templates/mr/MR.md). Refresh reads every existing MR file in order.
+If `branchHandoff.mrFilenames` lists `MR.md` after `MERGE_REQUEST.md`, bootstrap seeds a short **goals / deliverables** file from `[templates/mr/MR.md](templates/mr/MR.md)`. Refresh reads every existing MR file in order.
 
 ## Per-subtask models
 
