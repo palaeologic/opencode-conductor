@@ -14,8 +14,9 @@ Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context o
    - `rules/*` → `~/.config/opencode/rules/`
    - `commands/*` → `~/.config/opencode/commands/`
    - `tools/*` → `~/.config/opencode/tools/` (when tool-calling is stable)
-2. Create **`descriptor.json`**:  
-   `~/.config/opencode/projects/<projectKey>/descriptor.json` — start from [`descriptors/descriptor.template.json`](descriptors/descriptor.template.json)
+2. Create **`descriptor.json`** (choose one):
+   - **Guided**: run `/project-init <projectKey>` — scans repo, drafts descriptor, you approve
+   - **Manual**: copy [`descriptors/descriptor.template.json`](descriptors/descriptor.template.json) to `~/.config/opencode/projects/<projectKey>/descriptor.json` and fill in
 3. Copy branch templates:  
    `templates/mr/*` → `~/.config/opencode/projects/<projectKey>/_templates/mr/`  
    (include optional [`templates/mr/MR.md`](templates/mr/MR.md) if you use `mrFilenames`.)
@@ -69,7 +70,8 @@ flowchart TD
 
 | Command | Purpose |
 |---------|---------|
-| `/project-refresh <projectKey>` | Sync context; returns `changed_areas`, `reread_files`, nudges |
+| `/project-init <projectKey>` | **First-time setup**: scan repo, draft descriptor.json, present for approval, write project structure |
+| `/project-refresh <projectKey>` | Sync context; returns `changed_areas`, `reread_files`, nudges. Auto-suggests `/project-init` if no descriptor found |
 | `/project-bootstrap <projectKey>` | Seed tracked branch files (asks phases yes/no) |
 | `/project-phases <projectKey>` | Create or refine `PHASES.md` |
 | `/project-checkpoint <projectKey>` | Append checkpoint to `LOG.md` |
@@ -78,7 +80,7 @@ flowchart TD
 | `/project-knowledge-refresh <projectKey>` | Propose durable knowledge updates (user approves) |
 | `/manual-refresh <projectKey>` | No tool-calling; merges bootstrap+refresh behavior when needed |
 
-Examples: `/project-refresh aimos`, `/manual-refresh aimos`, `/project-close aimos`
+Examples: `/project-init myapp`, `/project-refresh aimos`, `/manual-refresh aimos`, `/project-close aimos`
 
 ## Refresh tool output (high level)
 

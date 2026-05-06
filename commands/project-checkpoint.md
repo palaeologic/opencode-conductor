@@ -14,6 +14,11 @@ Workflow:
    - Short bullet list: what changed since last checkpoint, key files, open risks
 5. Return confirmation with the path written and the SHA recorded.
 
+Manual fallback (when tools are unavailable):
+1. Resolve branch context folder from `~/.config/opencode/projects/$ARGUMENTS/branches/<branch>/`.
+2. Determine HEAD sha via `git rev-parse HEAD`.
+3. Open `LOG.md` directly and append a checkpoint section with `reviewed_through: <sha>`, summary bullets, and timestamp.
+
 Constraints:
 - Keep `LOG.md` append-only; do not rewrite historical sections.
 - Do not auto-edit shared `AGENTS.md` from this command.
