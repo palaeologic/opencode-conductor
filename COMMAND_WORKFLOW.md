@@ -1,4 +1,4 @@
-# OpenCode Handoff — Command Decision Matrix
+# OpenCode Conductor — Command Decision Matrix
 
 Quick reference for **which command** to run and **when**. For workflow diagrams and full docs, see [`README.md`](README.md).
 

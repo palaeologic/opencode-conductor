@@ -1,4 +1,4 @@
-# OpenCode Handoff Kit v2 — Test Plan
+# OpenCode Conductor — Test Plan
 
 Manual smoke-test script for validating a descriptor-driven handoff setup.
 Run after installing the kit or after changing rules/tools/templates.
@@ -92,7 +92,7 @@ Verify the setup is wired correctly before testing behavior.
 ### Step A — first refresh on new branch
 
 1. Open a repo for `<projectKey>` (e.g. `myapp`).
-2. Checkout a new test branch: `git checkout -b test/handoff-v2-smoke`.
+2. Checkout a new test branch: `git checkout -b test/conductor-smoke`.
 3. Run `/project-refresh <projectKey>`.
 
 **Expected**: reports `missing_branch_context` with `recommended_next_step: bootstrap`.
@@ -102,7 +102,7 @@ Verify the setup is wired correctly before testing behavior.
 1. Run `/project-bootstrap <projectKey>`.
 2. When prompted for phases, answer `no`.
 
-**Expected**: branch files created at `~/.config/opencode/projects/<projectKey>/branches/test-handoff-v2-smoke/`:
+**Expected**: branch files created at `~/.config/opencode/projects/<projectKey>/branches/test-conductor-smoke/`:
 - `MERGE_REQUEST.md`
 - `LOG.md`
 
@@ -113,7 +113,7 @@ Verify the setup is wired correctly before testing behavior.
 **Expected** (verify each field):
 - `applicable: true`
 - `handoff_mode: "tracked"`
-- `branch: "test/handoff-v2-smoke"`
+- `branch: "test/conductor-smoke"`
 - `checkpoint_commit` and `head_commit` present
 - `checkpoint_source: "log_field"` or `"merge_base"`
 - `changed_areas` array
@@ -129,7 +129,7 @@ Verify the setup is wired correctly before testing behavior.
 
 **Expected**:
 - Different branch context folder used.
-- No cross-contamination with `test/handoff-v2-smoke` files.
+- No cross-contamination with `test/conductor-smoke` files.
 
 **Pass**: full tracked lifecycle works end-to-end.
 
@@ -141,7 +141,7 @@ Verify the setup is wired correctly before testing behavior.
 
 ### Step A — checkpoint
 
-1. Switch back to `test/handoff-v2-smoke`.
+1. Switch back to `test/conductor-smoke`.
 2. Make a small code change (or just stage something).
 3. Run `/project-checkpoint <projectKey>`.
 
