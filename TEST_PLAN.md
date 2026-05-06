@@ -159,7 +159,7 @@ Pass criteria:
 Expected result:
 - `applicable: true`, `handoff_mode: lite`, `checkpoint_source: lite_window`.
 - No `missing_branch_context` failure for lite.
-- `reread_files` includes project `AGENTS.md` and area agents that exist.
+- `reread_files` includes project `AGENTS.md` and the **active area's** `AGENTS.md` (not all areas).
 
 ## 9) Optional `MR.md` and `mrFilenames`
 
