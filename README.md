@@ -13,6 +13,7 @@ Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context o
 1. **Pull latest** from GitHub, then copy kit assets into your OpenCode home:
   - `rules/*` → `~/.config/opencode/rules/`
   - `commands/*` → `~/.config/opencode/commands/`
+  - `skills/*` → `~/.config/opencode/skills/`
   - `tools/*` → `~/.config/opencode/tools/` (when tool-calling is stable)
 2. Create `**descriptor.json`** (choose one):
   - **Guided**: run `/project-init <projectKey>` — scans repo, drafts descriptor, you approve
@@ -39,6 +40,9 @@ Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context o
 | Commands            | `[commands/](commands/)`                                                                                       | Slash-command markdown templates                            |
 | Branch templates    | `[templates/mr/*](templates/mr/)`                                                                              | `MERGE_REQUEST.md`, `LOG.md`, optional `PHASES.md`, `MR.md` |
 | Rule baseline       | `[rules/HANDOFF_GENERIC.md](rules/HANDOFF_GENERIC.md)`                                                         | MUST/SHOULD behavioral contract                             |
+| Code quality rule   | `[rules/CODE_QUALITY.md](rules/CODE_QUALITY.md)`                                                               | Universal quality standards                                 |
+| Frontend rule       | `[rules/FRONTEND.md](rules/FRONTEND.md)`                                                                       | Base frontend conventions                                   |
+| Skills              | `[skills/](skills/)`                                                                                           | On-demand workflow guides (OpenCode native)                 |
 | Presentations       | `[docs/presentations/](docs/presentations/)`                                                                   | Teammate deck                                               |
 
 
@@ -141,6 +145,7 @@ flowchart TD
 
 ## Commands
 
+### Handoff lifecycle
 
 | Command                                    | Purpose                                                                                               |
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
@@ -155,10 +160,133 @@ flowchart TD
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
 | `/manual-refresh <projectKey>`             | No tool-calling; merges bootstrap+refresh behavior when needed                                        |
 
+### Verification
 
-Examples: `/project-init myapp`, `/project-refresh myapp`, `/project-close myapp`
+| Command              | Purpose                                                      |
+| -------------------- | ------------------------------------------------------------ |
+| `/check-types [area]` | Run the area's type checker and report errors               |
+| `/run-tests [area]`   | Run the appropriate test suite for changed/specified areas   |
+| `/lint-fix [area]`    | Run linter with auto-fix, report remaining issues           |
+| `/organize-imports`   | Sort, group, and clean up imports in changed files           |
 
-For **when to use which command** and model binding, see `[COMMAND_WORKFLOW.md](COMMAND_WORKFLOW.md)`.
+Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-end`
+
+### Use cases → what to run
+
+| I want to... | Run |
+| ------------ | --- |
+| Start a new session on an existing branch | `/manual-refresh` or `/project-refresh` |
+| Continue where I left off (read last checkpoint) | Read `branches/<branch>/LOG.md` directly — no refresh needed |
+| Review a colleague's branch | `/manual-refresh` → `/project-review` |
+| Just verify my code compiles | `/check-types` (no refresh needed) |
+| Run tests for what I changed | `/run-tests` (no refresh needed) |
+| Quick lint cleanup | `/lint-fix` (no refresh needed) |
+| Check what happened last session | Read `branches/<branch>/LOG.md` — look at last checkpoint entry |
+| Save progress before a break | `/project-checkpoint` |
+| Wrap up for the day | `/project-close` |
+| Start fresh on a new project | `/project-init` |
+| Understand an unfamiliar area | Agent loads `onboard-area` skill automatically |
+| Full pre-merge quality check | Agent loads `review-branch` skill, or manually: `/manual-refresh` → `/project-review` → `/check-types` → `/run-tests` |
+
+### Lightweight workflows (no refresh needed)
+
+Not every session requires a full refresh. Use these shortcuts for quick interactions:
+
+**Just read context:**
+- Open `~/.config/opencode/projects/<key>/branches/<branch>/LOG.md` to see session history
+- Open `MERGE_REQUEST.md` to see branch objectives
+- Open `PHASES.md` to see the plan
+
+**Just verify code:**
+- `/check-types` — works standalone, detects area from cwd
+- `/run-tests` — works standalone, detects area from cwd
+- `/lint-fix` — works standalone, detects area from cwd
+- `/organize-imports` — works standalone
+
+**Just record progress:**
+- `/project-checkpoint` — appends to LOG.md without needing a prior refresh
+
+**When to do a full refresh:**
+- First session of the day (context may be stale)
+- After switching branches
+- After a rebase or merge from main
+- Before a code review
+- When `LOG.md` is more than a day old
+
+For **command model binding**, see `[COMMAND_WORKFLOW.md](COMMAND_WORKFLOW.md)`.
+
+## Rules
+
+The kit includes optional, universally-applicable rules that any project can adopt:
+
+| Rule | Purpose |
+| ---- | ------- |
+| `rules/HANDOFF_GENERIC.md` | Behavioral contract for the handoff system (MUST/SHOULD) |
+| `rules/CODE_QUALITY.md` | Control flow, naming, TypeScript, testing, error handling best practices |
+| `rules/FRONTEND.md` | Base frontend conventions: imports, boundaries, React, TypeScript typing |
+
+Add them to your `opencode.json` `instructions` array:
+
+```json
+{
+  "instructions": [
+    "~/.config/opencode/rules/HANDOFF_GENERIC.md",
+    "~/.config/opencode/rules/CODE_QUALITY.md",
+    "~/.config/opencode/rules/FRONTEND.md"
+  ]
+}
+```
+
+Project-specific rules (e.g. framework conventions, custom patterns) should layer on top of these in your own project overlay.
+
+## Skills
+
+Skills are on-demand workflow guides loaded via OpenCode's native `skill` tool. They cost **zero context tokens** until the agent decides to load one.
+
+### How skills work
+
+1. OpenCode discovers all `~/.config/opencode/skills/*/SKILL.md` files at startup
+2. The agent sees a list of skill names + descriptions in its tool definition
+3. When the agent encounters a task matching a skill's description, it calls `skill({ name: "..." })` to load the full instructions
+4. The agent follows the loaded instructions in its current context
+
+Skills are NOT loaded unless relevant — unlike rules which are always present.
+
+### Available skills
+
+| Skill | Agent loads it when... | What it does |
+| ----- | ---------------------- | ------------ |
+| `review-branch` | User asks to review a branch, or says "check before merge" | Orchestrates: `/manual-refresh` → `/project-review` → `/check-types` → `/run-tests` |
+| `session-lifecycle` | User starts/ends a session, or asks "how should I checkpoint?" | Guides the refresh → work → checkpoint → close flow with decision points |
+| `onboard-area` | User asks about unfamiliar code, or agent needs to understand a new area before making changes | Reads AGENTS.md hierarchy, scans key files, builds a mental model |
+| `verify-changes` | User says "check if everything works" or "verify my changes" | Decision tree: detect areas → type-check → test → lint, reports combined result |
+| `systematic-debugging` | A bug is reported or a test fails unexpectedly | Guides binary search isolation, minimal reproduction, root cause analysis |
+| `refactor-safely` | User asks to refactor, restructure, or move code | Step-by-step safe refactoring with verification at each step |
+| `write-tests` | User asks to add tests, or code has no coverage | Guides: what to test → test type selection → assertion writing |
+
+### Installation
+
+Copy the `skills/` folder to `~/.config/opencode/skills/`:
+
+```bash
+cp -r skills/* ~/.config/opencode/skills/
+```
+
+Each skill follows OpenCode's discovery format: `skills/<name>/SKILL.md` with YAML frontmatter (`name` + `description` required).
+
+### Permissions (optional)
+
+Control skill access in `opencode.json`:
+
+```json
+{
+  "permission": {
+    "skill": {
+      "*": "allow"
+    }
+  }
+}
+```
 
 ## Refresh tool output
 
@@ -222,6 +350,53 @@ Fallback sentence (if `/manual-refresh` doesn't parse):
 - Keep templates generic; use placeholders like `<branch-name>`.
 - Keep `LOG.md` append-only and checkpoint-aware (`reviewed_through`).
 - Keep `PHASES.md` optional.
+
+## Token cost analysis
+
+The kit is designed to minimize token usage while maximizing agent productivity.
+
+### What's always in context (every message)
+
+| Layer | ~Tokens | Purpose |
+|-------|---------|---------|
+| Rules (loaded via `instructions`) | ~4,500-6,000 | Prevents mistakes, eliminates correction loops |
+| opencode.json config | ~1,300 | Command routing, permissions |
+| **Total always-on** | **~6,000-7,500** | |
+
+### What's loaded on-demand (zero cost until invoked)
+
+| Layer | ~Tokens each | When loaded |
+|-------|-------------|-------------|
+| Commands (subtask) | ~350-700 | Only the ONE invoked command loads, in a separate subtask context |
+| Skills | ~500-850 | Only when the agent decides the task matches |
+
+### Cost savings mechanisms
+
+| Mechanism | How it saves |
+|-----------|-------------|
+| **Model routing** | Haiku ($0.25/M) handles routine commands; Opus ($15/M) reserved for synthesis only — 60x cheaper per subtask |
+| **Subtask isolation** | Commands run in their own context, don't bloat the main conversation |
+| **Skills on-demand** | ~28KB of workflow guides NOT in context unless needed |
+| **Rules prevent mistakes** | ~6K tokens of rules prevents 30-60K tokens of correction loops (5-10x ROI) |
+| **Structured refresh output** | Agent gets exactly what it needs — fewer random tool calls and file reads |
+| **Lite mode** | Skip branch files for quick sessions — saves bootstrap + file reads |
+| **Lightweight workflows** | Skip refresh entirely for verify-only sessions |
+
+### Estimated savings per session
+
+| Session type | Without kit | With kit | Savings |
+|-------------|-------------|----------|---------|
+| Quick lint fix (5 messages) | ~$0.50 | ~$0.35 | ~30% |
+| Feature development (30 messages) | ~$4.50 | ~$3.00 | ~33% |
+| Full code review (15 messages) | ~$2.50 | ~$1.50 | ~40% |
+
+### Best practices to minimize cost
+
+1. **Use lite mode** for quick sessions — skip branch file overhead
+2. **Use lightweight workflows** — `/check-types` directly instead of full refresh + check
+3. **Let Haiku handle routine tasks** — refresh, checkpoint, lint, types are all Haiku-routed
+4. **Use skills instead of asking** — skill-guided workflows are more efficient than multi-turn conversations
+5. **Keep rules concise** — stay under 30KB total; prune rules that overlap
 
 ## Bedrock / provider caveat
 
