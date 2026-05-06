@@ -202,13 +202,20 @@ Example `opencode.json` snippet:
 }
 ```
 
-## Manual mode
+## Manual mode (tools disabled)
 
-Primary: `/manual-refresh <projectKey>`. Fallback sentence (if parsing fails):
+When tools are in `tools-off/` or disabled, `/manual-refresh` is your single entry point. It **replaces both** `/project-refresh` and `/project-bootstrap`:
+
+- Seeds branch files from templates if missing (tracked mode)
+- Reads all context layers
+- Computes git delta
+- Returns the same structured `## Handoff refresh result` block
+
+All other commands (`/project-init`, `/project-checkpoint`, `/project-close`, `/project-review`, `/project-cleanup-candidates`, `/project-phases`, `/project-knowledge-refresh`) work without tools — they only read/write files.
+
+Fallback sentence (if `/manual-refresh` doesn't parse):
 
 `Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`
-
-Manual mode intentionally **combines** bootstrap + refresh so one command works when tools are down.
 
 ## Template authoring
 
