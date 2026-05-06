@@ -5,12 +5,21 @@ subtask: true
 
 CRITICAL: Your output MUST begin with the structured block defined in "Output format" below. No prose before it.
 
-Tool-calling is disabled. Run manual handoff refresh for project key `$ARGUMENTS`.
+Tool-calling is disabled. Run manual handoff refresh.
+
+## Project key resolution
+
+If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
+
+1. Get cwd via `pwd` or workspace root.
+2. Scan `~/.config/opencode/projects/*/descriptor.json` files.
+3. Match cwd against each descriptor's `projectRootPath`.
+4. If exactly one matches, use that `projectKey`. If zero or multiple match, ask the user.
 
 ## Procedure
 
 1. Resolve branch and repo root from git.
-2. Load descriptor at `~/.config/opencode/projects/$ARGUMENTS/descriptor.json`.
+2. Load descriptor at `~/.config/opencode/projects/<resolved key>/descriptor.json`.
 3. Determine handoff mode from `handoffModeDefault` (default: `tracked`).
 4. **Tracked**: if branch context files (`MERGE_REQUEST.md`, `LOG.md`) are missing, seed from `_templates/mr/`. **Lite**: skip — no branch files required.
 5. Read context in order: project `AGENTS.md` → active area `AGENTS.md` → package `AGENTS.md` (if applicable) → branch `MERGE_REQUEST.md` → `PHASES.md` (if present) → latest `LOG.md`.

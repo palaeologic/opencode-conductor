@@ -3,7 +3,15 @@ description: Draft or refresh durable package/area knowledge from branch context
 subtask: true
 ---
 
-Use project key `$ARGUMENTS` to **propose** updates to shared knowledge files (not branch diaries).
+## Project key resolution
+
+If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
+1. Get cwd via `pwd` or workspace root.
+2. Scan `~/.config/opencode/projects/*/descriptor.json` files.
+3. Match cwd against each descriptor's `projectRootPath`.
+4. If exactly one matches, use that `projectKey`. If zero or multiple match, ask the user.
+
+**Propose** updates to shared knowledge files (not branch diaries).
 
 Workflow:
 1. Run `opencode_refresh_context` with `projectKey: $ARGUMENTS`.
