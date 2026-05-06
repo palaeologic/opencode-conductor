@@ -28,23 +28,44 @@ function expandTemplate(template: string, vars: { projectKey?: string; branchNam
   return out;
 }
 
-async function loadDescriptor(projectKey: string): Promise<JsonObject> {
+type LoadDescriptorResult =
+  | { ok: true; descriptor: JsonObject }
+  | { ok: false; error: JsonObject };
+
+async function loadDescriptor(projectKey: string): Promise<LoadDescriptorResult> {
   const descriptorPath = path.join(os.homedir(), ".config", "opencode", "projects", projectKey, "descriptor.json");
-  const text = await fs.readFile(descriptorPath, "utf8");
+  let text: string;
+  try {
+    text = await fs.readFile(descriptorPath, "utf8");
+  } catch {
+    return {
+      ok: false,
+      error: {
+        applicable: false,
+        reason: "descriptor_not_found",
+        recommended_next_step: "project_init",
+        projectKey,
+        descriptor_path: descriptorPath,
+        hint: `Run /project-init ${projectKey} to create a descriptor, or create one manually from the template.`,
+      },
+    };
+  }
   const parsed = JSON.parse(text) as JsonObject;
   if (typeof parsed.projectRootPath === "string") parsed.projectRootPath = homePath(parsed.projectRootPath);
   if (typeof parsed.opencodeProjectRootPath === "string") {
     parsed.opencodeProjectRootPath = homePath(parsed.opencodeProjectRootPath);
   }
-  return parsed;
+  return { ok: true, descriptor: parsed };
 }
 
 function getMrFilenames(handoff: JsonObject): string[] {
   if (Array.isArray(handoff.mrFilenames) && handoff.mrFilenames.length) {
     return handoff.mrFilenames.map((x: unknown) => String(x));
   }
-  const single = handoff.mrFilename ?? "MERGE_REQUEST.md";
-  return [String(single)];
+  if (typeof handoff.mrFilename === "string" && handoff.mrFilename) {
+    return [handoff.mrFilename];
+  }
+  return ["MERGE_REQUEST.md"];
 }
 
 function resolveHandoffMode(descriptor: JsonObject, override?: HandoffMode): HandoffMode {
@@ -129,12 +150,16 @@ async function fileMtimeMinutes(filePath: string): Promise<number | null> {
   }
 }
 
+const AGENTS_STALE_THRESHOLD_MS = 60 * 60 * 1000; // 1 hour buffer to reduce false positives
+
 export async function bootstrapBranchEngine(
   projectKey: string,
   params: { branchName?: string; includePhases?: boolean } = {},
   context: any,
 ) {
-  const descriptor = await loadDescriptor(projectKey);
+  const loaded = await loadDescriptor(projectKey);
+  if (!loaded.ok) return loaded.error;
+  const descriptor = loaded.descriptor;
 
   const repoRoot = normalizeSlashes((await Bun.$`git rev-parse --show-toplevel`.text()).trim());
   const projectRoot = normalizeSlashes(descriptor.projectRootPath ?? "");
@@ -257,7 +282,10 @@ export async function refreshContextEngine(
   } = {},
   context: any,
 ) {
-  const descriptor = await loadDescriptor(projectKey);
+  const loaded = await loadDescriptor(projectKey);
+  if (!loaded.ok) return loaded.error;
+  const descriptor = loaded.descriptor;
+
   const mode = resolveHandoffMode(descriptor, args.handoffMode);
 
   const repoRoot = normalizeSlashes((await Bun.$`git rev-parse --show-toplevel`.text()).trim());
@@ -309,14 +337,16 @@ export async function refreshContextEngine(
     };
   }
 
+  // Fix B: cache extractCheckpoint result
   const field = handoff.checkpointField ?? "reviewed_through";
   const maxCommits = args.maxCommits ?? 10;
+  const cachedCheckpoint = (hasTrackedContext && logText) ? extractCheckpoint(logText, field) : null;
   let baseline: string;
   let checkpointSource: string;
 
   if (hasTrackedContext && logText) {
-    baseline = args.checkpointCommit ?? extractCheckpoint(logText, field) ?? "";
-    checkpointSource = args.checkpointCommit ? "arg" : extractCheckpoint(logText, field) ? "log" : "fallback";
+    baseline = args.checkpointCommit ?? cachedCheckpoint ?? "";
+    checkpointSource = args.checkpointCommit ? "arg" : cachedCheckpoint ? "log" : "fallback";
     if (!baseline) {
       baseline = (await Bun.$`git rev-parse HEAD~${maxCommits}`.text()).trim();
       checkpointSource = "fallback";
@@ -341,18 +371,21 @@ export async function refreshContextEngine(
   const changed_areas = uniqueAreas(areaHits);
 
   const opencodeRoot = descriptor.opencodeProjectRootPath as string;
+  const activeArea = inferArea(descriptor, context.directory ?? repoRoot);
+
+  // Fix E: only include active area's AGENTS.md, not all areas
   const reread: string[] = [path.join(opencodeRoot, "AGENTS.md")];
-  for (const [, def] of Object.entries<any>(descriptor.areas ?? {})) {
-    const ap = typeof def.areaAgentsPath === "string" ? homePath(def.areaAgentsPath) : "";
-    if (ap) {
-      try {
-        await fs.access(ap);
-        reread.push(ap);
-      } catch {
-        /* optional layer */
-      }
+  const activeAreaDef = descriptor.areas?.[activeArea];
+  if (activeAreaDef?.areaAgentsPath) {
+    const ap = homePath(activeAreaDef.areaAgentsPath);
+    try {
+      await fs.access(ap);
+      reread.push(ap);
+    } catch {
+      /* area agents file doesn't exist yet */
     }
   }
+
   for (const mp of mrPathsResolved) {
     if (!reread.includes(mp)) reread.push(mp);
   }
@@ -378,6 +411,9 @@ export async function refreshContextEngine(
     else context_staleness = "aging";
   }
 
+  // Fix C: agents_stale_vs_branch with threshold to reduce false positives
+  // AGENTS.md lives outside the git repo (~/.config/opencode/) so we use fs mtime.
+  // Only flag as stale if the file was modified >1 hour after the merge-base commit.
   const agentsPath = path.join(opencodeRoot, "AGENTS.md");
   let agents_stale_vs_branch: boolean | null = null;
   try {
@@ -386,7 +422,9 @@ export async function refreshContextEngine(
     const agentsMtime = (await fs.stat(agentsPath)).mtimeMs;
     const mbTime = (await Bun.$`git show -s --format=%ct ${mergeBase}`.text()).trim();
     const mbMs = Number(mbTime) * 1000;
-    if (!Number.isNaN(mbMs)) agents_stale_vs_branch = agentsMtime > mbMs;
+    if (!Number.isNaN(mbMs)) {
+      agents_stale_vs_branch = (agentsMtime - mbMs) > AGENTS_STALE_THRESHOLD_MS;
+    }
   } catch {
     agents_stale_vs_branch = null;
   }
@@ -396,7 +434,7 @@ export async function refreshContextEngine(
     projectKey,
     branch,
     handoff_mode: mode,
-    area: inferArea(descriptor, context.directory ?? repoRoot),
+    area: activeArea,
     checkpoint_commit: baseline,
     checkpoint_source: checkpointSource,
     head_commit: head,

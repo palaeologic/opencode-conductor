@@ -6,6 +6,7 @@ When to run which command in a descriptor-driven setup.
 
 | Command | Subtask | Typical model binding |
 |---------|---------|------------------------|
+| `/project-init <projectKey>` | yes | default |
 | `/project-refresh <projectKey>` | yes | smaller / default |
 | `/project-bootstrap <projectKey>` | yes | default |
 | `/project-phases <projectKey>` | yes | default or stronger |
@@ -21,7 +22,8 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 
 | Situation | Command | Notes |
 |-----------|---------|--------|
-| Session start | `refresh` | Use `handoffMode: lite` in tool args only when descriptor or user requests lite |
+| First time using kit on a project | `init` | Scans repo, drafts descriptor, user approves; only needed once per project |
+| Session start | `refresh` | Use `handoffMode: lite` in tool args only when descriptor or user requests lite. Auto-suggests `init` if no descriptor found |
 | First visit to branch (tracked) | `bootstrap` then `refresh` | Creates MR/LOG (+ optional PHASES) |
 | Branch switch | `refresh` | Avoid carry-over |
 | After rebase / squash | `refresh` | Re-anchor checkpoint; append HISTORY note in `LOG.md` |
@@ -36,7 +38,7 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 
 On success, expect at least: `branch`, `handoff_mode`, checkpoint range, `changed_areas`, `reread_files`, `log_append_recommended`, `mr_update_recommended`, `needs_checkpoint`, `context_staleness`, optional `agents_stale_vs_branch`.
 
-On failure: `reason` (e.g. `missing_branch_context`, `workspace_not_in_project`, `detached_head`) and `recommended_next_step` when provided.
+On failure: `reason` (e.g. `missing_branch_context`, `workspace_not_in_project`, `detached_head`, `descriptor_not_found`) and `recommended_next_step` when provided.
 
 ## Typical tracked flow
 

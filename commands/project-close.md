@@ -15,6 +15,11 @@ Workflow:
    - `reviewed_through: <head_commit>` when appropriate
 5. Return the path updated.
 
+Manual fallback (when tools are unavailable):
+1. Resolve branch context folder from `~/.config/opencode/projects/$ARGUMENTS/branches/<branch>/`.
+2. Determine HEAD sha via `git rev-parse HEAD`.
+3. Open `LOG.md` directly and append a session-close section: summary, next step, and `reviewed_through: <sha>`.
+
 Constraints:
 - Append-only `LOG.md`.
 - Never remove merged branch folders or promote shared knowledge from this command alone.

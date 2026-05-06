@@ -38,7 +38,6 @@
   "branchHandoff": {
     "contextDirTemplate": "~/.config/opencode/projects/{projectKey}/branches/{branchName}",
     "mrFilenames": ["MERGE_REQUEST.md", "MR.md"],
-    "mrFilename": "MERGE_REQUEST.md",
     "logFilename": "LOG.md",
     "phasesFilename": "PHASES.md",
     "phasesOptional": true,
