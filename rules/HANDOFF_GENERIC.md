@@ -20,6 +20,7 @@ Use with `~/.config/opencode/projects/<projectKey>/descriptor.json`. OpenCode ha
 11. **Refresh is read-only**: `/project-refresh` and `/manual-refresh` MUST only gather and report context. NEVER execute actions (run tests, make code changes, run commands) based on what you read during refresh. Wait for the user to tell you what to do next.
 12. **Structured output**: when executing `/project-refresh` or `/manual-refresh`, output the `## Handoff refresh result` structured block FIRST (as defined in the command template), then optionally add narrative. Never skip or reorganize the structured block.
 13. **Subtask handoff to main agent**: when a lifecycle command runs as a subtask (for example `/project-init`, `/project-bootstrap`, `/project-review`, `/project-checkpoint`, `/project-close`, `/project-phases`, `/project-knowledge-refresh`, `/scaffold-knowledge`), the main agent MUST restate the subtask's recommended next commands in plain text before waiting for user input.
+14. **Open generated artifacts in GUI**: after creating or updating a user-facing artifact file (for example `REVIEW.md`, `PHASES.md`, `MERGE_REQUEST.md`, `MR.md`, `LOG.md`, or scaffolded `AGENTS.md`), open that file in the OpenCode GUI in the same turn. If GUI-open is unavailable, return the exact path and tell the user to open it.
 
 ## SHOULD
 
