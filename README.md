@@ -1,6 +1,12 @@
-# OpenCode Handoff Kit (Reusable)
+# OpenCode Conductor
 
-Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context outside the repo, **tracked** vs **lite** modes, optional `**MR.md`**, richer refresh metadata, **lifecycle commands** (no hooks), and optional **per-role model** hints.
+A descriptor-driven toolkit that **conducts** your AI coding sessions in OpenCode:
+
+- **Conducts the agent's behavior** — rules enforce conventions, prevent mistakes, and ensure clean code
+- **Conducts the workflow** — commands and skills orchestrate session lifecycle, verification, and refactoring
+- **Conducts the model orchestra** — routes Haiku, Sonnet, and Opus to the right tasks for optimal cost/quality
+
+Branch-local context outside the repo, **tracked** vs **lite** modes, optional `MR.md`, richer refresh metadata, **lifecycle commands** (no hooks), and **per-role model** routing.
 
 ## What this repo is for
 
