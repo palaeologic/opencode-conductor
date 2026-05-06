@@ -91,7 +91,7 @@ Verify the setup is wired correctly before testing behavior.
 
 ### Step A — first refresh on new branch
 
-1. Open a repo for `<projectKey>` (e.g. `aimos`).
+1. Open a repo for `<projectKey>` (e.g. `myapp`).
 2. Checkout a new test branch: `git checkout -b test/handoff-v2-smoke`.
 3. Run `/project-refresh <projectKey>`.
 
