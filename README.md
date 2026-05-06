@@ -57,19 +57,20 @@ Branch-local context outside the repo, **tracked** vs **lite** modes, optional `
 ```
 ~/.config/opencode/projects/<projectKey>/
   descriptor.json
-  AGENTS.md                        ← project-level shared knowledge
+  AGENTS.md                        ← project-level shared knowledge (same for all branches)
   <area>/AGENTS.md                 ← area-level shared knowledge
   packages/<pkg>/AGENTS.md         ← optional package knowledge
+  branches/<branch-name>/          ← per-branch: created on bootstrap; one folder per Git branch
+    MERGE_REQUEST.md
+    MR.md                          ← optional
+    LOG.md
+    PHASES.md                      ← optional
+    REVIEW.md                      ← optional (from /project-review)
   _templates/mr/
     MERGE_REQUEST.md
     LOG.md
     PHASES.md
     MR.md                          ← optional
-  branches/<branch-name>/
-    MERGE_REQUEST.md
-    MR.md                          ← optional
-    LOG.md
-    PHASES.md                      ← optional
 ```
 
 ### Descriptor responsibilities
@@ -164,7 +165,7 @@ flowchart TD
 | `/project-review <projectKey>`             | Generate review artifact (checklist, diff summary, or both — user chooses)                            |
 | `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
-| `/scaffold-knowledge <projectKey>`         | Auto-generate AGENTS.md knowledge files for areas and packages (scan + interactive)                   |
+| `/scaffold-knowledge <projectKey>`         | **Once after init:** scaffold shared `AGENTS.md` (not per-branch). Optional re-run when areas/packages/stack change |
 | `/manual-refresh <projectKey>`             | No tool-calling; merges bootstrap+refresh behavior when needed                                        |
 
 ### Verification

@@ -7,6 +7,13 @@ Scaffold knowledge files for project key `$ARGUMENTS`.
 
 This command generates `AGENTS.md` files for detected project areas so that future sessions can orient immediately without exploratory subtasks.
 
+## When to run
+
+- **Typical:** once after `/project-init` (or the first time you adopt Conductor on an existing project). Shared knowledge under `AGENTS.md` is **not branch-specific** — switching Git branches does **not** require re-running this command.
+- **Re-run only when** you add a new area to the descriptor, onboard a new pseudo-package, or the stack/architecture section is materially wrong and you want a guided refresh (the command merges; it does not replace operational rules blindly).
+
+**Branch-specific** work (MR goals, checkpoints, logs, phases) lives under `branches/<branch-name>/` — created by `/project-bootstrap` or the refresh/bootstrap tools, not by `/scaffold-knowledge`.
+
 ## Workflow
 
 1. **Resolve projectKey**: use `$ARGUMENTS` if provided, otherwise auto-detect from cwd by matching against known descriptors.
