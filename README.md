@@ -1,153 +1,150 @@
 # OpenCode Handoff Kit (Reusable)
 
-Reusable, descriptor-driven handoff kit for OpenCode projects.
+Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context outside the repo, **tracked** vs **lite** modes, optional **`MR.md`**, richer refresh metadata, **lifecycle commands** (no hooks), and optional **per-role model** hints.
 
 ## What this repo is for
 
-Use this kit to set up consistent branch handoff context outside source repos:
+- Branch-level context: `MERGE_REQUEST.md`, optional `MR.md`, `LOG.md`, optional `PHASES.md` under `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/`
+- Command templates: `/project-*`, `/manual-refresh`, plus **checkpoint / close / cleanup / knowledge**
+- Bun tools: `opencode_bootstrap_branch`, `opencode_refresh_context` (optional if tool-calling is unstable)
 
-- branch-level context files (`MERGE_REQUEST.md`, `LOG.md`, optional `PHASES.md`)
-- reusable command templates (`/project-*`, `/manual-refresh`)
-- descriptor-driven tooling/templates for multi-project reuse
+## Quick start
 
-## Quick Start
+1. **Pull latest** from GitHub, then copy kit assets into your OpenCode home:
+   - `rules/*` → `~/.config/opencode/rules/`
+   - `commands/*` → `~/.config/opencode/commands/`
+   - `tools/*` → `~/.config/opencode/tools/` (when tool-calling is stable)
+2. Create **`descriptor.json`**:  
+   `~/.config/opencode/projects/<projectKey>/descriptor.json` — start from [`descriptors/descriptor.template.json`](descriptors/descriptor.template.json)
+3. Copy branch templates:  
+   `templates/mr/*` → `~/.config/opencode/projects/<projectKey>/_templates/mr/`  
+   (include optional [`templates/mr/MR.md`](templates/mr/MR.md) if you use `mrFilenames`.)
+4. Update **`~/.config/opencode/opencode.json`**:
+   - Include [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md) in `instructions` (plus your project overlay rule if needed)
+   - Allow `external_directory` for `~/.config/opencode/projects/**`
+   - Register tools when provider path is stable
+5. Teammate deck: [`docs/presentations/handoff-kit-v2.pptx`](docs/presentations/handoff-kit-v2.pptx) (edit slides locally, then commit)
 
-1. Copy kit assets into your OpenCode home:
-   - `rules/*` -> `~/.config/opencode/rules/`
-   - `commands/*` -> `~/.config/opencode/commands/`
-   - `tools/*` -> `~/.config/opencode/tools/` (optional if tool-calling is stable)
-2. Create project descriptor:
-   - `~/.config/opencode/projects/<projectKey>/descriptor.json`
-   - start from `descriptors/descriptor.template.json`
-3. Copy branch templates:
-   - `templates/mr/*` -> `~/.config/opencode/projects/<projectKey>/_templates/mr/`
-4. Update `~/.config/opencode/opencode.json`:
-   - include handoff rule in `instructions`
-   - allow `external_directory` for `~/.config/opencode/projects/**`
-   - add tool permissions only if provider/tool path is stable
+## Handoff modes
 
-## Commands (argument is required)
+| Mode | When to use | Branch files | Refresh if files missing |
+|------|-------------|--------------|---------------------------|
+| **tracked** (default) | Long branches, MR workflow, handoffs | MR (+ optional MR.md), LOG, optional PHASES | `missing_branch_context` → bootstrap |
+| **lite** | Quick fixes, spikes, low-risk | Optional | Git window + minimal reread; no bootstrap required |
 
-Always pass a project key argument:
+Set `handoffModeDefault` in `descriptor.json` to `lite` or `tracked`. Override per call by passing `handoffMode` to `opencode_refresh_context` (see [`commands/project-refresh.md`](commands/project-refresh.md)).
 
-- `/project-refresh <projectKey>`
-- `/project-bootstrap <projectKey>`
-- `/project-phases <projectKey>`
-- `/manual-refresh <projectKey>` (no tool-calling fallback)
-
-Examples:
-
-- `/project-refresh aimos`
-- `/manual-refresh aimos`
-
-## Recommended Workflow
-
-1. Start session: `/project-refresh <projectKey>`  
-   (or `/manual-refresh <projectKey>` if tools are disabled)
-2. If branch context is missing: `/project-bootstrap <projectKey>`
-3. Implement work
-4. Append branch `LOG.md` after substantial work
-5. If branch gets large: `/project-phases <projectKey>`
-6. On branch switch/rebase/new session: refresh again
-
-### Visual workflow (tool mode)
+### Tracked workflow (tool mode)
 
 ```mermaid
 flowchart TD
-  A["Start session"] --> B["/project-refresh <projectKey>"]
-  B --> C{"Branch context exists?"}
-  C -- no --> D["/project-bootstrap <projectKey>"]
-  C -- yes --> E["Use reread_files + recommendations"]
-  D --> F["Branch files created/seeded"]
-  F --> G["/project-refresh <projectKey>"]
-  G --> E
-  E --> H["Implement work"]
-  H --> I["Append LOG.md after substantial work"]
-  I --> J{"Large/staged branch?"}
-  J -- yes --> K["/project-phases <projectKey>"]
-  J -- no --> L{"Branch switch/rebase/new session?"}
-  K --> L
-  L -- yes --> B
-  L -- no --> H
+  Start["Start session"] --> Refresh["/project-refresh projectKey"]
+  Refresh --> HasCtx{"Branch context OK?"}
+  HasCtx -- no --> Boot["/project-bootstrap projectKey"]
+  Boot --> Refresh2["/project-refresh projectKey"]
+  HasCtx -- yes --> Work["Implement work"]
+  Refresh2 --> Work
+  Work --> LogQ{"log_append_recommended or substantial work?"}
+  LogQ -- yes --> Append["Append LOG.md"]
+  LogQ -- no --> PauseQ{"Pausing or switching branch?"}
+  Append --> PauseQ
+  PauseQ -- pause --> CP["/project-checkpoint projectKey"]
+  PauseQ -- end --> Close["/project-close projectKey"]
+  PauseQ -- switch --> Refresh
+  CP --> Work
+  Close --> EndNode["Done"]
 ```
 
-## Manual Mode (when tools are unavailable)
+### Lite workflow
 
-Primary entry:
+```mermaid
+flowchart TD
+  L1["descriptor.handoffModeDefault lite"] --> L2["/project-refresh projectKey"]
+  L2 --> L3["Git delta plus minimal reread_files"]
+  L3 --> L4["Implement work"]
+  L4 --> L5["Optional: switch to tracked later via bootstrap"]
+```
 
-- `/manual-refresh <projectKey>`
+## Commands (project key required)
 
-If command parsing fails, use this sentence:
+| Command | Purpose |
+|---------|---------|
+| `/project-refresh <projectKey>` | Sync context; returns `changed_areas`, `reread_files`, nudges |
+| `/project-bootstrap <projectKey>` | Seed tracked branch files (asks phases yes/no) |
+| `/project-phases <projectKey>` | Create or refine `PHASES.md` |
+| `/project-checkpoint <projectKey>` | Append checkpoint to `LOG.md` |
+| `/project-close <projectKey>` | Session-close summary in `LOG.md` |
+| `/project-cleanup-candidates <projectKey>` | Stale `branches/*` report (read-only) |
+| `/project-knowledge-refresh <projectKey>` | Propose durable knowledge updates (user approves) |
+| `/manual-refresh <projectKey>` | No tool-calling; merges bootstrap+refresh behavior when needed |
+
+Examples: `/project-refresh aimos`, `/manual-refresh aimos`, `/project-close aimos`
+
+## Refresh tool output (high level)
+
+Successful refresh JSON includes among others:
+
+- `handoff_mode`, `branch`, `checkpoint_commit`, `head_commit`, `checkpoint_source`
+- `changed_areas`, `changed_files_preview`, `reread_files`
+- `mr_context_path`, `mr_context_paths`, `log_context_path`, `phases_context_path`
+- `last_log_age_minutes`, `needs_checkpoint`, `context_staleness`
+- `log_append_recommended`, `mr_update_recommended`, `agents_stale_vs_branch`
+- `subtaskModels` (echo of descriptor map for agents to pick models)
+
+## Optional `MR.md`
+
+If `branchHandoff.mrFilenames` lists `MR.md` after `MERGE_REQUEST.md`, bootstrap seeds a short **goals / deliverables** file from [`templates/mr/MR.md`](templates/mr/MR.md). Refresh reads every existing MR file in order.
+
+## Per-subtask models
+
+OpenCode **`opencode.json`** supports per-command `model` and `subtask` (see [OpenCode config](https://opencode.ai/config.json)). The descriptor may include **`subtaskModels`** (`refresh`, `bootstrap`, `checkpoint`, `close`, `knowledge`) as documentation for which model ID to bind when you register commands.
+
+Example (adjust provider and model IDs to your setup):
+
+```json
+{
+  "command": {
+    "project-refresh": {
+      "template": "~/.config/opencode/commands/project-refresh.md",
+      "description": "Refresh handoff context",
+      "subtask": true,
+      "model": "your-provider/your-small-model"
+    },
+    "project-knowledge-refresh": {
+      "template": "~/.config/opencode/commands/project-knowledge-refresh.md",
+      "description": "Propose durable knowledge updates",
+      "subtask": true,
+      "model": "your-provider/your-strong-model"
+    }
+  }
+}
+```
+
+If markdown frontmatter gains `model` support in your build, you can mirror the same IDs there.
+
+## Manual mode
+
+Primary: `/manual-refresh <projectKey>`. Fallback sentence (if parsing fails):
 
 `Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`
 
-### Why manual mode merges two steps into one
+Manual mode intentionally **combines** bootstrap + refresh so one command works when tools are down.
 
-In normal tool mode, commands are intentionally separated:
+## Where to read more
 
-- `/project-bootstrap <projectKey>` creates/initializes branch context files.
-- `/project-refresh <projectKey>` reads current state and returns refresh recommendations.
+- Concept: [`OPENCODE_HANDOFF_GENERIC.md`](OPENCODE_HANDOFF_GENERIC.md)
+- Command matrix: [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md)
+- Tests: [`TEST_PLAN.md`](TEST_PLAN.md)
+- Rule baseline: [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md)
+- Local OpenCode alignment ideas: [`docs/ALIGNMENT_OPENCODE_HOME.md`](docs/ALIGNMENT_OPENCODE_HOME.md)
+- Fallback skill: [`skills/project-manual-refresh-fallback.md`](skills/project-manual-refresh-fallback.md)
 
-In manual mode, `/manual-refresh <projectKey>` combines both behaviors on purpose:
+## Template authoring
 
-- if branch context is missing, it bootstraps first,
-- then it runs refresh.
+- Keep templates generic; use placeholders like `<branch-name>`.
+- Keep `LOG.md` append-only and checkpoint-aware (`reviewed_through`).
+- Keep `PHASES.md` optional.
 
-This keeps outages simple for users (one command to continue work), while preserving explicit two-step commands for stable/tool-enabled environments.
+## Bedrock / provider caveat
 
-### Visual workflow (manual mode)
-
-```mermaid
-flowchart TD
-  A["Start session on branch"] --> B["/manual-refresh <projectKey>"]
-  B --> C{"Branch context exists?"}
-  C -- no --> D["Seed MR/LOG/PHASES from templates"]
-  C -- yes --> E["Read project/area/package and branch files"]
-  D --> E
-  E --> F["Compute git delta checkpoint to HEAD"]
-  F --> G["Return changed_areas, reread_files, and recommendations"]
-  G --> H["Implement work"]
-  H --> I["Append LOG.md after substantial work"]
-  I --> J{"Branch switch or rebase?"}
-  J -- yes --> B
-  J -- no --> H
-```
-
-## Where to read details
-
-- Full conceptual guide: `OPENCODE_HANDOFF_GENERIC.md`
-- Command decision matrix: `COMMAND_WORKFLOW.md`
-- Test playbook: `TEST_PLAN.md`
-- Rule baseline: `rules/HANDOFF_GENERIC.md`
-- Fallback skill: `skills/project-manual-refresh-fallback.md`
-
-## Template Authoring
-
-When improving `templates/mr/*`:
-
-- keep templates generic (no project/company-specific names)
-- use explicit placeholders (for example `<branch-name>`)
-- keep `LOG.md` append-only and checkpoint-aware
-- keep `PHASES.md` optional and phase-driven
-
-Template change checklist:
-
-1. Update template files.
-2. Verify descriptor filenames match template filenames.
-3. Run bootstrap/manual-refresh on a throwaway branch.
-4. Confirm docs and examples still match behavior.
-
-## Bedrock / Provider Caveat
-
-If you see errors like:
-
-- `toolConfig.tools.N.member.toolSpec.description must have length greater than or equal to 1`
-
-switch to manual mode and keep tool permissions disabled until runtime/provider path is stable.
-
-References:
-
-- [AWS ToolSpecification](https://docs.aws.amazon.com/bedrock/latest/APIReference/API_agent_ToolSpecification.html)
-- [OpenCode PR #15957](https://github.com/anomalyco/opencode/pull/15957)
-- [Cline issue #7696](https://github.com/cline/cline/issues/7696)
-
+If you see `toolSpec.description` validation errors, switch to **manual mode** and disable tool permissions until the provider path is stable. See upstream [OpenCode PR #15957](https://github.com/anomalyco/opencode/pull/15957).

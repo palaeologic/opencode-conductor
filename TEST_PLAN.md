@@ -18,6 +18,7 @@ Before testing behavior, confirm the setup is wired correctly.
   - `~/.config/opencode/projects/<projectKey>/_templates/mr/MERGE_REQUEST.md`
   - `~/.config/opencode/projects/<projectKey>/_templates/mr/LOG.md`
   - optional `PHASES.md` template
+  - optional `MR.md` template when using `mrFilenames`
 - Tools are available under:
   - `~/.config/opencode/tools/`
 
@@ -57,6 +58,7 @@ Expected result:
 - `applicable`-style success signal.
 - branch and head/checkpoint info present.
 - `reread_files` list present (non-empty when there are relevant changes).
+- JSON includes `changed_areas`, `handoff_mode`, and nudge fields (`log_append_recommended`, `needs_checkpoint`, …) when applicable.
 
 ### Step D - branch isolation
 
@@ -148,7 +150,33 @@ Pass criteria:
 - Equivalent behavior and file layout.
 - Branch-local context appears under `branches/<branch-name>/`.
 
-## 8) Pass/Fail checklist
+## 8) Lite mode smoke test
+
+1. Set `handoffModeDefault` to `lite` on a throwaway descriptor copy (or pass `handoffMode: lite` to `opencode_refresh_context`).
+2. Use a branch **without** `branches/<name>/` files.
+3. Run refresh (tool or `/manual-refresh`).
+
+Expected result:
+- `applicable: true`, `handoff_mode: lite`, `checkpoint_source: lite_window`.
+- No `missing_branch_context` failure for lite.
+- `reread_files` includes project `AGENTS.md` and area agents that exist.
+
+## 9) Optional `MR.md` and `mrFilenames`
+
+1. Add `"mrFilenames": ["MERGE_REQUEST.md", "MR.md"]` to `branchHandoff` and install `MR.md` template into `_templates/mr/`.
+2. Bootstrap a new branch.
+
+Expected result:
+- Both files created when templates exist.
+- Refresh lists both paths in `mr_context_paths` when present.
+
+## 10) Lifecycle commands (tracked)
+
+1. After changes, run `/project-checkpoint <projectKey>` and confirm a new `LOG.md` section.
+2. Run `/project-close <projectKey>` with real work done; confirm session summary appended.
+3. Run `/project-cleanup-candidates <projectKey>`; confirm read-only report (no deletes).
+
+## 11) Pass/Fail checklist
 
 - [ ] Preflight checks pass
 - [ ] TUI refresh-before-bootstrap behavior correct
@@ -160,3 +188,6 @@ Pass criteria:
 - [ ] (Optional) phases workflow works
 - [ ] Rebase/squash continuation works
 - [ ] Merged-branch closure follows explicit user choice
+- [ ] Lite refresh works without branch folder
+- [ ] Optional `MR.md` path when configured
+- [ ] Checkpoint / close / cleanup commands behave as documented
