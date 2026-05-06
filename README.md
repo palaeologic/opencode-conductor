@@ -164,6 +164,7 @@ flowchart TD
 | `/project-review <projectKey>`             | Generate review artifact (checklist, diff summary, or both — user chooses)                            |
 | `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
+| `/scaffold-knowledge <projectKey>`         | Auto-generate AGENTS.md knowledge files for areas and packages (scan + interactive)                   |
 | `/manual-refresh <projectKey>`             | No tool-calling; merges bootstrap+refresh behavior when needed                                        |
 
 ### Verification
@@ -190,7 +191,7 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 | Check what happened last session | Read `branches/<branch>/LOG.md` — look at last checkpoint entry |
 | Save progress before a break | `/project-checkpoint` |
 | Wrap up for the day | `/project-close` |
-| Start fresh on a new project | `/project-init` |
+| Start fresh on a new project | `/project-init` → `/scaffold-knowledge` |
 | Understand an unfamiliar area | Agent loads `onboard-area` skill automatically |
 | Full pre-merge quality check | Agent loads `review-branch` skill, or manually: `/manual-refresh` → `/project-review` → `/check-types` → `/run-tests` |
 

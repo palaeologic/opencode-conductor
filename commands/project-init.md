@@ -41,7 +41,9 @@ Workflow:
    - Report all paths created
 
 Output:
-Return a summary of created paths and suggest running `/project-refresh $ARGUMENTS` to start.
+Return a summary of created paths and suggest next steps:
+- "Run `/scaffold-knowledge $ARGUMENTS` to populate area knowledge files with stack and architecture info."
+- "Run `/project-refresh $ARGUMENTS` to start your first session."
 
 Constraints:
 - Never write files without user approval of the draft.
