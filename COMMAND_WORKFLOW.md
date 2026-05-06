@@ -49,16 +49,27 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | `detached_head` | No branch ref | Checkout a branch |
 | `descriptor_not_found` | No `descriptor.json` | `/project-init` |
 
-## Manual fallback
+## Tool dependency
 
-When tool-calling is unavailable:
+Not all commands require the Bun tool engine. When tools are in `tools-off/` or disabled:
 
-1. `/manual-refresh <projectKey>`
-2. Seeds templates if files missing (tracked)
-3. Reads layers: project `AGENTS.md` → active area agents → MR files → `LOG.md` tail → optional `PHASES.md`
-4. Git delta from checkpoint or recent window (lite)
-5. Returns same fields as tool refresh where possible
+| Command | Needs tools? | Without tools |
+|---------|-------------|---------------|
+| `/manual-refresh` | No | **Replaces** `/project-refresh` + `/project-bootstrap` (seeds files if missing, then does git delta) |
+| `/project-init` | No | Works as-is (scans repo, writes files) |
+| `/project-checkpoint` | No | Has manual fallback (appends LOG.md directly) |
+| `/project-close` | No | Has manual fallback (appends LOG.md directly) |
+| `/project-review` | No | Works as-is (reads diff, generates REVIEW.md) |
+| `/project-cleanup-candidates` | No | Works as-is (lists folders) |
+| `/project-phases` | No | Works as-is (creates/edits PHASES.md) |
+| `/project-knowledge-refresh` | No | Works as-is (reads + proposes) |
+| `/project-refresh` | **Yes** | Use `/manual-refresh` instead |
+| `/project-bootstrap` | **Yes** | Use `/manual-refresh` instead (auto-seeds missing files) |
 
-Fallback sentence (if parsing fails):
+**Daily workflow without tools**: `/manual-refresh` for context sync, everything else as normal.
+
+## Fallback sentence
+
+If `/manual-refresh` doesn't parse, paste this exact sentence:
 
 `Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`
