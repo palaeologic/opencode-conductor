@@ -22,6 +22,14 @@ Version 2 transforms the kit from a minimal bootstrap-and-refresh tool into a fu
 - Drafts a `descriptor.json` and presents it for user review.
 - On approval, writes descriptor + templates + initial `AGENTS.md`.
 - Refresh auto-suggests init when no descriptor is found (graceful instead of hard error).
+- Suggests `/scaffold-knowledge <projectKey>` as the next step after init.
+
+### `/scaffold-knowledge` command
+
+- New knowledge scaffolding command for first-time project setup.
+- Generates or enriches project/area/package `AGENTS.md` files with stack and architecture orientation.
+- Designed as a one-time post-init step; branch switches do not require rerunning.
+- Can be rerun when areas, pseudo-packages, or core stack conventions materially change.
 
 ### Lifecycle commands (no-hooks design)
 
@@ -90,6 +98,7 @@ New fields returned by `opencode_refresh_context`:
 | `commands/project-close.md` | New (with manual fallback) |
 | `commands/project-cleanup-candidates.md` | New |
 | `commands/project-knowledge-refresh.md` | New |
+| `commands/scaffold-knowledge.md` | New |
 | `templates/mr/MR.md` | New optional template |
 
 ---
@@ -102,6 +111,7 @@ New fields returned by `opencode_refresh_context`:
 4. **Remove stale files**: delete any top-level runbook/workflow docs (e.g. `COMMAND_WORKFLOW.md`, `OPENCODE_HANDOFF_*.md`) and `skills/` folder from `~/.config/opencode/` — these are now handled by commands and rules.
 5. **Test**: run through `TEST_PLAN.md` sections 1–10.
 6. **Optional**: run `/project-init` on a fresh project to validate the guided setup flow.
+7. **Recommended**: run `/scaffold-knowledge <projectKey>` once after init to populate shared knowledge files.
 
 ---
 

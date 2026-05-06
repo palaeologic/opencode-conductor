@@ -16,6 +16,7 @@ Quick reference for **which command** to run and **when**. For workflow diagrams
 | `/project-cleanup-candidates <projectKey>` | yes | smaller |
 | `/project-knowledge-refresh <projectKey>` | yes | stronger |
 | `/manual-refresh <projectKey>` | yes | default |
+| `/scaffold-knowledge <projectKey>` | yes | default |
 
 Bind models in `opencode.json` `command.*.model` (and/or document IDs under `descriptor.subtaskModels`).
 
@@ -24,6 +25,7 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Situation | Command | Notes |
 |-----------|---------|--------|
 | First time using kit on a project | `init` | Scans repo, drafts descriptor, user approves; only needed once per project |
+| First-time knowledge scaffolding | `scaffold-knowledge` | Run once after `init`; creates shared `AGENTS.md` orientation files |
 | Session start | `refresh` | Auto-suggests `init` if no descriptor found |
 | First visit to branch (tracked) | `bootstrap` then `refresh` | Creates MR/LOG (+ optional PHASES) |
 | Branch switch | `refresh` | Avoid carry-over |
@@ -63,6 +65,7 @@ Not all commands require the Bun tool engine. When tools are in `tools-off/` or 
 | `/project-cleanup-candidates` | No | Works as-is (lists folders) |
 | `/project-phases` | No | Works as-is (creates/edits PHASES.md) |
 | `/project-knowledge-refresh` | No | Works as-is (reads + proposes) |
+| `/scaffold-knowledge` | No | Works as-is (creates/merges shared knowledge files) |
 | `/project-refresh` | **Yes** | Use `/manual-refresh` instead |
 | `/project-bootstrap` | **Yes** | Use `/manual-refresh` instead (auto-seeds missing files) |
 

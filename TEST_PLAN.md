@@ -16,7 +16,7 @@ Verify the setup is wired correctly before testing behavior.
 | `~/.config/opencode/opencode.json` | yes | `instructions` includes handoff rules; `external_directory` allows `~/.config/opencode/projects/**` |
 | `~/.config/opencode/rules/HANDOFF_GENERIC.md` | yes | Base behavioral contract exists |
 | `~/.config/opencode/rules/HANDOFF.md` | optional | Project overlay (if you have one) |
-| `~/.config/opencode/commands/*.md` | yes | All 9 command files present |
+| `~/.config/opencode/commands/*.md` | yes | All expected command files present (including `project-*`, `manual-refresh`, verification commands, and `scaffold-knowledge`) |
 | `~/.config/opencode/projects/<projectKey>/descriptor.json` | yes | Valid JSON, has `handoffModeDefault` |
 | `~/.config/opencode/projects/<projectKey>/_templates/mr/` | yes | At minimum `MERGE_REQUEST.md` + `LOG.md` |
 | `~/.config/opencode/tools/` (or `tools-off/`) | conditional | Tools present; may be disabled if provider is unstable |
@@ -60,13 +60,34 @@ Verify the setup is wired correctly before testing behavior.
   - `_templates/mr/PHASES.md`
   - `_templates/mr/MR.md`
   - `AGENTS.md` (empty or minimal)
-- Agent suggests running `/project-refresh testkit` next.
+- Agent suggests running `/scaffold-knowledge testkit` and `/project-refresh testkit` next.
 
 **Pass**: full project structure created from scan without manual mkdir/cp.
 
 ---
 
-## 3) Tracked mode — core workflow
+## 3) `/scaffold-knowledge` — first-time knowledge population
+
+> Validate one-time shared knowledge scaffolding after init.
+
+### Steps
+
+1. Run `/scaffold-knowledge testkit`.
+2. Select one or more areas when prompted.
+3. If prompted, add one pseudo-package (or skip).
+
+### Expected result
+
+- `~/.config/opencode/projects/testkit/AGENTS.md` has project routing/context hierarchy guidance.
+- Selected areas have `~/.config/opencode/projects/testkit/<area>/AGENTS.md`.
+- If provided, pseudo-package files exist at `~/.config/opencode/projects/testkit/<area>/packages/<pkg>/AGENTS.md`.
+- Existing operational content (if any) is merged/preserved rather than replaced.
+
+**Pass**: shared knowledge files are scaffolded once; rerun is only needed for new areas/packages or major stack changes.
+
+---
+
+## 4) Tracked mode — core workflow
 
 ### Step A — first refresh on new branch
 
@@ -114,7 +135,7 @@ Verify the setup is wired correctly before testing behavior.
 
 ---
 
-## 4) Lifecycle commands (tracked)
+## 5) Lifecycle commands (tracked)
 
 > Test checkpoint, close, and cleanup on the test branch.
 
@@ -148,7 +169,7 @@ Verify the setup is wired correctly before testing behavior.
 
 ---
 
-## 5) Lite mode
+## 6) Lite mode
 
 ### Setup
 
@@ -173,7 +194,7 @@ Option B: pass `handoffMode: lite` when calling the refresh tool.
 
 ---
 
-## 6) Optional `MR.md` and `mrFilenames`
+## 7) Optional `MR.md` and `mrFilenames`
 
 ### Setup
 
@@ -195,7 +216,7 @@ Option B: pass `handoffMode: lite` when calling the refresh tool.
 
 ---
 
-## 7) Manual fallback (`/manual-refresh`)
+## 8) Manual fallback (`/manual-refresh`)
 
 > Test when tools are unavailable (your `tools-off/` scenario).
 
@@ -232,7 +253,7 @@ Tool-calling is disabled. Run manual handoff refresh for project key <projectKey
 
 ---
 
-## 8) Phases workflow
+## 9) Phases workflow
 
 1. On the test branch, run `/project-phases <projectKey>`.
 2. Create or refine `PHASES.md` (AI draft, user-led, or hybrid).
@@ -246,7 +267,7 @@ Tool-calling is disabled. Run manual handoff refresh for project key <projectKey
 
 ---
 
-## 9) History rewrite and merge closure
+## 10) History rewrite and merge closure
 
 ### Step A — rebase/squash
 
@@ -271,7 +292,7 @@ Tool-calling is disabled. Run manual handoff refresh for project key <projectKey
 
 ---
 
-## 10) `agents_stale_vs_branch` nudge
+## 11) `agents_stale_vs_branch` nudge
 
 ### Setup
 
@@ -286,7 +307,7 @@ Modify the project or area `AGENTS.md` with a timestamp significantly older than
 
 ---
 
-## 11) Review artifact generation
+## 12) Review artifact generation
 
 ### Steps
 
@@ -305,7 +326,7 @@ Modify the project or area `AGENTS.md` with a timestamp significantly older than
 
 ---
 
-## 12) Rule layering validation
+## 13) Rule layering validation
 
 ### Steps
 
@@ -322,7 +343,7 @@ Modify the project or area `AGENTS.md` with a timestamp significantly older than
 
 ---
 
-## 12) Common failure signals and fixes
+## 14) Common failure signals and fixes
 
 | Symptom | Likely cause | Fix |
 |---------|-------------|-----|
@@ -335,10 +356,11 @@ Modify the project or area `AGENTS.md` with a timestamp significantly older than
 
 ---
 
-## 13) Pass/Fail checklist
+## 15) Pass/Fail checklist
 
 - [ ] Preflight: all files present, no stale artifacts
 - [ ] `/project-init` creates full project structure from scan
+- [ ] `/scaffold-knowledge` populates shared AGENTS.md files as expected
 - [ ] Tracked: refresh reports missing context on new branch
 - [ ] Tracked: bootstrap creates branch files
 - [ ] Tracked: refresh-after-bootstrap returns full metadata
