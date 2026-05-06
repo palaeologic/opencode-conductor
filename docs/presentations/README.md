@@ -1,6 +1,13 @@
 # Presentations
 
-- `opencode-handoff-kit-v3.pptx` — deck synced from upstream `main`.
-- `handoff-kit-v2.pptx` — copy used for **v2 teammate updates** (tracked vs lite, lifecycle commands, optional `MR.md`, refresh metadata, model hints). Replace slides in PowerPoint / Keynote as you iterate; commit the binary when the narrative is final.
+This folder is for slide decks to share the handoff kit with teammates.
 
-Internal sharing: point teammates at this folder plus the repo `README.md` and `rules/HANDOFF_GENERIC.md`.
+Create your own deck (PowerPoint / Keynote / Google Slides) covering:
+
+- Tracked vs lite modes
+- Lifecycle commands (checkpoint, close, cleanup, knowledge-refresh)
+- Optional `MR.md` and `mrFilenames`
+- Refresh metadata and nudges
+- Per-subtask model hints
+
+Commit the binary here when the narrative is final. Point teammates at this folder plus the repo `README.md` and `rules/HANDOFF_GENERIC.md`.

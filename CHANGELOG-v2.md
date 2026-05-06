@@ -96,11 +96,12 @@ New fields returned by `opencode_refresh_context`:
 
 ## Migration from v1
 
-1. **Pull latest** and re-copy `commands/*`, `rules/*`, `templates/*` into your OpenCode home.
-2. **Update descriptor**: add `handoffModeDefault`, `mrFilenames` (array), optionally `subtaskModels`.
-3. **Register new commands** in `opencode.json` with appropriate `model` and `subtask: true`.
-4. **Test**: run through `TEST_PLAN.md` sections 1–10.
-5. **Optional**: run `/project-init` on a fresh project to validate the guided setup flow.
+1. **Pull latest** and re-copy `commands/*` and `rules/*` into `~/.config/opencode/`.
+2. **Update descriptor**: add `handoffModeDefault`, switch `mrFilename` → `mrFilenames` (array), optionally add `subtaskModels`.
+3. **Update `opencode.json`**: register new commands with appropriate `model` and `subtask: true`.
+4. **Remove stale files**: delete any top-level runbook/workflow docs (e.g. `COMMAND_WORKFLOW.md`, `OPENCODE_HANDOFF_*.md`) and `skills/` folder from `~/.config/opencode/` — these are now handled by commands and rules.
+5. **Test**: run through `TEST_PLAN.md` sections 1–10.
+6. **Optional**: run `/project-init` on a fresh project to validate the guided setup flow.
 
 ---
 
