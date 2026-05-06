@@ -10,20 +10,24 @@ Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context o
 
 ## Quick start
 
-1. **Pull latest** from GitHub, then copy kit assets into your OpenCode home:
-   - `rules/*` → `~/.config/opencode/rules/`
-   - `commands/*` → `~/.config/opencode/commands/`
-   - `tools/*` → `~/.config/opencode/tools/` (when tool-calling is stable)
-2. Create **`descriptor.json`** (choose one):
-   - **Guided**: run `/project-init <projectKey>` — scans repo, drafts descriptor, you approve
-   - **Manual**: copy [`descriptors/descriptor.template.json`](descriptors/descriptor.template.json) to `~/.config/opencode/projects/<projectKey>/descriptor.json` and fill in
-3. Copy branch templates:  
-   `templates/mr/*` → `~/.config/opencode/projects/<projectKey>/_templates/mr/`  
-   (include optional [`templates/mr/MR.md`](templates/mr/MR.md) if you use `mrFilenames`.)
-4. Update **`~/.config/opencode/opencode.json`**:
-   - Include [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md) in `instructions` (plus your project overlay rule if needed)
+1. **Clone** this repo and copy kit assets into your OpenCode home:
+   ```bash
+   cp commands/*.md   ~/.config/opencode/commands/
+   cp rules/*.md      ~/.config/opencode/rules/
+   # Optional: copy tools when tool-calling is stable
+   cp tools/*.ts      ~/.config/opencode/tools/
+   ```
+2. **Update `~/.config/opencode/opencode.json`**:
+   - Include `HANDOFF_GENERIC.md` in `instructions` (plus your project overlay rule if needed)
    - Allow `external_directory` for `~/.config/opencode/projects/**`
    - Register tools when provider path is stable
+3. **Open your project** in OpenCode and run:
+   ```
+   /project-init <projectKey>
+   ```
+   This scans your repo, drafts a `descriptor.json`, and on approval writes the full project structure (`descriptor.json` + templates + `AGENTS.md`). No manual folder creation needed.
+
+**Manual alternative** (skip step 3): copy [`descriptors/descriptor.template.json`](descriptors/descriptor.template.json) to `~/.config/opencode/projects/<projectKey>/descriptor.json`, fill it in, and copy `templates/mr/*` into `_templates/mr/` yourself.
 
 ## Architecture
 
