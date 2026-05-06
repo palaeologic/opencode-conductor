@@ -1,193 +1,339 @@
-# OpenCode Handoff Kit - Manual Test Plan
+# OpenCode Handoff Kit v2 — Test Plan
 
-This document is a manual smoke-test script for validating a descriptor-driven handoff setup.
+Manual smoke-test script for validating a descriptor-driven handoff setup.
+Run after installing the kit or after changing rules/tools/templates.
 
-Use it after installing the kit on a machine or after changing rules/tools/templates.
+---
 
 ## 1) Preflight checks
 
-Before testing behavior, confirm the setup is wired correctly.
+Verify the setup is wired correctly before testing behavior.
 
-- `~/.config/opencode/opencode.json` includes:
-  - handoff rule in `instructions`
-  - tool permissions for bootstrap/refresh tools
-  - external directory permission for `~/.config/opencode/projects/**`
-- A project descriptor exists:
-  - `~/.config/opencode/projects/<projectKey>/descriptor.json`
-- Branch templates exist:
-  - `~/.config/opencode/projects/<projectKey>/_templates/mr/MERGE_REQUEST.md`
-  - `~/.config/opencode/projects/<projectKey>/_templates/mr/LOG.md`
-  - optional `PHASES.md` template
-  - optional `MR.md` template when using `mrFilenames`
-- Tools are available under:
-  - `~/.config/opencode/tools/`
+### Files to confirm
 
-Pass criteria:
-- All required files exist and permissions are configured.
+| Location | Required | Check |
+|----------|----------|-------|
+| `~/.config/opencode/opencode.json` | yes | `instructions` includes handoff rules; `external_directory` allows `~/.config/opencode/projects/**` |
+| `~/.config/opencode/rules/HANDOFF_GENERIC.md` | yes | Base behavioral contract exists |
+| `~/.config/opencode/rules/HANDOFF.md` | optional | Project overlay (if you have one) |
+| `~/.config/opencode/commands/*.md` | yes | All 9 command files present |
+| `~/.config/opencode/projects/<projectKey>/descriptor.json` | yes | Valid JSON, has `handoffModeDefault` |
+| `~/.config/opencode/projects/<projectKey>/_templates/mr/` | yes | At minimum `MERGE_REQUEST.md` + `LOG.md` |
+| `~/.config/opencode/tools/` (or `tools-off/`) | conditional | Tools present; may be disabled if provider is unstable |
 
-## 2) TUI smoke test
+### No stale files
 
-### Step A - first refresh on new branch
+| Should NOT exist | Why |
+|------------------|-----|
+| `~/.config/opencode/COMMAND_WORKFLOW.md` | Replaced by commands/ |
+| `~/.config/opencode/OPENCODE_HANDOFF_*.md` | Replaced by rules + README |
+| `~/.config/opencode/projects/<key>/skills/` | Replaced by commands/ |
 
-1. Open a repo for `<projectKey>`.
-2. Checkout a test branch (new or without context files).
-3. Run refresh command (generic or project-specific).
+**Pass**: all required files exist, no stale files remain, `opencode.json` permissions are correct.
 
-Expected result:
-- Refresh reports missing branch context (or equivalent signal).
+---
 
-### Step B - bootstrap
+## 2) `/project-init` — first-time setup (no descriptor)
 
-1. Run bootstrap command.
-2. If prompted for phases, answer `yes` or `no`.
+> Test the guided initialization flow.
 
-Expected result:
-- Branch files are created under:
-  - `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/`
+### Setup
 
-Minimum expected files:
+1. Pick a repo that does NOT have a descriptor yet (or use a temporary project key like `testkit`).
+2. Open that repo in OpenCode.
+
+### Steps
+
+1. Run `/project-refresh testkit`.
+2. Observe: should report `descriptor_not_found` and suggest running `/project-init`.
+3. Run `/project-init testkit`.
+4. Observe: agent scans the repo (toplevel, dirs, packages, baseline branch).
+5. Agent presents a draft `descriptor.json` — review it.
+6. Approve (or request edits and re-approve).
+
+### Expected result
+
+- `~/.config/opencode/projects/testkit/` created with:
+  - `descriptor.json` (matching your approval)
+  - `_templates/mr/MERGE_REQUEST.md`
+  - `_templates/mr/LOG.md`
+  - `_templates/mr/PHASES.md`
+  - `_templates/mr/MR.md`
+  - `AGENTS.md` (empty or minimal)
+- Agent suggests running `/project-refresh testkit` next.
+
+**Pass**: full project structure created from scan without manual mkdir/cp.
+
+---
+
+## 3) Tracked mode — core workflow
+
+### Step A — first refresh on new branch
+
+1. Open a repo for `<projectKey>` (e.g. `aimos`).
+2. Checkout a new test branch: `git checkout -b test/handoff-v2-smoke`.
+3. Run `/project-refresh <projectKey>`.
+
+**Expected**: reports `missing_branch_context` with `recommended_next_step: bootstrap`.
+
+### Step B — bootstrap
+
+1. Run `/project-bootstrap <projectKey>`.
+2. When prompted for phases, answer `no`.
+
+**Expected**: branch files created at `~/.config/opencode/projects/<projectKey>/branches/test-handoff-v2-smoke/`:
 - `MERGE_REQUEST.md`
 - `LOG.md`
-- `PHASES.md` only when enabled
 
-### Step C - refresh again
+### Step C — refresh after bootstrap
 
-1. Run refresh again on the same branch.
+1. Run `/project-refresh <projectKey>` again.
 
-Expected result:
-- `applicable`-style success signal.
-- branch and head/checkpoint info present.
-- `reread_files` list present (non-empty when there are relevant changes).
-- JSON includes `changed_areas`, `handoff_mode`, and nudge fields (`log_append_recommended`, `needs_checkpoint`, …) when applicable.
+**Expected** (verify each field):
+- `applicable: true`
+- `handoff_mode: "tracked"`
+- `branch: "test/handoff-v2-smoke"`
+- `checkpoint_commit` and `head_commit` present
+- `checkpoint_source: "log_field"` or `"merge_base"`
+- `changed_areas` array
+- `reread_files` array (non-empty; includes active area `AGENTS.md`)
+- `log_append_recommended`, `mr_update_recommended`, `needs_checkpoint` booleans
+- `context_staleness`: `"fresh"`, `"aging"`, or `"stale"`
+- `subtaskModels` echoed from descriptor
 
-### Step D - branch isolation
+### Step D — branch isolation
 
-1. Switch to a different branch.
-2. Run refresh.
-3. Bootstrap if needed.
+1. `git checkout main` (or another branch).
+2. Run `/project-refresh <projectKey>`.
 
-Expected result:
-- New branch uses its own branch-local folder.
-- No cross-branch mixing of `MERGE_REQUEST.md`/`LOG.md`.
+**Expected**:
+- Different branch context folder used.
+- No cross-contamination with `test/handoff-v2-smoke` files.
 
-## 3) GUI/Desktop smoke test
+**Pass**: full tracked lifecycle works end-to-end.
 
-Repeat the same flow in GUI chat:
+---
 
-1. Ask agent to refresh.
-2. If missing context is reported, ask agent to bootstrap.
-3. Verify generated files under the branch folder.
-4. Start a fresh chat/agent and ask it to refresh.
+## 4) Lifecycle commands (tracked)
 
-Expected result:
-- Fresh agent restores context from branch files without a full re-discovery pass.
+> Test checkpoint, close, and cleanup on the test branch.
 
-## 4) Optional phase workflow test
+### Step A — checkpoint
 
-1. On an existing branch, run phases command/tool.
+1. Switch back to `test/handoff-v2-smoke`.
+2. Make a small code change (or just stage something).
+3. Run `/project-checkpoint <projectKey>`.
+
+**Expected**: `LOG.md` has a new checkpoint entry with timestamp, reviewed_through, and summary.
+
+### Step B — close
+
+1. Run `/project-close <projectKey>`.
+
+**Expected**: `LOG.md` has a session-close entry with summary and "next steps" section.
+
+### Step C — cleanup candidates
+
+1. Run `/project-cleanup-candidates <projectKey>`.
+
+**Expected**: read-only report listing branch folders with age. No deletions performed.
+
+### Step D — knowledge refresh
+
+1. Run `/project-knowledge-refresh <projectKey>`.
+
+**Expected**: agent proposes updates to shared `AGENTS.md` files (or reports "nothing to promote"). Does NOT write without your approval.
+
+**Pass**: all lifecycle commands work without errors; LOG.md is append-only.
+
+---
+
+## 5) Lite mode
+
+### Setup
+
+Option A: temporarily change `handoffModeDefault` to `"lite"` in descriptor.
+Option B: pass `handoffMode: lite` when calling the refresh tool.
+
+### Steps
+
+1. Checkout a branch that has NO `branches/<name>/` folder.
+2. Run `/project-refresh <projectKey>` (with lite mode active).
+
+### Expected result
+
+- `applicable: true`
+- `handoff_mode: "lite"`
+- `checkpoint_source: "lite_window"`
+- No `missing_branch_context` error
+- `reread_files` includes project `AGENTS.md` and the **active area's** `AGENTS.md` only
+- No bootstrap required or suggested
+
+**Pass**: lite refresh succeeds on a branch with zero handoff files.
+
+---
+
+## 6) Optional `MR.md` and `mrFilenames`
+
+### Setup
+
+1. Add `"mrFilenames": ["MERGE_REQUEST.md", "MR.md"]` to `branchHandoff` in descriptor.
+2. Copy the `MR.md` template into `_templates/mr/`.
+
+### Steps
+
+1. Checkout a fresh branch.
+2. Run `/project-bootstrap <projectKey>`.
+3. Run `/project-refresh <projectKey>`.
+
+### Expected result
+
+- Bootstrap creates both `MERGE_REQUEST.md` and `MR.md` in the branch folder.
+- Refresh includes both paths in `mr_context_paths`.
+
+**Pass**: multiple MR files are seeded and read correctly.
+
+---
+
+## 7) Manual fallback (`/manual-refresh`)
+
+> Test when tools are unavailable (your `tools-off/` scenario).
+
+### Setup
+
+Ensure tools are disabled (in `tools-off/` not `tools/`, or tool permissions removed from `opencode.json`).
+
+### Steps
+
+1. Open a repo in OpenCode.
+2. Run `/manual-refresh <projectKey>`.
+
+### Expected result
+
+- Agent performs the refresh manually (no tool call):
+  - Resolves branch and branch folder
+  - Seeds templates if missing (tracked mode)
+  - Reads context layers in order
+  - Computes git delta
+  - Returns structured summary: branch, checkpoint→head, changed_areas, reread_files, recommendations
+- Result is functionally equivalent to tool-based refresh.
+
+### Fallback sentence test
+
+If `/manual-refresh` doesn't parse, paste this exact sentence:
+
+```
+Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.
+```
+
+**Expected**: agent follows the procedure and returns structured output.
+
+**Pass**: manual mode produces actionable refresh output without any tool calls.
+
+---
+
+## 8) Phases workflow
+
+1. On the test branch, run `/project-phases <projectKey>`.
 2. Create or refine `PHASES.md` (AI draft, user-led, or hybrid).
-3. Run refresh again.
+3. Run `/project-refresh <projectKey>`.
 
-Expected result:
-- `PHASES.md` is included in handoff/re-read behavior.
+**Expected**:
+- `PHASES.md` created in branch folder.
+- `phases_context_path` populated in refresh output.
 
-## 5) History rewrite and merge closure test
+**Pass**: phases file is created and included in refresh context.
 
-### Step A - rebase or squash behavior
+---
 
-1. Rebase test branch onto baseline (or squash commits locally).
-2. Run refresh.
-3. Append a `LOG.md` note indicating history rewrite and new anchor checkpoint.
+## 9) History rewrite and merge closure
 
-Expected result:
-- Refresh still succeeds from current branch state.
-- Team can continue without relying on old pre-rewrite SHAs.
+### Step A — rebase/squash
 
-### Step B - merged branch closure choice
+1. Rebase or squash the test branch.
+2. Run `/project-refresh <projectKey>`.
 
-1. Merge test branch to baseline.
-2. Ask user which closure mode to apply:
-   - `archive`
-   - `promote-and-delete`
-3. Apply chosen mode:
-   - `archive`: keep branch folder untouched.
-   - `promote-and-delete`: update shared durable guidance, then remove merged branch folder.
+**Expected**:
+- Refresh succeeds (doesn't crash on stale SHAs).
+- Agent may note that checkpoint is stale.
 
-Expected result:
-- Closure action matches explicit user choice.
-- No merged branch folder is deleted without explicit user confirmation.
+### Step B — merge closure
 
-## 6) Common failure signals and fixes
+1. Merge test branch to baseline (or simulate).
+2. Agent should ask: **archive** or **promote-and-delete**.
 
-- **Missing tool permission**
-  - Symptom: tool call denied.
-  - Fix: add tool to `permission` in `opencode.json`.
+**Expected**:
+- `archive`: branch folder kept untouched.
+- `promote-and-delete`: durable knowledge proposed for shared files, folder deleted only after explicit confirmation.
+- Never auto-deletes.
 
-- **Missing external directory permission**
-  - Symptom: cannot write under `~/.config/opencode/projects/...`.
-  - Fix: allow `~/.config/opencode/projects/**` under `permission.external_directory`.
+**Pass**: history rewrites don't break refresh; closure respects user choice.
 
-- **Descriptor not found**
-  - Symptom: refresh/bootstrap returns descriptor missing error.
-  - Fix: create `projects/<projectKey>/descriptor.json`.
+---
 
-- **Detached HEAD**
-  - Symptom: branch resolution fails.
-  - Fix: checkout a real branch and rerun.
+## 10) `agents_stale_vs_branch` nudge
 
-- **Templates missing**
-  - Symptom: bootstrap cannot seed branch files correctly.
-  - Fix: restore `_templates/mr/*` files.
+### Setup
 
-## 7) Reproducibility check (second machine)
+Modify the project or area `AGENTS.md` with a timestamp significantly older than recent branch commits (or just verify the field is present in refresh output).
 
-1. Install kit on another machine.
-2. Copy files into `~/.config/opencode`.
-3. Create descriptor for the same project conventions.
-4. Run sections 1-3 of this test plan.
+### Expected
 
-Pass criteria:
-- Equivalent behavior and file layout.
-- Branch-local context appears under `branches/<branch-name>/`.
+- `agents_stale_vs_branch: true` when shared knowledge is outdated relative to branch activity.
+- Agent should suggest reviewing `AGENTS.md` or running `/project-knowledge-refresh`.
 
-## 8) Lite mode smoke test
+**Pass**: staleness detection works and produces actionable nudge.
 
-1. Set `handoffModeDefault` to `lite` on a throwaway descriptor copy (or pass `handoffMode: lite` to `opencode_refresh_context`).
-2. Use a branch **without** `branches/<name>/` files.
-3. Run refresh (tool or `/manual-refresh`).
+---
 
-Expected result:
-- `applicable: true`, `handoff_mode: lite`, `checkpoint_source: lite_window`.
-- No `missing_branch_context` failure for lite.
-- `reread_files` includes project `AGENTS.md` and the **active area's** `AGENTS.md` (not all areas).
+## 11) Rule layering validation
 
-## 9) Optional `MR.md` and `mrFilenames`
+### Steps
 
-1. Add `"mrFilenames": ["MERGE_REQUEST.md", "MR.md"]` to `branchHandoff` and install `MR.md` template into `_templates/mr/`.
-2. Bootstrap a new branch.
+1. In an OpenCode session, ask the agent: "What handoff rules are you following?"
+2. Or ask: "What should you do at session start?"
 
-Expected result:
-- Both files created when templates exist.
-- Refresh lists both paths in `mr_context_paths` when present.
+### Expected
 
-## 10) Lifecycle commands (tracked)
+- Agent references behavior from `HANDOFF_GENERIC.md` (MUST rules: resolve project, resolve branch, refresh at session start).
+- If project overlay exists, agent also mentions project-specific details (tool names, packages).
+- No contradiction between generic and overlay rules.
 
-1. After changes, run `/project-checkpoint <projectKey>` and confirm a new `LOG.md` section.
-2. Run `/project-close <projectKey>` with real work done; confirm session summary appended.
-3. Run `/project-cleanup-candidates <projectKey>`; confirm read-only report (no deletes).
+**Pass**: both rule layers are loaded and consistent.
 
-## 11) Pass/Fail checklist
+---
 
-- [ ] Preflight checks pass
-- [ ] TUI refresh-before-bootstrap behavior correct
-- [ ] Bootstrap creates branch files in expected location
-- [ ] Refresh-after-bootstrap returns expected metadata
-- [ ] Branch isolation works
-- [ ] GUI flow works
-- [ ] Fresh agent context recovery works
-- [ ] (Optional) phases workflow works
-- [ ] Rebase/squash continuation works
-- [ ] Merged-branch closure follows explicit user choice
-- [ ] Lite refresh works without branch folder
-- [ ] Optional `MR.md` path when configured
-- [ ] Checkpoint / close / cleanup commands behave as documented
+## 12) Common failure signals and fixes
+
+| Symptom | Likely cause | Fix |
+|---------|-------------|-----|
+| Tool call denied | Missing tool permission | Add to `permission` in `opencode.json` |
+| Cannot write under `projects/` | Missing external_directory | Allow `~/.config/opencode/projects/**` |
+| Descriptor missing error | No `descriptor.json` | Run `/project-init` |
+| Branch resolution fails | Detached HEAD | Checkout a real branch |
+| Bootstrap can't seed files | Templates missing | Restore `_templates/mr/*` |
+| `toolSpec.description` validation error | Provider issue | Switch to manual mode |
+
+---
+
+## 13) Pass/Fail checklist
+
+- [ ] Preflight: all files present, no stale artifacts
+- [ ] `/project-init` creates full project structure from scan
+- [ ] Tracked: refresh reports missing context on new branch
+- [ ] Tracked: bootstrap creates branch files
+- [ ] Tracked: refresh-after-bootstrap returns full metadata
+- [ ] Tracked: branch isolation (no cross-contamination)
+- [ ] Lifecycle: checkpoint appends to LOG.md
+- [ ] Lifecycle: close appends session summary
+- [ ] Lifecycle: cleanup-candidates is read-only
+- [ ] Lifecycle: knowledge-refresh is proposal-only
+- [ ] Lite: refresh succeeds without branch folder
+- [ ] Lite: no missing_branch_context error
+- [ ] MR.md: both files seeded and read when configured
+- [ ] Manual fallback produces equivalent refresh output
+- [ ] Phases: created and included in refresh
+- [ ] History rewrite: refresh survives stale SHAs
+- [ ] Merge closure: respects user choice
+- [ ] agents_stale_vs_branch: nudge present when applicable
+- [ ] Rule layering: both generic + overlay loaded correctly
