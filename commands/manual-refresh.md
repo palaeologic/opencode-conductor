@@ -3,20 +3,50 @@ description: Manual fallback refresh without tool-calling
 subtask: true
 ---
 
-Tool-calling is disabled. Run manual handoff refresh for project key `$ARGUMENTS` using branch context files and git delta (or **lite** git-only window when `handoffModeDefault` is `lite` and branch files are absent), then return:
-- branch
-- checkpoint -> head
-- changed_areas
-- reread_files
-- mr_update_recommended
-- log_append_recommended
-- recommendations / risks
+Tool-calling is disabled. Run manual handoff refresh for project key `$ARGUMENTS`.
 
-Rules:
-1. Resolve branch and repo root.
-2. If branch context files are missing, seed them from templates.
-3. Read context in order: project -> area -> package -> branch files.
-4. Determine checkpoint from `reviewed_through` in `LOG.md` when tracked files exist; otherwise use the last N commits window (**lite**).
-5. Inspect git delta from checkpoint to `HEAD`.
-6. Do not mix context across branches.
-7. Do not auto-update shared package `AGENTS.md`; propose promotions separately.
+## Procedure
+
+1. Resolve branch and repo root from git.
+2. Load descriptor at `~/.config/opencode/projects/$ARGUMENTS/descriptor.json`.
+3. Determine handoff mode from `handoffModeDefault` (default: `tracked`).
+4. **Tracked**: if branch context files (`MERGE_REQUEST.md`, `LOG.md`) are missing, seed from `_templates/mr/`. **Lite**: skip — no branch files required.
+5. Read context in order: project `AGENTS.md` → active area `AGENTS.md` → package `AGENTS.md` (if applicable) → branch `MERGE_REQUEST.md` → `PHASES.md` (if present) → latest `LOG.md`.
+6. Determine checkpoint: `reviewed_through` field from `LOG.md` (tracked), or merge-base / last N commits window (lite).
+7. Inspect git delta from checkpoint to `HEAD`: list changed files, bucket by area prefix.
+8. Do not mix context across branches.
+9. Do not auto-update shared `AGENTS.md`; propose promotions separately.
+
+## Output format (MUST use exactly)
+
+After completing the procedure, output the following block. The receiving agent or user parses this structure directly. Do NOT omit fields, do NOT reorganize into prose.
+
+```
+## Handoff refresh result
+- project_key: $ARGUMENTS
+- handoff_mode: <tracked|lite>
+- branch: <current branch name>
+- checkpoint: <checkpoint_commit> → <head_commit>
+- checkpoint_source: <log_field|merge_base|lite_window>
+- changed_areas: [<comma-separated area names>]
+- changed_files_count: <number>
+- reread_files:
+  - <path 1>
+  - <path 2>
+  - ...
+- log_append_recommended: <true|false>
+- mr_update_recommended: <true|false>
+- needs_checkpoint: <true|false>
+- context_staleness: <fresh|aging|stale>
+- agents_stale_vs_branch: <true|false|unknown>
+- risks:
+  - <risk 1>
+  - <risk 2>
+  - ...
+- next_steps:
+  - <recommendation 1>
+  - <recommendation 2>
+  - ...
+```
+
+After the structured block, you MAY add a brief narrative summary for human readability, but the structured block MUST come first and MUST be complete.
