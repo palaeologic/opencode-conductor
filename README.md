@@ -19,7 +19,7 @@ Branch-local context outside the repo, **tracked** vs **lite** modes, optional `
 - [`README.md`](README.md) — canonical guide (architecture, workflows, commands, rules, skills, cost analysis)
 - [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — quick command decision matrix
 - [`TEST_PLAN.md`](TEST_PLAN.md) — smoke test checklist
-- [`CHANGELOG-v2.md`](CHANGELOG-v2.md) — v1 to v2/v3 evolution notes
+- [`CHANGELOG-v2.md`](CHANGELOG-v2.md) — v1 to Conductor evolution notes
 - [`docs/presentations/`](docs/presentations/) — teammate-facing deck assets
 
 ## Quick start
