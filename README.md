@@ -186,6 +186,7 @@ flowchart TD
 | `/project-checkpoint <projectKey>`         | Append checkpoint to `LOG.md`                                                                         |
 | `/project-close <projectKey>`              | Session-close summary in `LOG.md`                                                                     |
 | `/project-review <projectKey>`             | Generate review artifact (checklist, diff summary, or both — user chooses)                            |
+| `/project-update-mr <projectKey>`          | Update `MERGE_REQUEST.md` from git facts + branch context while preserving curated sections            |
 | `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
 | `/scaffold-knowledge <projectKey>`         | **Once after init:** scaffold shared `AGENTS.md` (not per-branch). Optional re-run when areas/packages/stack change |
@@ -209,6 +210,7 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 | Start a new session on an existing branch | `/manual-refresh` or `/project-refresh` |
 | Continue where I left off (read last checkpoint) | Read `branches/<branch>/LOG.md` directly — no refresh needed |
 | Review a colleague's branch | `/manual-refresh` → `/project-review` |
+| Update MR after review/progress | `/project-update-mr` |
 | Just verify my code compiles | `/check-types` (no refresh needed) |
 | Run tests for what I changed | `/run-tests` (no refresh needed) |
 | Quick lint cleanup | `/lint-fix` (no refresh needed) |

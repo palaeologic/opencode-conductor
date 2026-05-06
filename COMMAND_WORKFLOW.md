@@ -13,6 +13,7 @@ Quick reference for **which command** to run and **when**. For workflow diagrams
 | `/project-checkpoint <projectKey>` | yes | smaller |
 | `/project-close <projectKey>` | yes | smaller |
 | `/project-review <projectKey>` | yes | default |
+| `/project-update-mr <projectKey>` | yes | default |
 | `/project-cleanup-candidates <projectKey>` | yes | smaller |
 | `/project-knowledge-refresh <projectKey>` | yes | stronger |
 | `/manual-refresh <projectKey>` | yes | default |
@@ -34,6 +35,7 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Pausing mid-task (tracked) | `checkpoint` | Structured `LOG.md` entry |
 | Ending session (tracked) | `close` | Summary + next step |
 | Before code review | `review` | Generates checklist, diff summary, or both (user picks) |
+| After substantial review/progress | `update-mr` | Refreshes `MERGE_REQUEST.md` with current branch facts while preserving curated sections |
 | Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |
 | Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file |
 | Tools unavailable | `manual-refresh` | Bootstraps if needed, then delta |
@@ -62,6 +64,7 @@ Not all commands require the Bun tool engine. When tools are in `tools-off/` or 
 | `/project-checkpoint` | No | Has manual fallback (appends LOG.md directly) |
 | `/project-close` | No | Has manual fallback (appends LOG.md directly) |
 | `/project-review` | No | Works as-is (reads diff, generates REVIEW.md) |
+| `/project-update-mr` | No | Works as-is (reads branch files + git facts, updates MR) |
 | `/project-cleanup-candidates` | No | Works as-is (lists folders) |
 | `/project-phases` | No | Works as-is (creates/edits PHASES.md) |
 | `/project-knowledge-refresh` | No | Works as-is (reads + proposes) |
