@@ -1,8 +1,8 @@
-# OpenCode Handoff Command Workflow
+# OpenCode Handoff — Command Decision Matrix
 
-When to run which command in a descriptor-driven setup.
+Quick reference for **which command** to run and **when**. For workflow diagrams and full docs, see [`README.md`](README.md).
 
-## Commands
+## Command roster
 
 | Command | Subtask | Typical model binding |
 |---------|---------|------------------------|
@@ -23,45 +23,40 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Situation | Command | Notes |
 |-----------|---------|--------|
 | First time using kit on a project | `init` | Scans repo, drafts descriptor, user approves; only needed once per project |
-| Session start | `refresh` | Use `handoffMode: lite` in tool args only when descriptor or user requests lite. Auto-suggests `init` if no descriptor found |
+| Session start | `refresh` | Auto-suggests `init` if no descriptor found |
 | First visit to branch (tracked) | `bootstrap` then `refresh` | Creates MR/LOG (+ optional PHASES) |
 | Branch switch | `refresh` | Avoid carry-over |
 | After rebase / squash | `refresh` | Re-anchor checkpoint; append HISTORY note in `LOG.md` |
 | Large branch | `phases` | Milestones in `PHASES.md` |
 | Pausing mid-task (tracked) | `checkpoint` | Structured `LOG.md` entry |
-| Ending session (tracked) | `close` | Summary + next step; skip if zero meaningful work unless user insists |
+| Ending session (tracked) | `close` | Summary + next step |
 | Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |
 | Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file |
 | Tools unavailable | `manual-refresh` | Bootstraps if needed, then delta |
 
-## Refresh outcomes (tool)
+## Refresh outcomes
 
-On success, expect at least: `branch`, `handoff_mode`, checkpoint range, `changed_areas`, `reread_files`, `log_append_recommended`, `mr_update_recommended`, `needs_checkpoint`, `context_staleness`, optional `agents_stale_vs_branch`.
+**Success** returns at minimum: `branch`, `handoff_mode`, checkpoint range, `changed_areas`, `reread_files`, `log_append_recommended`, `mr_update_recommended`, `needs_checkpoint`, `context_staleness`, optional `agents_stale_vs_branch`.
 
-On failure: `reason` (e.g. `missing_branch_context`, `workspace_not_in_project`, `detached_head`, `descriptor_not_found`) and `recommended_next_step` when provided.
+**Failure** returns: `reason` + `recommended_next_step`.
 
-## Typical tracked flow
-
-1. `refresh`
-2. If `missing_branch_context` → `bootstrap` → `refresh`
-3. Implement; append `LOG.md` when `log_append_recommended` or after substantial work
-4. `checkpoint` before context switch; `close` when stopping
-5. `cleanup-candidates` occasionally
-
-## Lite flow
-
-1. Set `handoffModeDefault: lite` (or pass `handoffMode: lite` to refresh tool)
-2. `refresh` only — no bootstrap required
-3. Optional: later run `bootstrap` + switch descriptor to `tracked` if the branch becomes serious
+| Failure reason | Meaning | Next step |
+|----------------|---------|-----------|
+| `missing_branch_context` | No branch folder (tracked mode) | `/project-bootstrap` |
+| `workspace_not_in_project` | CWD outside project root | `cd` into project |
+| `detached_head` | No branch ref | Checkout a branch |
+| `descriptor_not_found` | No `descriptor.json` | `/project-init` |
 
 ## Manual fallback
 
-1. `/manual-refresh <projectKey>`
-2. Seed templates if files missing (tracked)
-3. Read layers: project `AGENTS.md` → area agents → MR files that exist → `LOG.md` tail → optional `PHASES.md`
-4. Git delta from checkpoint or recent window (lite)
-5. Return same fields as tool refresh where possible
+When tool-calling is unavailable:
 
-Quick sentence if command parsing fails:
+1. `/manual-refresh <projectKey>`
+2. Seeds templates if files missing (tracked)
+3. Reads layers: project `AGENTS.md` → active area agents → MR files → `LOG.md` tail → optional `PHASES.md`
+4. Git delta from checkpoint or recent window (lite)
+5. Returns same fields as tool refresh where possible
+
+Fallback sentence (if parsing fails):
 
 `Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`

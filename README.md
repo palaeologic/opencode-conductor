@@ -24,7 +24,50 @@ Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context o
    - Include [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md) in `instructions` (plus your project overlay rule if needed)
    - Allow `external_directory` for `~/.config/opencode/projects/**`
    - Register tools when provider path is stable
-5. Teammate deck: [`docs/presentations/handoff-kit-v2.pptx`](docs/presentations/handoff-kit-v2.pptx) (edit slides locally, then commit)
+
+## Architecture
+
+### Components
+
+| Component | Path | Role |
+|-----------|------|------|
+| Descriptor template | [`descriptors/descriptor.template.json`](descriptors/descriptor.template.json) | Schema baseline |
+| Example descriptor | [`descriptors/examples/example-project.descriptor.json`](descriptors/examples/example-project.descriptor.json) | Filled-in reference |
+| Engine | [`tools/_opencode_engine.ts`](tools/_opencode_engine.ts) | Bootstrap + refresh logic |
+| Tool wrappers | [`tools/opencode_*.ts`](tools/) | OpenCode plugin interface |
+| Commands | [`commands/`](commands/) | Slash-command markdown templates |
+| Branch templates | [`templates/mr/*`](templates/mr/) | `MERGE_REQUEST.md`, `LOG.md`, optional `PHASES.md`, `MR.md` |
+| Rule baseline | [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md) | MUST/SHOULD behavioral contract |
+| Presentations | [`docs/presentations/`](docs/presentations/) | Teammate deck |
+
+### Disk layout (per project)
+
+```
+~/.config/opencode/projects/<projectKey>/
+  descriptor.json
+  AGENTS.md                        ← project-level shared knowledge
+  <area>/AGENTS.md                 ← area-level shared knowledge
+  packages/<pkg>/AGENTS.md         ← optional package knowledge
+  _templates/mr/
+    MERGE_REQUEST.md
+    LOG.md
+    PHASES.md
+    MR.md                          ← optional
+  branches/<branch-name>/
+    MERGE_REQUEST.md
+    MR.md                          ← optional
+    LOG.md
+    PHASES.md                      ← optional
+```
+
+### Descriptor responsibilities
+
+- `projectRootPath`, `opencodeProjectRootPath`, `baselineBranchForMaterialChanges`
+- `handoffModeDefault`: `tracked` | `lite`
+- `areas` and optional `trackedKnowledgeTargets`
+- `branchHandoff`: templates, filenames, optional **`mrFilenames`** (ordered; first existing MR wins for primary read), `checkpointField`
+- `refreshToolHeuristics` for `mr_update_recommended`
+- `subtaskModels`: optional map of role → `provider/model` string
 
 ## Handoff modes
 
@@ -33,9 +76,29 @@ Reusable, **descriptor-driven** handoff kit for OpenCode: branch-local context o
 | **tracked** (default) | Long branches, MR workflow, handoffs | MR (+ optional MR.md), LOG, optional PHASES | `missing_branch_context` → bootstrap |
 | **lite** | Quick fixes, spikes, low-risk | Optional | Git window + minimal reread; no bootstrap required |
 
-Set `handoffModeDefault` in `descriptor.json` to `lite` or `tracked`. Override per call by passing `handoffMode` to `opencode_refresh_context` (see [`commands/project-refresh.md`](commands/project-refresh.md)).
+Set `handoffModeDefault` in `descriptor.json` to `lite` or `tracked`. Override per call by passing `handoffMode` to `opencode_refresh_context`.
 
-### Tracked workflow (tool mode)
+## Workflows
+
+### First-time project setup (`/project-init`)
+
+```mermaid
+flowchart TD
+  UserRefresh["/project-refresh projectKey"] --> CheckDesc{"descriptor.json exists?"}
+  CheckDesc -- yes --> NormalRefresh["Run refresh as normal"]
+  CheckDesc -- no --> AutoPrompt["Suggest: run /project-init"]
+  AutoPrompt --> InitFlow["/project-init projectKey"]
+
+  InitFlow --> Scan["Scan repo: git toplevel, dirs, packages, baseline branch"]
+  Scan --> DraftDescriptor["Generate draft descriptor.json"]
+  DraftDescriptor --> PresentDraft["Show JSON to user for review"]
+  PresentDraft --> UserApproves{"Approved?"}
+  UserApproves -- yes --> WriteDescriptor["Write descriptor + templates + AGENTS.md"]
+  UserApproves -- edits --> PresentDraft
+  WriteDescriptor --> Ready["Ready: /project-refresh projectKey"]
+```
+
+### Tracked workflow
 
 ```mermaid
 flowchart TD
@@ -60,18 +123,18 @@ flowchart TD
 
 ```mermaid
 flowchart TD
-  L1["descriptor.handoffModeDefault lite"] --> L2["/project-refresh projectKey"]
-  L2 --> L3["Git delta plus minimal reread_files"]
+  L1["descriptor.handoffModeDefault: lite"] --> L2["/project-refresh projectKey"]
+  L2 --> L3["Git delta + minimal reread_files"]
   L3 --> L4["Implement work"]
-  L4 --> L5["Optional: switch to tracked later via bootstrap"]
+  L4 --> L5["Optional: switch to tracked later via /project-bootstrap"]
 ```
 
-## Commands (project key required)
+## Commands
 
 | Command | Purpose |
 |---------|---------|
 | `/project-init <projectKey>` | **First-time setup**: scan repo, draft descriptor.json, present for approval, write project structure |
-| `/project-refresh <projectKey>` | Sync context; returns `changed_areas`, `reread_files`, nudges. Auto-suggests `/project-init` if no descriptor found |
+| `/project-refresh <projectKey>` | Sync context; returns `changed_areas`, `reread_files`, nudges. Auto-suggests init if no descriptor |
 | `/project-bootstrap <projectKey>` | Seed tracked branch files (asks phases yes/no) |
 | `/project-phases <projectKey>` | Create or refine `PHASES.md` |
 | `/project-checkpoint <projectKey>` | Append checkpoint to `LOG.md` |
@@ -80,18 +143,22 @@ flowchart TD
 | `/project-knowledge-refresh <projectKey>` | Propose durable knowledge updates (user approves) |
 | `/manual-refresh <projectKey>` | No tool-calling; merges bootstrap+refresh behavior when needed |
 
-Examples: `/project-init myapp`, `/project-refresh aimos`, `/manual-refresh aimos`, `/project-close aimos`
+Examples: `/project-init myapp`, `/project-refresh myapp`, `/project-close myapp`
 
-## Refresh tool output (high level)
+For **when to use which command** and model binding, see [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md).
 
-Successful refresh JSON includes among others:
+## Refresh tool output
 
-- `handoff_mode`, `branch`, `checkpoint_commit`, `head_commit`, `checkpoint_source`
+Successful refresh JSON includes:
+
+- `handoff_mode`, `branch`, `area`, `checkpoint_commit`, `head_commit`, `checkpoint_source`
 - `changed_areas`, `changed_files_preview`, `reread_files`
 - `mr_context_path`, `mr_context_paths`, `log_context_path`, `phases_context_path`
 - `last_log_age_minutes`, `needs_checkpoint`, `context_staleness`
 - `log_append_recommended`, `mr_update_recommended`, `agents_stale_vs_branch`
 - `subtaskModels` (echo of descriptor map for agents to pick models)
+
+On failure: `reason` + `recommended_next_step` (e.g. `descriptor_not_found` → `project_init`).
 
 ## Optional `MR.md`
 
@@ -99,9 +166,9 @@ If `branchHandoff.mrFilenames` lists `MR.md` after `MERGE_REQUEST.md`, bootstrap
 
 ## Per-subtask models
 
-OpenCode **`opencode.json`** supports per-command `model` and `subtask` (see [OpenCode config](https://opencode.ai/config.json)). The descriptor may include **`subtaskModels`** (`refresh`, `bootstrap`, `checkpoint`, `close`, `knowledge`) as documentation for which model ID to bind when you register commands.
+OpenCode `opencode.json` supports per-command `model` and `subtask`. The descriptor may include `subtaskModels` (`refresh`, `bootstrap`, `checkpoint`, `close`, `knowledge`) as documentation for which model ID to bind.
 
-Example (adjust provider and model IDs to your setup):
+Example `opencode.json` snippet:
 
 ```json
 {
@@ -122,8 +189,6 @@ Example (adjust provider and model IDs to your setup):
 }
 ```
 
-If markdown frontmatter gains `model` support in your build, you can mirror the same IDs there.
-
 ## Manual mode
 
 Primary: `/manual-refresh <projectKey>`. Fallback sentence (if parsing fails):
@@ -131,15 +196,6 @@ Primary: `/manual-refresh <projectKey>`. Fallback sentence (if parsing fails):
 `Tool-calling is disabled. Run manual handoff refresh for project key <projectKey> using branch context files and git delta, then return branch, checkpoint->head, changed_areas, reread_files, and recommendations.`
 
 Manual mode intentionally **combines** bootstrap + refresh so one command works when tools are down.
-
-## Where to read more
-
-- Concept: [`OPENCODE_HANDOFF_GENERIC.md`](OPENCODE_HANDOFF_GENERIC.md)
-- Command matrix: [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md)
-- Tests: [`TEST_PLAN.md`](TEST_PLAN.md)
-- Rule baseline: [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md)
-- Local OpenCode alignment ideas: [`docs/ALIGNMENT_OPENCODE_HOME.md`](docs/ALIGNMENT_OPENCODE_HOME.md)
-- Fallback skill: [`skills/project-manual-refresh-fallback.md`](skills/project-manual-refresh-fallback.md)
 
 ## Template authoring
 
