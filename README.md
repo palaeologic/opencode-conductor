@@ -14,6 +14,14 @@ Branch-local context outside the repo, **tracked** vs **lite** modes, optional `
 - Command templates: `/project-*`, `/manual-refresh`, plus **checkpoint / close / cleanup / knowledge**
 - Bun tools: `opencode_bootstrap_branch`, `opencode_refresh_context` (optional if tool-calling is unstable)
 
+## Docs map
+
+- [`README.md`](README.md) — canonical guide (architecture, workflows, commands, rules, skills, cost analysis)
+- [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — quick command decision matrix
+- [`TEST_PLAN.md`](TEST_PLAN.md) — smoke test checklist
+- [`CHANGELOG-v2.md`](CHANGELOG-v2.md) — v1 to v2/v3 evolution notes
+- [`docs/presentations/`](docs/presentations/) — teammate-facing deck assets
+
 ## Quick start
 
 1. **Pull latest** from GitHub, then copy kit assets into your OpenCode home:

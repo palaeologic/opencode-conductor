@@ -88,7 +88,7 @@ New fields returned by `opencode_refresh_context`:
 | File | Change |
 |------|--------|
 | `README.md` | Now single source of truth: architecture, disk layout, all Mermaid diagrams, commands, output schema |
-| `OPENCODE_HANDOFF_GENERIC.md` | Reduced to redirect → README |
+| `README.md` | Consolidated canonical handoff documentation previously split across legacy runbooks |
 | `COMMAND_WORKFLOW.md` | Trimmed to pure decision matrix (when to call which command) |
 | `TEST_PLAN.md` | Added sections for lite mode, MR.md, lifecycle commands; fixed active-area wording |
 | `rules/HANDOFF_GENERIC.md` | Rewritten as concise MUST/SHOULD behavioral contract |
