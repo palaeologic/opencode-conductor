@@ -5,6 +5,10 @@ subtask: true
 
 Update the current branch `MERGE_REQUEST.md` for project key `$ARGUMENTS`.
 
+## Scope
+
+Paste-ingest of semi-structured MR/issue/testing context lives in `/project-review-sync` (scope D), not here. This command is for refreshing canonical `## OpenCode:` blocks and append/regenerate MR drafts.
+
 ## Project key resolution
 
 If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
@@ -56,18 +60,9 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
    - **A) Update in place (safe merge)**
    - **B) Append an update section only**
    - **C) Regenerate full MR draft (preserve protected sections)**
-   - **D) Ingest pasted MR/issue/testing context into narrative sections (safe merge)**
-6. If user chose **D** (or additionally requests context ingest), ask them to paste source text and normalize it into protected narrative sections:
-   - `Issue`/`MR`/`Pod URL` and similar links -> `## External links` bullets (or `## Notes` if section absent).
-   - `Stakeholders` -> `## Stakeholders`.
-   - `Description` -> concise `## Goal` summary (1-3 sentences), with extra details in `## Notes`.
-   - `Proposal` -> `## In scope`.
-   - `Acceptance criteria` -> `## Acceptance criteria` checkboxes.
-   - `Blocked by` -> blocker note in `## Constraints` (skip when effectively none, e.g. `Nada`).
-   - Testing instructions/focus/review pod -> `## Verification target`.
-   - Feedback requests -> `## Feedback requested` (or `## Notes` fallback).
-   - Replace placeholder text; do not overwrite non-placeholder human-authored narrative without explicit approval.
-7. Update `MERGE_REQUEST.md` according to chosen mode(s):
+
+   If the user asks to seed/refresh narrative sections from external semi-structured MR/issue/testing text, send them to `/project-review-sync <projectKey>` (scope D). This command does not handle that flow.
+6. Update `MERGE_REQUEST.md` according to chosen mode(s):
    - **Primary (always target when present or when using stock template):**
     - `## OpenCode: review status` — refresh with git summary, areas touched, checkpoint range, optional next steps from `LOG.md` / recommendations. **If the heading is missing**, insert it **after** the last protected narrative section (typically after `## Notes`) and before other `OpenCode:` blocks; do not duplicate.
      - `## OpenCode: open findings (from REVIEW.md)` — when `REVIEW.md` contains `## Review findings / questions` and/or triage by `F-xx`, summarize **still-open** vs **resolved** items here for MR readers. If `REVIEW.md` is missing, set a one-line placeholder. **If the heading is missing**, create it after `## OpenCode: review status`.
@@ -78,7 +73,7 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
      - `## Risks and reviewer focus`
      - `## Next steps`
    - **Never** inject automated git/findings prose into unstructured author checklists, `## Goal` body, or narrative outside OpenCode (and outside legacy ops headings listed above).
-8. Write updated file and report path.
+7. Write updated file and report path.
 
 ## Promotion from `REVIEW.md`
 
