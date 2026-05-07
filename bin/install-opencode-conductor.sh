@@ -11,7 +11,7 @@ SYNCED_COUNT=0
 
 usage() {
   cat <<'EOF'
-Usage: bash bin/install-opencode.sh [options]
+Usage: bash bin/install-opencode-conductor.sh [options]
 
 Sync OpenCode kit files from this repository into ~/.config/opencode.
 

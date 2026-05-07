@@ -28,12 +28,12 @@ Branch-local context outside the repo, **tracked** vs **lite** modes, optional `
 ```bash
 git clone <repo>
 cd opencode-conductor
-bash bin/install-opencode.sh
+bash bin/install-opencode-conductor.sh
 # or to preview only:
-bash bin/install-opencode.sh --dry-run
+bash bin/install-opencode-conductor.sh --dry-run
 ```
 
-Re-run `bash bin/install-opencode.sh` after each `git pull` so `~/.config/opencode/` stays in sync with kit updates.
+Re-run `bash bin/install-opencode-conductor.sh` after each `git pull` so `~/.config/opencode/` stays in sync with kit updates.
 
 1. **Pull latest** from GitHub, then copy kit assets into your OpenCode home:
   - `rules/*` → `~/.config/opencode/rules/`
