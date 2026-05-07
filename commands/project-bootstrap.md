@@ -3,6 +3,8 @@ description: Generic branch bootstrap via descriptor-driven tool
 subtask: true
 ---
 
+When the user opts into phased delivery, load skill `plan-phases` (when available) for the Senior Architect / PM lens before drafting `PHASES.md`.
+
 ## Project key resolution
 
 If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:

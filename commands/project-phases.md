@@ -3,6 +3,8 @@ description: Create or refine PHASES.md for large branches
 subtask: true
 ---
 
+Loads skill: `plan-phases` (when available) for the Senior Architect / PM lens, phase template, sizing heuristics, and anti-patterns.
+
 ## Project key resolution
 
 If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:

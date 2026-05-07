@@ -3,6 +3,8 @@ description: Generate a review artifact for the current branch
 subtask: true
 ---
 
+Loads skills (when available): `review-branch` (Senior Reviewer lens), `discover-knowledge` (Senior Architect lens, used by the knowledge preflight).
+
 Generate a review artifact for the current project.
 
 ## Project key resolution
@@ -27,6 +29,55 @@ Ask the user in **plain language** first; you may show the letter as a shorthand
 ## Procedure
 
 1. Run refresh internally (call `opencode_refresh_context` or manual refresh steps) to gather: branch, changed_areas, changed_files, risks from `LOG.md`, MR acceptance criteria from `MERGE_REQUEST.md`.
+
+1.5. **Knowledge preflight (silent default).** Run before any user-facing question. Goal: ensure relevant area / leaf `AGENTS.md` files exist and surface stale ones as findings, so the review draws on real context.
+
+   1. From the refresh result, take `changed_files` (use `changed_files_preview` if `changed_files` is unavailable).
+   2. Load `pseudoPackageDetection` from the descriptor and **normalize**:
+      - Object form (legacy v1): wrap in a single-element array.
+      - Reject any rule missing `area`.
+      - Skip rules whose `pathPattern` lacks `{packageName}` (area-only documentation).
+   3. Apply detection rules to map each changed file to a `(area, packageName)` pair. **Disambiguation:** longest matching stem wins; ties broken by descriptor array order. Files that don't map are ignored.
+   4. For each unique detected leaf, resolve the expected `AGENTS.md`:
+      - If `trackedKnowledgeTargets.sharedPackageKnowledge[packageName]` is defined, use that override path.
+      - Otherwise use the convention path `<opencodeProjectRootPath>/<rel>/AGENTS.md`, where `<rel>` mirrors the leaf's path under `projectRootPath` per the **stem derivation contract** in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md).
+   5. Apply safety guardrails for any candidate write:
+      - Reject leaf names not matching `^[A-Za-z0-9_][A-Za-z0-9_-]*$` (`invalid_package_name`).
+      - Verify root containment under `opencodeProjectRootPath` (`path_outside_root`).
+      - `lstat` the target; if it is a symlink, do not write (`symlink_refused`).
+   6. Classify each leaf:
+      - **`existing`** — `AGENTS.md` present at resolved path.
+      - **`missing`** — no file; safety guardrails passed; auto-scaffold using the leaf template from [`commands/scaffold-knowledge.md`](scaffold-knowledge.md) step 11. **Non-destructive**: skip if the file appeared between detection and write.
+      - **`stale`** — file exists and the **deterministic git-based stale heuristic** is true (see below).
+      - **`skipped`** — guardrail tripped; record reason.
+   7. After each successful auto-scaffold, append exactly one audit line to the active branch's `LOG.md`:
+
+      ```
+      preflight: scaffolded <area>/<packageName> at <path> (commit: <head_short>)
+      ```
+   8. Add convention-path leaf files (existing and newly created) to the review's reread list so step 6 below sees them. Do not re-fetch `reread_files` from the engine — augment the local list.
+   9. Emit a structured **`## Preflight summary`** subsection at the very top of the generated `REVIEW.md`, containing:
+
+      ```
+      ## Preflight summary
+      - created: [<area>/<pkg> -> <path>, ...]
+      - existing: <count>
+      - stale: [<area>/<pkg>, ...]
+      - skipped: [<area>/<pkg> — <reason>, ...]
+      ```
+
+   For each `stale` entry, also emit one finding `F-xx` "Knowledge stale for `<area>/<package>`" with severity `Medium` and Suggested action `/project-knowledge-refresh <projectKey>`. For each `skipped` entry, emit `F-xx` "Preflight skipped `<area>/<package>` — `<reason>`" with severity `Note`.
+
+   **Default is silent**: do not interrupt the user with prompts during preflight. Errors surface as findings, not blockers. Users may pass `no-preflight` (in `$ARGUMENTS`, e.g. `/project-review <projectKey> no-preflight`) to skip this step.
+
+   **Stale heuristic (deterministic, git-only):** A leaf's `AGENTS.md` is stale when ALL are true:
+
+   - There is at least one commit since `git merge-base HEAD <baselineBranchForMaterialChanges>` whose changed files include the leaf path (`api/<pkg>/...` or equivalent).
+   - There is **no** commit since that merge-base whose changed files include the leaf's `AGENTS.md`.
+   - Churn under the leaf since merge-base is `>= 5` changed files OR includes a high-signal sub-path (`gql/`, `models.py`, `migrations/`, `schema.*`, `index.{ts,tsx,js}`, or any file matched by `descriptor.refreshToolHeuristics.highSignalChangedSubstrings`).
+
+   Do **not** use `mtime` — it is unreliable across `git checkout`, IDE saves, and editor scaffolds.
+
 2. **If `REVIEW.md` already exists** in the branch folder:
    - Ask whether to **replace the entire file** or **merge into the existing file** (merge is safer when humans edited triage).
    - If merging or partially regenerating: ask **findings merge mode**:
@@ -63,6 +114,7 @@ After the structured block, display the generated `REVIEW.md` content inline for
 
 When generating a **checklist** (type A) or the checklist portion of **both** (type C), use this order unless the branch is trivially small (then omit empty sections):
 
+0. **`## Preflight summary`** — emitted by step 1.5 (knowledge preflight). Always present at the very top when preflight ran (skipped only with `no-preflight`).
 1. **`## Executive summary`** — 3–8 bullets: what changed, scale of churn (file count / rough insert-delete totals from `git diff` metadata if available), where the highest risk is. For very large MRs, state clearly when most files look like mechanical churn (e.g. import-only refactors) **only** if justified by diff shape; otherwise use cautious language (**estimated**).
 2. **`## Review findings / questions`** — triageable engineering questions and risks (not a duplicate of every MR acceptance checkbox). Prefer **questions / risks / follow-ups**; reference MR acceptance by short title where the finding relates to a specific criterion.
    - **Table** (no checkboxes inside cells; pipe table):
