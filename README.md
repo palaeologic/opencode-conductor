@@ -10,7 +10,7 @@ Branch-local context (default **under `~/.config`**, or **beside the clone** whe
 
 ## What this repo is for
 
-- Branch-level context: `MERGE_REQUEST.md`, optional `MR.md`, `LOG.md`, optional `PHASES.md` under `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/`
+- Branch-level context: `MERGE_REQUEST.md`, optional `MR.md`, `LOG.md`, optional `PHASES.md` under **`branchHandoff.contextDirTemplate`** (default global example: `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/`)
 - Command templates: `/project-*`, `/manual-refresh`, plus **checkpoint / close / cleanup / knowledge**
 - Bun tools: `opencode_bootstrap_branch`, `opencode_refresh_context` (optional if tool-calling is unstable)
 
