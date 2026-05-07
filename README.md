@@ -17,6 +17,7 @@ Branch-local context outside the repo, **tracked** vs **lite** modes, optional `
 ## Docs map
 
 - [`README.md`](README.md) — canonical guide (architecture, workflows, commands, rules, skills, cost analysis)
+- [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review**, skills, Mermaid diagrams); start here for ordered procedures
 - [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — quick command decision matrix
 - [`TEST_PLAN.md`](TEST_PLAN.md) — smoke test checklist
 - [`CHANGELOG-v2.md`](CHANGELOG-v2.md) — v1 to Conductor evolution notes
@@ -68,6 +69,7 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 | Tool wrappers       | `[tools/opencode_*.ts](tools/)`                                                                                | OpenCode plugin interface                                   |
 | Commands            | `[commands/](commands/)`                                                                                       | Slash-command markdown templates                            |
 | Branch templates    | `[templates/mr/*](templates/mr/)`                                                                              | `MERGE_REQUEST.md`, `LOG.md`, optional `PHASES.md`, `MR.md` |
+| Workflow scenarios  | [`WORKFLOW.md`](WORKFLOW.md)                                                                                    | Step-by-step review / MR / handoff flows |
 | Rule baseline       | `[rules/HANDOFF_GENERIC.md](rules/HANDOFF_GENERIC.md)`                                                         | MUST/SHOULD behavioral contract                             |
 | Code quality rule   | `[rules/CODE_QUALITY.md](rules/CODE_QUALITY.md)`                                                               | Universal quality standards                                 |
 | Frontend rule       | `[rules/FRONTEND.md](rules/FRONTEND.md)`                                                                       | Base frontend conventions                                   |
@@ -104,6 +106,8 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 - `branchHandoff`: templates, filenames, optional `**mrFilenames**` (ordered; first existing MR wins for primary read), `checkpointField`
 - `refreshToolHeuristics` for `mr_update_recommended`
 - `subtaskModels`: optional map of role → `provider/model` string
+
+**UI base URLs** for reviewers belong in **`MERGE_REQUEST.md`** (`## Verification target`) and/or repo `README` — [`/project-review`](commands/project-review.md) folds a single optional **`Base URL (manual):`** line into `## How to verify` (see command). No descriptor fields are required for URLs.
 
 ## Handoff modes
 
@@ -185,8 +189,9 @@ flowchart TD
 | `/project-phases <projectKey>`             | Create or refine `PHASES.md`                                                                          |
 | `/project-checkpoint <projectKey>`         | Append checkpoint to `LOG.md`                                                                         |
 | `/project-close <projectKey>`              | Session-close summary in `LOG.md`                                                                     |
-| `/project-review <projectKey>`             | Generate review artifact (checklist, diff summary, or both — user chooses)                            |
-| `/project-update-mr <projectKey>`          | Update `MERGE_REQUEST.md` from git facts + branch context while preserving curated sections            |
+| `/project-review <projectKey>`             | Generate `REVIEW.md` (checklist review, diff-first review, or checklist + diff; findings table with `F-xx` ids; preserve/replace triage; optional appendix; optional reviewer context) |
+| `/project-review-sync <projectKey>`        | Light refresh: merge MR deltas into `REVIEW.md` checklist, optional new `F-xx` rows (preserve triage), refresh MR **`OpenCode:`** blocks — not a full regenerate |
+| `/project-update-mr <projectKey>`          | Update `MERGE_REQUEST.md` from git facts + branch context; refreshes **`## OpenCode:`** machine blocks and optional legacy ops headings if present |
 | `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
 | `/scaffold-knowledge <projectKey>`         | **Once after init:** scaffold shared `AGENTS.md` (not per-branch). Optional re-run when areas/packages/stack change |
@@ -205,21 +210,19 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 
 ### Use cases → what to run
 
-| I want to... | Run |
-| ------------ | --- |
+**Full catalog** (init, phases, tracked loop, lite mode, review, skills, diagrams): **[`WORKFLOW.md`](WORKFLOW.md)** — that file is the single source of truth for ordered procedures; this table is only **quick picks**.
+
+| I want to… | Run or read |
+| ----------- | ----------- |
+| **Everything else** (“how do I…?”) | Open **[`WORKFLOW.md`](WORKFLOW.md)** TOC |
 | Start a new session on an existing branch | `/manual-refresh` or `/project-refresh` |
-| Continue where I left off (read last checkpoint) | Read `branches/<branch>/LOG.md` directly — no refresh needed |
-| Review a colleague's branch | `/manual-refresh` → `/project-review` |
-| Update MR after review/progress | `/project-update-mr` |
-| Just verify my code compiles | `/check-types` (no refresh needed) |
-| Run tests for what I changed | `/run-tests` (no refresh needed) |
-| Quick lint cleanup | `/lint-fix` (no refresh needed) |
-| Check what happened last session | Read `branches/<branch>/LOG.md` — look at last checkpoint entry |
-| Save progress before a break | `/project-checkpoint` |
-| Wrap up for the day | `/project-close` |
-| Start fresh on a new project | `/project-init` → `/scaffold-knowledge` |
-| Understand an unfamiliar area | Agent loads `onboard-area` skill automatically |
-| Full pre-merge quality check | Agent loads `review-branch` skill, or manually: `/manual-refresh` → `/project-review` → `/check-types` → `/run-tests` |
+| First-time project on this kit | `/project-init` → `/scaffold-knowledge` (see **WORKFLOW §2**) |
+| Long-lived branch / checkpoints / MR sync | **WORKFLOW §3**; `/project-checkpoint`, `/project-update-mr` |
+| Review before merge | `/manual-refresh` → `/project-review` (**WORKFLOW §9**); optional `review-branch` skill |
+| Light sync after MR edits or new commits | `/project-review-sync` |
+| Refresh MR `OpenCode:` blocks from facts | `/project-update-mr` |
+| Types / tests / lint only | `/check-types`, `/run-tests`, `/lint-fix` |
+| Read last session without refresh | `branches/<branch>/LOG.md` |
 
 ### Lightweight workflows (no refresh needed)
 
@@ -289,7 +292,7 @@ Skills are NOT loaded unless relevant — unlike rules which are always present.
 
 | Skill | Agent loads it when... | What it does |
 | ----- | ---------------------- | ------------ |
-| `review-branch` | User asks to review a branch, or says "check before merge" | Orchestrates: `/manual-refresh` → `/project-review` → `/check-types` → `/run-tests` |
+| `review-branch` | User asks to review a branch, or says "check before merge" | Orchestrates: `/manual-refresh` → `/project-review` → optional verification → optional `/project-update-mr` or `/project-review-sync` (see skill) |
 | `session-lifecycle` | User starts/ends a session, or asks "how should I checkpoint?" | Guides the refresh → work → checkpoint → close flow with decision points |
 | `onboard-area` | User asks about unfamiliar code, or agent needs to understand a new area before making changes | Reads AGENTS.md hierarchy, scans key files, builds a mental model |
 | `verify-changes` | User says "check if everything works" or "verify my changes" | Decision tree: detect areas → type-check → test → lint, reports combined result |
