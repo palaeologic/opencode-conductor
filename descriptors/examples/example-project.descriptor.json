@@ -1,5 +1,6 @@
 {
   "projectKey": "example-project",
+  "descriptorSchemaVersion": 2,
   "projectRootPath": "~/projects/example-project",
   "opencodeProjectRootPath": "~/.config/opencode/projects/example-project",
   "baselineBranchForMaterialChanges": "main",
@@ -22,11 +23,14 @@
       "commandsRoot": "cli"
     }
   },
-  "pseudoPackageDetection": {
-    "kind": "pathAndAlias",
-    "pathPattern": "frontend/src/{packageName}/**/*",
-    "aliases": ["@org/{packageName}", "@platform/{packageName}"]
-  },
+  "pseudoPackageDetection": [
+    {
+      "area": "frontend",
+      "kind": "pathAndAlias",
+      "pathPattern": "frontend/src/{packageName}/**/*",
+      "aliases": ["@org/{packageName}", "@platform/{packageName}"]
+    }
+  ],
   "trackedKnowledgeTargets": {
     "sharedPackageKnowledge": {
       "forms": "~/.config/opencode/projects/example-project/frontend/packages/forms/AGENTS.md",

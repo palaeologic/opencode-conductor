@@ -41,6 +41,37 @@ Alternatively, for a clean cut: archive old state, re-run **`/project-init`** wi
 
 If your team standardizes on a **fork** of this kit, treat **that fork** as the clone you `git pull` and install from so org-specific commands stay aligned. Upstream `CHANGELOG.md` remains vendor-neutral; your fork may add release notes for fork-only changes.
 
+## Migrating to `descriptorSchemaVersion: 2`
+
+Schema v2 introduces a small, additive change: `pseudoPackageDetection` becomes an **array of rules** so a single project can declare distinct detection strategies per area (e.g., a `pathAndAlias` rule for a frontend monorepo plus a `pathPrefix` rule for a flat backend with naming conventions). The legacy object form is still accepted for one minor release and is treated as a single-element array.
+
+Steps:
+
+1. Add `"descriptorSchemaVersion": 2` near the top of `descriptor.json`.
+2. Wrap the existing `pseudoPackageDetection` object in an array and add an `"area": "<existing-area>"` field. Example:
+
+   ```json
+   "pseudoPackageDetection": [
+     {
+       "area": "frontend",
+       "kind": "pathAndAlias",
+       "pathPattern": "frontend/src/{packageName}/**/*",
+       "aliases": ["@org/{packageName}"]
+     }
+   ]
+   ```
+3. (Optional) Add a second rule for any other area with package-like leaves (backend monorepo packages, prefix-named modules, etc.).
+4. Drop redundant entries from `trackedKnowledgeTargets.sharedPackageKnowledge` for leaves whose knowledge already lives at the **convention path** (`<opencodeProjectRootPath>/<rel>/AGENTS.md` mirroring the leaf's path under `projectRootPath`). Keep `sharedPackageKnowledge` only for true overrides (legacy paths, generated knowledge, files shared across leaves).
+5. If you previously placed leaf knowledge at a non-canonical path (e.g., `<opencodeRoot>/<area>/packages/<pkg>/AGENTS.md` when no `packages/` segment exists in the source tree), keep the legacy file with a short redirect note pointing to the new convention path; remove it in the next release cycle.
+
+Validation:
+
+- `python -m json.tool < descriptor.json` parses cleanly.
+- `/scaffold-knowledge <projectKey> list` enumerates leaves at the expected convention paths.
+- `/scaffold-knowledge <projectKey> dry-run` reports zero new writes after the initial pass on a healthy descriptor.
+
+Backward compatibility: omit `descriptorSchemaVersion` and keep `pseudoPackageDetection` as an object — commands will normalize to a single-rule array on read. This is the deprecated path; please migrate before the next major release.
+
 ## Tags
 
 Optional `git tag` releases (e.g. `v0.3.0`) on `main` are documented in the root [`CHANGELOG.md`](../CHANGELOG.md). Tags are optional; day-to-day upgrades follow `git pull` + install script.

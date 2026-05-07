@@ -1,5 +1,6 @@
 {
   "projectKey": "my-project",
+  "descriptorSchemaVersion": 2,
   "projectRootPath": "~/projects/my-project",
   "opencodeProjectRootPath": "~/.config/opencode/projects/my-project",
   "baselineBranchForMaterialChanges": "main",
@@ -30,13 +31,28 @@
       "commandsRoot": "cli"
     }
   },
-  "pseudoPackageDetection": {
-    "kind": "pathAndAlias",
-    "pathPattern": "frontend/src/{packageName}/**/*",
-    "aliases": [
-      "@org/{packageName}"
-    ]
-  },
+  "pseudoPackageDetection": [
+    {
+      "area": "frontend",
+      "kind": "pathAndAlias",
+      "pathPattern": "frontend/src/{packageName}/**/*",
+      "aliases": [
+        "@org/{packageName}"
+      ]
+    },
+    {
+      "area": "backend",
+      "kind": "pathPrefix",
+      "pathPattern": "backend/{packageName}/**/*",
+      "namePrefixes": [
+        "core_",
+        "feature_"
+      ],
+      "namedExtras": [
+        "shared_core"
+      ]
+    }
+  ],
   "trackedKnowledgeTargets": {
     "sharedPackageKnowledge": {},
     "trackedAreas": [

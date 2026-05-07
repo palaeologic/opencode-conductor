@@ -146,12 +146,51 @@ Use **`/project-init`** to pick global vs project-local and the `.gitignore` tri
 
 ### Descriptor responsibilities
 
+- `descriptorSchemaVersion`: integer, current is **`2`** (introduces the rules-array form of `pseudoPackageDetection`). Omitted or absent ≡ **v1** (legacy object form). v1 is **deprecated** and accepted for one minor release; see [`docs/UPGRADING.md`](docs/UPGRADING.md).
 - `projectRootPath`, `opencodeProjectRootPath`, `baselineBranchForMaterialChanges`
 - `handoffModeDefault`: `tracked` | `lite`
 - `areas` and optional `trackedKnowledgeTargets`
 - `branchHandoff`: templates, filenames, optional `**mrFilenames**` (ordered; first existing MR wins for primary read), `checkpointField`
 - `refreshToolHeuristics` for `mr_update_recommended`
 - `subtaskModels`: optional map of role → `provider/model` string
+- `pseudoPackageDetection`: **array of rules** (v2). Each rule declares an `area` and a `kind` (`pathAndAlias` or `pathPrefix`) plus a `pathPattern` whose `{packageName}` slot drives leaf detection and the source-tree-mirror knowledge convention path (see [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md)).
+
+#### `pseudoPackageDetection` rule shape (v2)
+
+`pathAndAlias` rule:
+
+```json
+{
+  "area": "frontend",
+  "kind": "pathAndAlias",
+  "pathPattern": "frontend/src/{packageName}/**/*",
+  "aliases": ["@org/{packageName}"]
+}
+```
+
+`pathPrefix` rule:
+
+```json
+{
+  "area": "backend",
+  "kind": "pathPrefix",
+  "pathPattern": "backend/{packageName}/**/*",
+  "namePrefixes": ["core_", "feature_"],
+  "namedExtras": ["shared_core"]
+}
+```
+
+Normalization rules (commands MUST apply on read):
+
+- If `pseudoPackageDetection` is an object (legacy v1), treat as a single-element array.
+- Every rule MUST declare `area`. Reject the descriptor with a clear error if missing — no silent inference.
+- If a rule's `pathPattern` lacks `{packageName}`, treat the rule as **area-level documentation only** (skipped during leaf discovery).
+- When multiple rules match a file, **longest matching stem wins**; ties broken by descriptor array order.
+
+`pathPattern` semantics:
+
+- The prefix up to and including the first `{packageName}` is the **knowledge stem** used by commands to derive the convention path (`<opencodeProjectRootPath>/<rel>/AGENTS.md`).
+- `**` matches any depth, `*` matches a single segment — both are descriptive only; the kit does **not** enforce depth or extension.
 
 **UI base URLs** for reviewers belong in **`MERGE_REQUEST.md`** (`## Verification target`) and/or repo `README` — [`/project-review`](commands/project-review.md) folds a single optional **`Base URL (manual):`** line into `## How to verify` (see command). No descriptor fields are required for URLs.
 
