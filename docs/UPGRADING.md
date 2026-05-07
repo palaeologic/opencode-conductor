@@ -4,7 +4,7 @@ Re-run `bash bin/install-opencode-conductor.sh` after each `git pull` from your 
 
 ## Stale clone (“last pulled before a large kit drop”)
 
-1. `cd` to your `opencode-conductor` clone and `git pull` on `main`.
+1. `cd` to your `opencode-conductor` clone and `git pull` on the **default branch** (this repo uses **`main`**; your fork or org clone may use **`master`** — use whatever `origin/HEAD` points at).
 2. Read `CHANGELOG.md` from the date you last updated forward; anything **BREAKING** may need manual steps below.
 3. Run `bash bin/install-opencode-conductor.sh` (use `--dry-run` first if you prefer).
 4. If **`opencode.json`** or **descriptor** schema changed, merge new keys from [`descriptors/descriptor.template.json`](../descriptors/descriptor.template.json) (and your own `opencode.json` template if your fork ships one) into your live files — **never blind overwrite** (preserve API keys and custom paths).
