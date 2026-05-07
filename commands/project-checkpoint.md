@@ -23,7 +23,7 @@ Workflow:
 5. Return confirmation with the path written and the SHA recorded.
 
 Manual fallback (when tools are unavailable):
-1. Resolve branch context folder from `~/.config/opencode/projects/$ARGUMENTS/branches/<branch>/`.
+1. Load `~/.config/opencode/projects/$ARGUMENTS/descriptor.json`, expand `branchHandoff.contextDirTemplate` with current branch name (default global example: `~/.config/opencode/projects/$ARGUMENTS/branches/<branch>/`).
 2. Determine HEAD sha via `git rev-parse HEAD`.
 3. Open `LOG.md` directly and append a checkpoint section with `reviewed_through: <sha>`, summary bullets, and timestamp.
 

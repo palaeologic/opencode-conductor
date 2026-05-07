@@ -6,7 +6,7 @@ A descriptor-driven toolkit that **conducts** your AI coding sessions in OpenCod
 - **Conducts the workflow** — commands and skills orchestrate session lifecycle, verification, and refactoring
 - **Conducts the model orchestra** — routes Haiku, Sonnet, and Opus to the right tasks for optimal cost/quality
 
-Branch-local context outside the repo, **tracked** vs **lite** modes, optional `MR.md`, richer refresh metadata, **lifecycle commands** (no hooks), and **per-role model** routing.
+Branch-local context (default **under `~/.config`**, or **beside the clone** when you choose project-local in `/project-init`), **tracked** vs **lite** modes, optional `MR.md`, richer refresh metadata, **lifecycle commands** (no hooks), and **per-role model** routing.
 
 ## What this repo is for
 
@@ -20,6 +20,10 @@ Branch-local context outside the repo, **tracked** vs **lite** modes, optional `
 - [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review**, skills, Mermaid diagrams); start here for ordered procedures
 - [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — quick command decision matrix
 - [`TEST_PLAN.md`](TEST_PLAN.md) — smoke test checklist
+- [`CHANGELOG.md`](CHANGELOG.md) — notable kit changes (read after every `git pull`)
+- [`docs/UPGRADING.md`](docs/UPGRADING.md) — stale clone catch-up, global vs project-local migration
+- [`SECURITY.md`](SECURITY.md) — vulnerability reporting + operator checklist
+- [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) — how tools resolve `descriptor.json` vs branch paths
 - [`CHANGELOG-v2.md`](CHANGELOG-v2.md) — v1 to Conductor evolution notes
 - [`docs/presentations/`](docs/presentations/) — teammate-facing deck assets
 
@@ -34,6 +38,10 @@ bash bin/install-opencode-conductor.sh --dry-run
 ```
 
 Re-run `bash bin/install-opencode-conductor.sh` after each `git pull` so `~/.config/opencode/` stays in sync with kit updates.
+
+**Updating the kit:** `cd` into the clone you use as install source, `git pull`, run `bash bin/install-opencode-conductor.sh`, restart OpenCode if slash-commands look stale. If `CHANGELOG.md` marks **BREAKING**, read [`docs/UPGRADING.md`](docs/UPGRADING.md) before merging descriptor or `opencode.json` changes.
+
+Teams that maintain a **private downstream fork** should `git pull` and install from **that fork** so org-tuned commands stay consistent (upstream README stays vendor-neutral).
 
 1. **Pull latest** from GitHub, then copy kit assets into your OpenCode home:
   - `rules/*` → `~/.config/opencode/rules/`
@@ -87,7 +95,24 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 | Presentations       | `[docs/presentations/](docs/presentations/)`                                                                   | Teammate deck                                               |
 
 
+### Where does handoff state live?
+
+| Layout | `descriptor.json` on disk | Branch folders + `AGENTS.md` trees | Typical `.gitignore` |
+| ------ | ------------------------- | ----------------------------------- | --------------------- |
+| **Global (default)** | `~/.config/opencode/projects/<projectKey>/descriptor.json` | Same tree under that directory | N/A (outside repo) |
+| **Project-local** | Still **`~/.config/.../descriptor.json`** (kit tool contract) | Paths inside **`<git-root>/.opencode-conductor/`** (or `.opencode/`) per [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) | **Default:** ignore `<dir>/` so internal narrative is not committed |
+
+**Who sees handoff after `git clone`?**
+
+- **Global:** new clone has **no** branch state until you bootstrap on that machine; state stays in your home dir.
+- **Project-local + gitignored:** same as global for clones — empty `<dir>/` until bootstrap; CI does not see handoff files.
+- **Project-local + committed:** everyone with repo access sees files; mind **classification**, **secrets**, and **merge conflicts** on `LOG.md` / `REVIEW.md`.
+
+Use **`/project-init`** to pick global vs project-local and the `.gitignore` tri-state. Long risk explanations stay in this README and [`WORKFLOW.md`](WORKFLOW.md), not in the init wall-of-text.
+
 ### Disk layout (per project)
+
+**Global layout** (canonical example — paths always come from your `descriptor.json`):
 
 ```
 ~/.config/opencode/projects/<projectKey>/
@@ -106,6 +131,16 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
     LOG.md
     PHASES.md
     MR.md                          ← optional
+```
+
+**Project-local layout** (same filenames; root is `<git-root>/.opencode-conductor/` by default):
+
+```
+<git-root>/.opencode-conductor/
+  AGENTS.md
+  <area>/AGENTS.md
+  branches/<branch-name>/...
+  _templates/mr/...
 ```
 
 ### Descriptor responsibilities
@@ -240,9 +275,9 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 Not every session requires a full refresh. Use these shortcuts for quick interactions:
 
 **Just read context:**
-- Open `~/.config/opencode/projects/<key>/branches/<branch>/LOG.md` to see session history
-- Open `MERGE_REQUEST.md` to see branch objectives
-- Open `PHASES.md` to see the plan
+- Open **`LOG.md`** on the branch: resolve `branchHandoff.contextDirTemplate` from `descriptor.json` (default global example: `~/.config/opencode/projects/<key>/branches/<branch>/LOG.md`)
+- Open **`MERGE_REQUEST.md`** in that same branch folder for objectives
+- Open **`PHASES.md`** there if used
 
 **Just verify code:**
 - `/check-types` — works standalone, detects area from cwd
