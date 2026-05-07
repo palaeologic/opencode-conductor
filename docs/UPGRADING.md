@@ -13,6 +13,18 @@ Worked example (generic):
 
 > You last synced months ago. Since then the kit added `SECURITY.md`, `CHANGELOG.md`, path-contract docs, and `/project-init` options for project-local state. Pull `main`, run the install script, skim `CHANGELOG.md`, then merge any new `opencode.json` keys you need from the template in **your** clone.
 
+## After rewritten git history
+
+If maintainers rewrite this kit’s history (for example to remove commit / PR attribution trailers or other unwanted metadata), existing clones must reset to the rewritten remote branch. First save or commit any local work elsewhere, then run:
+
+```bash
+git fetch origin
+git reset --hard origin/<default-branch>
+git fetch origin --tags --force
+```
+
+Use the repo’s actual default branch (`main`, `master`, or whatever `origin/HEAD` points at). This is only needed after an announced history rewrite; normal upgrades use `git pull`.
+
 ## Global ↔ project-local durable state
 
 **There is no automatic migrator.** `/project-init` targets **new** onboarding. To switch layouts on an existing project:
