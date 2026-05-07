@@ -185,13 +185,13 @@ flowchart TD
 | ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | `/project-init <projectKey>`               | **First-time setup**: scan repo, draft descriptor.json, present for approval, write project structure |
 | `/project-refresh <projectKey>`            | Sync context; returns `changed_areas`, `reread_files`, nudges. Auto-suggests init if no descriptor    |
-| `/project-bootstrap <projectKey>`          | Seed tracked branch files (asks phases yes/no)                                                        |
+| `/project-bootstrap <projectKey>`          | Seed tracked branch files (asks phases yes/no; can ingest pasted MR/issue/testing text into narrative sections) |
 | `/project-phases <projectKey>`             | Create or refine `PHASES.md`                                                                          |
 | `/project-checkpoint <projectKey>`         | Append checkpoint to `LOG.md`                                                                         |
 | `/project-close <projectKey>`              | Session-close summary in `LOG.md`                                                                     |
 | `/project-review <projectKey>`             | Generate `REVIEW.md` (checklist review, diff-first review, or checklist + diff; findings table with `F-xx` ids; preserve/replace triage; optional appendix; optional reviewer context) |
 | `/project-review-sync <projectKey>`        | Light refresh: merge MR deltas into `REVIEW.md` checklist, optional new `F-xx` rows (preserve triage), refresh MR **`OpenCode:`** blocks — not a full regenerate |
-| `/project-update-mr <projectKey>`          | Update `MERGE_REQUEST.md` from git facts + branch context; refreshes **`## OpenCode:`** machine blocks and optional legacy ops headings if present |
+| `/project-update-mr <projectKey>`          | Update `MERGE_REQUEST.md` from git facts + branch context; refreshes canonical **`## OpenCode:`** machine blocks and can ingest pasted semi-structured MR/testing context into protected narrative sections |
 | `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
 | `/scaffold-knowledge <projectKey>`         | **Once after init:** scaffold shared `AGENTS.md` (not per-branch). Optional re-run when areas/packages/stack change |

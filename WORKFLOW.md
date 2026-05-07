@@ -45,7 +45,7 @@ See `handoffModeDefault` in [`README.md`](README.md) (Descriptor responsibilitie
 1. **`/project-init <projectKey>`** — scans the repo, drafts `descriptor.json`, you approve before it is written under `~/.config/opencode/projects/<projectKey>/`.
 2. **`/scaffold-knowledge <projectKey>`** — once (or again when areas/stack change): shared `AGENTS.md` orientation, not per-branch.
 3. **`/manual-refresh <projectKey>`** or **`/project-refresh <projectKey>`** — confirm project resolves; for **tracked**, expect branch context paths from refresh output.
-4. **First visit to a Git branch (tracked):** if refresh reports missing branch context, **`/project-bootstrap <projectKey>`** (optionally seed `PHASES.md`).
+4. **First visit to a Git branch (tracked):** if refresh reports missing branch context, **`/project-bootstrap <projectKey>`** (optionally seed `PHASES.md` and optionally paste MR/issue/testing context so narrative sections auto-fill).
 5. **Implement** in the repo; use **`/project-checkpoint`** when you pause.
 
 ### With phased delivery
@@ -86,7 +86,7 @@ Typical loop:
 2. If refresh says **`missing_branch_context`**: **`/project-bootstrap`**, then refresh again.
 3. Implement; append **`LOG.md`** when refresh recommends or after substantial work.
 4. Before breaks: **`/project-checkpoint`** with short bullets + optional user prompt (same message).
-5. When MR facts drift: **`/project-update-mr`** (refreshes `## OpenCode:` blocks).
+5. When MR facts drift or you have fresh pasted MR/test context: **`/project-update-mr`** (refreshes canonical `## OpenCode:` blocks and can ingest semi-structured narrative context safely).
 6. When shared knowledge is stale vs branch: **`/project-knowledge-refresh`** (proposal-first; you approve edits).
 7. End of day: **`/project-close`** summary.
 
@@ -207,7 +207,8 @@ Still run **`/manual-refresh`** first if you **switched branches**, **rebased**,
 
 1. Re-read `REVIEW.md`.
 2. Update triage for `F-xx`.
-3. Optionally **`/project-checkpoint`** before switching tasks.
+3. Keep triage entries in checkbox form (`- [ ]` for `open`, `- [x]` otherwise); review-sync/update flows restore markers if a manual edit dropped them.
+4. Optionally **`/project-checkpoint`** before switching tasks.
 
 ### 9.3 Continue reviewing (new session / new agent)
 
