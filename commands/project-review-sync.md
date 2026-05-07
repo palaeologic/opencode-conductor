@@ -32,8 +32,21 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
    - **A)** Merge MR checklist deltas into `REVIEW.md` **`## Review checklist`** (add/update checkboxes from MR `## Acceptance criteria`, `## In scope`, `## Verification target`; **do not** delete unrelated human bullets unless clearly superseded by MR removal).
    - **B)** Optionally **append** new **`F-xx` findings** for risks visible in the new diff only — default **preserve** existing findings table and triage checklist; scan max existing `F-xx` before allocating new ids (same rule as `/project-review`). Ask **yes/no** for new findings; default **no** if the change is trivial.
    - **C)** Refresh **`MERGE_REQUEST.md`** only inside **`## OpenCode:`** headings from current `REVIEW.md` triage summary + git facts (same rules as `/project-update-mr` for OpenCode blocks). Ask **yes/no**; default **yes** when the user asked for MR handoff.
-4. Apply chosen scopes. **Never** overwrite protected MR narrative (everything before the first `## OpenCode:` in the stock template, plus `## Branch`–`## Notes` bodies). **Never** remove existing `F-xx` triage lines unless the user explicitly asked to replace findings.
-5. Write updated files and report paths.
+   - **D)** Ingest pasted MR/issue/testing context and merge it into protected `MERGE_REQUEST.md` narrative sections (same normalization map as `/project-update-mr` option D). Ask **yes/no**; default **yes** when the user pasted semi-structured context.
+4. For scope **D**, parse labels such as `Issue`, `MR`, `Pod URL`, `Stakeholders`, `Description`, `Proposal`, `Acceptance criteria`, `Blocked by`, testing instructions/focus, and feedback request text; merge into narrative sections (`Goal`, `In scope`, `Acceptance criteria`, `Constraints`, `Verification target`, `External links`, `Stakeholders`, `Feedback requested`, `Notes`) without touching machine blocks.
+5. Apply chosen scopes. **Never** overwrite protected MR narrative (everything before the first `## OpenCode:` in the stock template, plus `## Branch`–`## Notes` bodies and optional narrative sections). **Never** remove existing `F-xx` triage lines unless the user explicitly asked to replace findings.
+6. When preserving/merging `### Triage checklist (by Id)` lines in `REVIEW.md`, normalize each line to checkbox form:
+   - Required line format: `- [ ] F-xx — <state>` (open) or `- [x] F-xx — <state>` (triaged).
+   - Allowed `<state>` tokens: `open` | `valid` | `invalid` | `fixed` | `wontfix` | `followup`.
+   - If a human edit removed the checkbox marker (for example `- F-02 — valid`), restore it (`- [x] F-02 — valid`).
+   - Do not change the user-authored `<state>` token; only normalize the checkbox prefix.
+   - Set `- [ ]` when `<state>` is `open`; set `- [x]` when `<state>` is anything else.
+   - Never delete triage lines during preserve/merge; only append new ids.
+7. For scope **C**, refresh only canonical machine headings in MR:
+   - `## OpenCode: review status`
+   - `## OpenCode: open findings (from REVIEW.md)`
+   If drifted OpenCode headings exist, migrate content into canonical headings and stop writing to drifted names.
+8. Write updated files and report paths.
 
 ## Output format (MUST use exactly)
 

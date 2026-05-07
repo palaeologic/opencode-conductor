@@ -78,6 +78,14 @@ When generating a **checklist** (type A) or the checklist portion of **both** (t
 
      - [ ] F-01 — open
 
+     **Normalization rules (MUST):**
+     - Line format is `- [ ] F-xx — <state>` for open or `- [x] F-xx — <state>` for triaged.
+     - Allowed `<state>` tokens: `open` | `valid` | `invalid` | `fixed` | `wontfix` | `followup`.
+     - If a human edit drops the checkbox marker (for example `- F-01 — valid`), restore it during merge/preserve normalization (`- [x] F-01 — valid`).
+     - Do not change the user-authored `<state>` token when normalizing; only restore/normalize the checkbox prefix.
+     - Mark checkbox `- [ ]` when `<state>` is `open`; mark `- [x]` when `<state>` is anything else.
+     - Never delete existing triage lines during preserve/merge; only append new ids.
+
    - **`### Findings legend`** — short definitions for severity levels and triage tokens.
    - **Cap:** at most **25** rows in the table for this section; overflow: single row `F-xx` with Question “Additional mechanical / low-signal changes — see `## Diff summary` or appendix” if type C or appendix requested.
 3. **`## Review checklist`** — see **Review checklist body** below.
@@ -135,6 +143,7 @@ Navigate to: /app/feature/items
 - **Sources:** MR `Constraints`, `Notes`, `Verification target`, diff hotspots, `LOG.md` risks, mechanical heuristics (config/schema/migrations/lockfiles).
 - **Reserve `F-xx` for** questions, risks, and follow-ups — **not** for every acceptance checkbox (those belong in `## Review checklist`).
 - **`preserve`:** read existing table and triage list; **append** new rows only for **new** delta since last review; keep prior rows and triage lines intact.
+- **`preserve` normalization:** enforce triage checklist checkbox prefixes as `- [ ]` when state is `open`, or `- [x]` for `valid|invalid|fixed|wontfix|followup`; if a line is plain bullet (no checkbox), restore the marker without changing the state token.
 - **`replace`:** rebuild table from current branch state; reset triage checklist lines to `- [ ] F-xx — open` for new ids.
 
 ## Diff summary format (type B)

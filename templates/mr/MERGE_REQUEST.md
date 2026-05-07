@@ -38,6 +38,17 @@ List the minimum checks expected before this branch is considered ready.
 
 Include **`Base URL (manual):`** \<origin\> here when reviewers need a dev server (so `/project-review` can copy it into `REVIEW.md` → `## How to verify`). You may add **scenario-style** UI verification (title, `Navigate to: /your/route`, numbered steps, expected outcomes, one regression bullet for an adjacent flow). That text feeds cleanly into `/project-review` checklist and `## How to verify` sections.
 
+## External links
+- Issue: <url or "none">
+- MR: <url or "none">
+- Review environment: <url or "none">
+
+## Stakeholders
+- Name / role
+
+## Feedback requested
+- What you want testers/reviewers to focus on
+
 ## Notes
 Stable branch-level context only. Do not use this file as a running diary.
 
