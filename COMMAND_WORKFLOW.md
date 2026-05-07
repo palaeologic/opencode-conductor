@@ -1,6 +1,6 @@
 # OpenCode Conductor — Command Decision Matrix
 
-Quick reference for **which command** to run and **when**. For workflow diagrams and full docs, see [`README.md`](README.md).
+Quick reference for **which command** to run and **when**. For numbered scenarios (“I want to …”), see [`WORKFLOW.md`](WORKFLOW.md). For diagrams and full docs, see [`README.md`](README.md).
 
 ## Command roster
 
@@ -13,6 +13,7 @@ Quick reference for **which command** to run and **when**. For workflow diagrams
 | `/project-checkpoint <projectKey>` | yes | smaller |
 | `/project-close <projectKey>` | yes | smaller |
 | `/project-review <projectKey>` | yes | default |
+| `/project-review-sync <projectKey>` | yes | default |
 | `/project-update-mr <projectKey>` | yes | default |
 | `/project-cleanup-candidates <projectKey>` | yes | smaller |
 | `/project-knowledge-refresh <projectKey>` | yes | stronger |
@@ -34,8 +35,9 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Large branch | `phases` | Milestones in `PHASES.md` |
 | Pausing mid-task (tracked) | `checkpoint` | Structured `LOG.md` entry |
 | Ending session (tracked) | `close` | Summary + next step |
-| Before code review | `review` | Generates checklist, diff summary, or both (user picks) |
-| After substantial review/progress | `update-mr` | Refreshes `MERGE_REQUEST.md` with current branch facts while preserving curated sections |
+| Before code review | `review` | Generates `REVIEW.md` (checklist review, diff-first, or checklist + diff); findings table with `F-xx`; preserve/replace triage |
+| After MR edits + commits (light sync) | `review-sync` | Merges MR checklist into `REVIEW.md`, optional append-only `F-xx`, refreshes MR `OpenCode:` blocks — not a full regenerate |
+| After substantial review/progress | `update-mr` | Refreshes `MERGE_REQUEST.md` `OpenCode:` blocks (+ optional legacy ops headings) while preserving narrative |
 | Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |
 | Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file |
 | Tools unavailable | `manual-refresh` | Bootstraps if needed, then delta |
@@ -63,7 +65,8 @@ Not all commands require the Bun tool engine. When tools are in `tools-off/` or 
 | `/project-init` | No | Works as-is (scans repo, writes files) |
 | `/project-checkpoint` | No | Has manual fallback (appends LOG.md directly) |
 | `/project-close` | No | Has manual fallback (appends LOG.md directly) |
-| `/project-review` | No | Works as-is (reads diff, generates REVIEW.md) |
+| `/project-review` | No | Works as-is (reads diff, generates REVIEW.md, can include user-provided additional context) |
+| `/project-review-sync` | No | Works as-is (reads branch files + MR + REVIEW, merge-only updates) |
 | `/project-update-mr` | No | Works as-is (reads branch files + git facts, updates MR) |
 | `/project-cleanup-candidates` | No | Works as-is (lists folders) |
 | `/project-phases` | No | Works as-is (creates/edits PHASES.md) |
