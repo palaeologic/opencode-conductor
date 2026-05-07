@@ -45,7 +45,7 @@ See `handoffModeDefault` in [`README.md`](README.md) (Descriptor responsibilitie
 1. **`/project-init <projectKey>`** — scans the repo, drafts `descriptor.json`, you approve before it is written under `~/.config/opencode/projects/<projectKey>/`.
 2. **`/scaffold-knowledge <projectKey>`** — once (or again when areas/stack change): shared `AGENTS.md` orientation, not per-branch.
 3. **`/manual-refresh <projectKey>`** or **`/project-refresh <projectKey>`** — confirm project resolves; for **tracked**, expect branch context paths from refresh output.
-4. **First visit to a Git branch (tracked):** if refresh reports missing branch context, **`/project-bootstrap <projectKey>`** (optionally seed `PHASES.md` and optionally paste MR/issue/testing context so narrative sections auto-fill). If you skip the paste at bootstrap, you can re-ingest later with **`/project-review-sync <projectKey>`** scope D.
+4. **First visit to a Git branch (tracked):** if refresh reports missing branch context, **`/project-bootstrap <projectKey>`** (optionally seed `PHASES.md` and optionally paste MR/issue/testing context so narrative sections auto-fill). If you skip the paste at bootstrap, you can re-ingest later with **`/project-update-mr <projectKey>`** scope D or **`/project-review-sync <projectKey>`** scope D.
 5. **Implement** in the repo; use **`/project-checkpoint`** when you pause.
 
 ### With phased delivery
@@ -86,7 +86,7 @@ Typical loop:
 2. If refresh says **`missing_branch_context`**: **`/project-bootstrap`**, then refresh again.
 3. Implement; append **`LOG.md`** when refresh recommends or after substantial work.
 4. Before breaks: **`/project-checkpoint`** with short bullets + optional user prompt (same message).
-5. When MR facts drift: **`/project-update-mr`** (refreshes canonical `## OpenCode:` blocks; supports in-place merge, append, or regenerate). For pasted MR/issue/testing context, run **`/project-review-sync`** (scope D) instead — see [§9.10](#910-feed-in-semi-structured-mr-text-paste-ingest).
+5. When MR facts drift: **`/project-update-mr`** (refreshes canonical `## OpenCode:` blocks; supports in-place merge, append, regenerate, and paste-ingest via option D). You can also use **`/project-review-sync`** scope D when you are syncing review artifacts at the same time — see [§9.10](#910-feed-in-semi-structured-mr-text-paste-ingest).
 6. When shared knowledge is stale vs branch: **`/project-knowledge-refresh`** (proposal-first; you approve edits).
 7. End of day: **`/project-close`** summary.
 
@@ -252,22 +252,28 @@ Ask whether to run **`/check-types`**, **`/run-tests`**, **`/lint-fix`**, or a *
 
 ### 9.10 Feed in semi-structured MR text (paste-ingest)
 
-When you have a GitLab/Jira/issue-tracker description and want it normalized into the protected narrative sections of `MERGE_REQUEST.md` (`## External links`, `## Stakeholders`, `## Goal`, `## In scope`, `## Acceptance criteria`, `## Verification target`, `## Feedback requested`), use **`/project-review-sync`** scope **D**. It is the canonical paste-ingest path; it leaves `## OpenCode:` machine blocks untouched.
+When you have a GitLab/Jira/issue-tracker description and want it normalized into the protected narrative sections of `MERGE_REQUEST.md` (`## External links`, `## Stakeholders`, `## Goal`, `## In scope`, `## Acceptance criteria`, `## Verification target`, `## Feedback requested`), use either **`/project-update-mr`** scope **D** (direct MR update intent) or **`/project-review-sync`** scope **D** (when also syncing review artifacts). Both leave `## OpenCode:` machine blocks untouched.
+
+```
+/project-update-mr <projectKey>
+# then choose D, paste the issue text
+```
 
 ```
 /project-review-sync <projectKey>
 # then choose D, paste the issue text
 ```
 
-Pick **D** when narrative sections are still placeholder text or when you want to refresh them from an external description. For first-time MR seeding the same paste prompt is offered by `/project-bootstrap`; if you skipped it there, run the snippet above.
+Pick **D** when narrative sections are still placeholder text or when you want to refresh them from an external description. For first-time MR seeding the same paste prompt is offered by `/project-bootstrap`; if you skipped it there, run either command above based on intent.
 
 ### 9.11 Where do paste-ingest, refresh, and bootstrap live?
 
 | Need | Command |
 | --- | --- |
 | Seed MR narrative for the first time | **`/project-bootstrap`** (paste prompt) |
-| Re-ingest / replace MR narrative from pasted issue text later | **`/project-review-sync`** (option **D**) |
-| Refresh canonical `## OpenCode:` MR blocks | **`/project-update-mr`** |
+| Update MR narrative directly from pasted issue text | **`/project-update-mr`** (option **D**) |
+| Update MR narrative while syncing review artifacts | **`/project-review-sync`** (option **D**) |
+| Refresh canonical `## OpenCode:` MR blocks | **`/project-update-mr`** (options **A/B/C**) |
 
 ```mermaid
 flowchart TD
