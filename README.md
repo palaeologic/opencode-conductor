@@ -200,8 +200,8 @@ flowchart TD
 | `/project-checkpoint <projectKey>`         | Append checkpoint to `LOG.md`                                                                         |
 | `/project-close <projectKey>`              | Session-close summary in `LOG.md`                                                                     |
 | `/project-review <projectKey>`             | Generate `REVIEW.md` (checklist review, diff-first review, or checklist + diff; findings table with `F-xx` ids; preserve/replace triage; optional appendix; optional reviewer context) |
-| `/project-review-sync <projectKey>`        | Light refresh: merge MR deltas into `REVIEW.md` checklist, optional new `F-xx` rows (preserve triage), refresh MR **`OpenCode:`** blocks — not a full regenerate |
-| `/project-update-mr <projectKey>`          | Update `MERGE_REQUEST.md` from git facts + branch context; refreshes canonical **`## OpenCode:`** machine blocks and can ingest pasted semi-structured MR/testing context into protected narrative sections |
+| `/project-review-sync <projectKey>`        | Light refresh: merge MR deltas into `REVIEW.md` checklist, optional new `F-xx` rows (preserve triage), refresh MR **`OpenCode:`** blocks, **and ingest pasted semi-structured MR/issue/testing context (scope D)** into protected MR narrative sections — not a full regenerate |
+| `/project-update-mr <projectKey>`          | Update `MERGE_REQUEST.md` from git facts + branch context; refreshes canonical **`## OpenCode:`** machine blocks (in-place merge / append / regenerate). Paste-ingest of semi-structured MR/issue text lives in `/project-review-sync` (scope D), not here |
 | `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
 | `/scaffold-knowledge <projectKey>`         | **Once after init:** scaffold shared `AGENTS.md` (not per-branch). Optional re-run when areas/packages/stack change |
@@ -230,7 +230,8 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 | Long-lived branch / checkpoints / MR sync | **WORKFLOW §3**; `/project-checkpoint`, `/project-update-mr` |
 | Review before merge | `/manual-refresh` → `/project-review` (**WORKFLOW §9**); optional `review-branch` skill |
 | Light sync after MR edits or new commits | `/project-review-sync` |
-| Refresh MR `OpenCode:` blocks from facts | `/project-update-mr` |
+| Ingest pasted MR/issue/testing text into MR narrative | `/project-review-sync` (option **D**) |
+| Refresh MR `OpenCode:` machine blocks from facts | `/project-update-mr` |
 | Types / tests / lint only | `/check-types`, `/run-tests`, `/lint-fix` |
 | Read last session without refresh | `branches/<branch>/LOG.md` |
 
