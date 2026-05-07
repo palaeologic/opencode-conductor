@@ -7,7 +7,7 @@ Update the current branch `MERGE_REQUEST.md` for project key `$ARGUMENTS`.
 
 ## Scope
 
-Paste-ingest of semi-structured MR/issue/testing context lives in `/project-review-sync` (scope D), not here. This command is for refreshing canonical `## OpenCode:` blocks and append/regenerate MR drafts.
+This command refreshes canonical `## OpenCode:` blocks and supports append/regenerate MR draft updates. It also supports narrative paste-ingest via option D.
 
 ## Project key resolution
 
@@ -60,8 +60,9 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
    - **A) Update in place (safe merge)**
    - **B) Append an update section only**
    - **C) Regenerate full MR draft (preserve protected sections)**
+   - **D) Ingest pasted MR/issue/testing context into narrative sections (safe merge)**
 
-   If the user asks to seed/refresh narrative sections from external semi-structured MR/issue/testing text, send them to `/project-review-sync <projectKey>` (scope D). This command does not handle that flow.
+   Paste-ingest is also available in `/project-review-sync` (scope D); pick whichever command matches your intent.
 6. Update `MERGE_REQUEST.md` according to chosen mode(s):
    - **Primary (always target when present or when using stock template):**
     - `## OpenCode: review status` — refresh with git summary, areas touched, checkpoint range, optional next steps from `LOG.md` / recommendations. **If the heading is missing**, insert it **after** the last protected narrative section (typically after `## Notes`) and before other `OpenCode:` blocks; do not duplicate.
@@ -73,7 +74,8 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
      - `## Risks and reviewer focus`
      - `## Next steps`
    - **Never** inject automated git/findings prose into unstructured author checklists, `## Goal` body, or narrative outside OpenCode (and outside legacy ops headings listed above).
-7. Write updated file and report path.
+7. For mode **D**, ask the user to paste the source text, then parse labels such as `Issue`, `MR`, `Pod URL`, `Stakeholders`, `Description`, `Proposal`, `Acceptance criteria`, `Blocked by`, testing instructions/focus, and feedback request text; merge into narrative sections (`Goal`, `In scope`, `Acceptance criteria`, `Constraints`, `Verification target`, `External links`, `Stakeholders`, `Feedback requested`, `Notes`) without touching machine blocks. Replace placeholder template text; do not overwrite non-placeholder human-authored narrative without explicit approval.
+8. Write updated file and report path.
 
 ## Promotion from `REVIEW.md`
 
