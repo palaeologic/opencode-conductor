@@ -27,9 +27,10 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
    - `mr_context_path`
    - `log_context_path`
    - `phases_context_path` (if present)
-5. Ask whether the user wants to paste MR / issue / testing context now:
+5. Offer the **first-time paste-ingest** affordance (the same paste flow is available later via `/project-review-sync <projectKey>` scope D):
    - Ask exactly: `Do you want to paste MR/issue/testing context to auto-fill MERGE_REQUEST.md narrative sections? (yes/no)`
    - If `yes`, ask them to paste the full semi-structured text.
+   - If `no`, tell the user: "If you skip paste now, run `/project-review-sync <key>` later and choose option D to ingest the description."
 6. If context was pasted, normalize it into **protected narrative** sections in `MERGE_REQUEST.md`:
    - Parse common labels case-insensitively: `Issue`, `MR`, `Pod URL`, `Stakeholders`, `Description`, `Proposal`, `Acceptance criteria`, `Blocked by`, `Instructions for testing`, `Testing instructions / Focus`, `Desired feedback`, `Feedback`.
    - Merge into narrative sections only (before any `## OpenCode:` heading):
