@@ -24,6 +24,7 @@ Branch-local context (default **under `~/.config`**, or **beside the clone** whe
 - [`docs/UPGRADING.md`](docs/UPGRADING.md) — stale clone catch-up, global vs project-local migration
 - [`SECURITY.md`](SECURITY.md) — vulnerability reporting + operator checklist
 - [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) — how tools resolve `descriptor.json` vs branch paths
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — deferred ideas (kitVersion, descriptor-from-repo, governance)
 - [`CHANGELOG-v2.md`](CHANGELOG-v2.md) — v1 to Conductor evolution notes
 - [`docs/presentations/`](docs/presentations/) — teammate-facing deck assets
 
