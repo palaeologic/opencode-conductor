@@ -22,6 +22,18 @@ Keep `MERGE_REQUEST.md` current by merging:
 
 without overwriting human-authored intent sections.
 
+## OpenCode headings (preferred machine targets)
+
+**OpenCode heading** — any `##` line whose title starts with **`OpenCode:`** (e.g. `## OpenCode: review status`). **Refresh content only inside these sections** for automated updates. They are safe merge targets.
+
+**Legacy operational headings** (no `OpenCode:` prefix) — older kit names: `## Scope status`, `## Files/areas touched`, `## Verification status`, `## Risks and reviewer focus`, `## Next steps`. **Deprecation:** teams should migrate content into the `OpenCode:` sections in [templates/mr/MERGE_REQUEST.md](templates/mr/MERGE_REQUEST.md). Until then, if a legacy heading **exists verbatim** in the file, you may refresh it **in addition to** OpenCode blocks; if absent, do not create legacy sections.
+
+## Protected narrative (never overwrite body text)
+
+Preserve all human-authored sections. For the stock template, treat everything from **`## Branch`** through **`## Notes`** (inclusive) and any content **before** the first `## OpenCode:` as protected — edit only inside `## OpenCode:` blocks unless the user chose full regenerate with explicit preserve list.
+
+Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## Deliverables`, `## Open questions`.
+
 ## Procedure
 
 1. Resolve branch and descriptor.
@@ -41,18 +53,23 @@ without overwriting human-authored intent sections.
    - **B) Append an update section only**
    - **C) Regenerate full MR draft (preserve protected sections)**
 6. Update `MERGE_REQUEST.md` according to user choice:
-   - Preserve protected sections if present:
-     - `## Context`
-     - `## Goals`
-     - `## Deliverables`
-     - `## Open questions`
-   - Refresh operational sections:
+   - **Primary (always target when present or when using stock template):**
+     - `## OpenCode: review status` — refresh with git summary, areas touched, checkpoint range, optional next steps from `LOG.md` / recommendations. **If the heading is missing**, insert it **after** the last protected narrative section (typically after `## Notes`) and before other `OpenCode:` blocks; do not duplicate.
+     - `## OpenCode: open findings (from REVIEW.md)` — when `REVIEW.md` contains `## Review findings / questions` and/or triage by `F-xx`, summarize **still-open** vs **resolved** items here for MR readers. If `REVIEW.md` is missing, set a one-line placeholder. **If the heading is missing**, create it after `## OpenCode: review status`.
+   - **Legacy (optional, transitional):** If any of these headings exist **exactly**, refresh their bodies from the same facts; otherwise **omit** (do not add new legacy sections):
      - `## Scope status`
      - `## Files/areas touched`
      - `## Verification status`
      - `## Risks and reviewer focus`
      - `## Next steps`
+   - **Never** inject automated git/findings prose into unstructured author checklists, `## Goal` body, or narrative outside OpenCode (and outside legacy ops headings listed above).
 7. Write updated file and report path.
+
+## Promotion from `REVIEW.md`
+
+When `REVIEW.md` includes `## Review findings / questions` and/or `### Triage checklist (by Id)`:
+- Populate or refresh **`## OpenCode: open findings (from REVIEW.md)`** with a compact list: open `F-xx` items, severity, one-line question; optionally separate “Resolved since last update”.
+- Do not copy the entire `REVIEW.md` into the MR; keep the block scannable.
 
 ## Output format (MUST use exactly)
 
@@ -76,3 +93,4 @@ After the structured block, show the updated MR content inline.
 - Prefer merging over destructive rewrite.
 - If `MERGE_REQUEST.md` is missing, create from template first, then update.
 - Keep updates deterministic and grounded in branch files + git facts.
+- Prefer **`## OpenCode:`** headings for all new automated MR content.
