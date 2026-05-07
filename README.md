@@ -17,7 +17,7 @@ Branch-local context (default **under `~/.config`**, or **beside the clone** whe
 ## Docs map
 
 - [`README.md`](README.md) — canonical guide (architecture, workflows, commands, rules, skills, cost analysis)
-- [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review**, skills, Mermaid diagrams); start here for ordered procedures
+- [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review** with preflight, skills, Mermaid diagrams, **worked examples**); start here for ordered procedures
 - [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — quick command decision matrix
 - [`TEST_PLAN.md`](TEST_PLAN.md) — smoke test checklist
 - [`CHANGELOG.md`](CHANGELOG.md) — notable kit changes (read after every `git pull`)
@@ -92,6 +92,7 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 | Rule baseline       | `[rules/HANDOFF_GENERIC.md](rules/HANDOFF_GENERIC.md)`                                                         | MUST/SHOULD behavioral contract                             |
 | Code quality rule   | `[rules/CODE_QUALITY.md](rules/CODE_QUALITY.md)`                                                               | Universal quality standards                                 |
 | Frontend rule       | `[rules/FRONTEND.md](rules/FRONTEND.md)`                                                                       | Base frontend conventions                                   |
+| Senior baseline rule | `[rules/SENIOR_ENGINEERING.md](rules/SENIOR_ENGINEERING.md)`                                                  | Three-lens persona (Developer + Engineer + Architect)       |
 | Skills              | `[skills/](skills/)`                                                                                           | On-demand workflow guides (OpenCode native)                 |
 | Presentations       | `[docs/presentations/](docs/presentations/)`                                                                   | Teammate deck                                               |
 
@@ -303,7 +304,9 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 | Start a new session on an existing branch | `/manual-refresh` or `/project-refresh` |
 | First-time project on this kit | `/project-init` → `/scaffold-knowledge` (see **WORKFLOW §2**) |
 | Long-lived branch / checkpoints / MR sync | **WORKFLOW §3**; `/project-checkpoint`, `/project-update-mr` |
-| Review before merge | `/manual-refresh` → `/project-review` (**WORKFLOW §9**); optional `review-branch` skill |
+| Review before merge | `/manual-refresh` → `/project-review` (**WORKFLOW §9**, with auto knowledge preflight per **§11**); optional `review-branch` skill |
+| Add a new package / module to tracked knowledge | `/scaffold-knowledge <projectKey>` (discovery); `/scaffold-knowledge <projectKey> list` to audit |
+| Author or refine `PHASES.md` for a long-lived branch | `/project-phases <projectKey>` (loads `plan-phases` skill) |
 | Light sync after MR edits or new commits | `/project-review-sync` |
 | Ingest pasted MR/issue/testing text into MR narrative | `/project-update-mr` (option **D**) or `/project-review-sync` (option **D**) |
 | Refresh MR `OpenCode:` machine blocks from facts | `/project-update-mr` |
@@ -346,6 +349,7 @@ The kit includes optional, universally-applicable rules that any project can ado
 | `rules/HANDOFF_GENERIC.md` | Behavioral contract for the handoff system (MUST/SHOULD) |
 | `rules/CODE_QUALITY.md` | Control flow, naming, TypeScript, testing, error handling best practices |
 | `rules/FRONTEND.md` | Base frontend conventions: imports, boundaries, React, TypeScript typing |
+| `rules/SENIOR_ENGINEERING.md` | Senior Developer + Engineer + Architect baseline lens (small, opt-out via `instructions`) |
 
 Add them to your `opencode.json` `instructions` array:
 
@@ -354,7 +358,8 @@ Add them to your `opencode.json` `instructions` array:
   "instructions": [
     "~/.config/opencode/rules/HANDOFF_GENERIC.md",
     "~/.config/opencode/rules/CODE_QUALITY.md",
-    "~/.config/opencode/rules/FRONTEND.md"
+    "~/.config/opencode/rules/FRONTEND.md",
+    "~/.config/opencode/rules/SENIOR_ENGINEERING.md"
   ]
 }
 ```
@@ -473,44 +478,68 @@ Fallback sentence (if `/manual-refresh` doesn't parse):
 - Keep `LOG.md` append-only and checkpoint-aware (`reviewed_through`).
 - Keep `PHASES.md` optional.
 
-## Token cost analysis
+## Token cost analysis (post-v2.1, refreshed)
 
-The kit is designed to minimize token usage while maximizing agent productivity.
+The kit is designed to minimize token usage while maximizing agent productivity. Numbers below are per-call estimates rounded to the nearest 50 tokens; English text is approximated at ~4 chars per token.
 
 ### What's always in context (every message)
 
 | Layer | ~Tokens | Purpose |
 |-------|---------|---------|
-| Rules (loaded via `instructions`) | ~4,500-6,000 | Prevents mistakes, eliminates correction loops |
+| Existing rules (`HANDOFF_GENERIC` + `CODE_QUALITY` + `FRONTEND`) | ~2,700 | Prevents mistakes, eliminates correction loops |
+| `SENIOR_ENGINEERING.md` (new) | ~600 | Senior Developer + Engineer + Architect baseline lens |
 | opencode.json config | ~1,300 | Command routing, permissions |
-| **Total always-on** | **~6,000-7,500** | |
+| **Total always-on** | **~4,600** | |
 
 ### What's loaded on-demand (zero cost until invoked)
 
 | Layer | ~Tokens each | When loaded |
 |-------|-------------|-------------|
-| Commands (subtask) | ~350-700 | Only the ONE invoked command loads, in a separate subtask context |
-| Skills | ~500-850 | Only when the agent decides the task matches |
+| Commands (subtask) | ~350-900 | Only the ONE invoked command loads, in its own subtask context |
+| `discover-knowledge` skill (new) | ~750 | `/scaffold-knowledge`, `/project-knowledge-refresh`, review preflight |
+| `review-branch` skill (extended with Senior Reviewer lens) | ~1,500 | Pre-merge review |
+| `plan-phases` skill (new) | ~700 | `/project-phases`, `/project-bootstrap` (phased mode) |
+| Other skills (`onboard-area`, `verify-changes`, `systematic-debugging`, `refactor-safely`, `write-tests`, `session-lifecycle`) | ~500-850 | Task-matching as before |
+
+### Per-flow incremental cost (vs pre-v2.1 baseline)
+
+| Flow | Pre-v2.1 | Post-v2.1 (typical) | Net change |
+|------|----------|---------------------|-----------|
+| `/scaffold-knowledge` (initial) | ~700 (cmd) | ~700 (cmd) + ~750 (skill) | +750 once |
+| `/scaffold-knowledge` (re-run, no new leaves) | n/a | ~700 (cmd) + ~750 (skill) | new capability |
+| `/scaffold-knowledge list` / `dry-run` | n/a | ~700 (cmd) | new capability |
+| `/project-knowledge-refresh` | ~700 (cmd) | ~700 (cmd) + ~750 (skill) | +750 |
+| `/project-review` (no preflight findings) | ~900 (cmd) + ~1,200 (review skill) | ~900 (cmd) + ~1,500 (review skill, extended) + ~750 (discover skill once) | +1,050 |
+| `/project-review` (preflight scaffolds 2 leaves + 1 stale) | n/a | +~400 (audit + summary block) on top of review cost | ~+400 vs no preflight |
+| `/project-phases` | ~600 (cmd) | ~600 (cmd) + ~700 (plan-phases skill) | +700 |
+| Always-on rules baseline | ~4,000 | ~4,600 | +600 every message |
 
 ### Cost savings mechanisms
 
 | Mechanism | How it saves |
 |-----------|-------------|
-| **Model routing** | Haiku ($0.25/M) handles routine commands; Opus ($15/M) reserved for synthesis only — 60x cheaper per subtask |
-| **Subtask isolation** | Commands run in their own context, don't bloat the main conversation |
-| **Skills on-demand** | ~28KB of workflow guides NOT in context unless needed |
-| **Rules prevent mistakes** | ~6K tokens of rules prevents 30-60K tokens of correction loops (5-10x ROI) |
-| **Structured refresh output** | Agent gets exactly what it needs — fewer random tool calls and file reads |
-| **Lite mode** | Skip branch files for quick sessions — saves bootstrap + file reads |
-| **Lightweight workflows** | Skip refresh entirely for verify-only sessions |
+| **Convention path eliminates JSON edits** | Re-running `/scaffold-knowledge` discovers new leaves automatically — no descriptor diffs, no review back-and-forth |
+| **Knowledge preflight loads correct context** | Review reads the right leaf `AGENTS.md` immediately; saves ~3-10 exploratory tool calls per missing leaf (~3K-10K tokens) |
+| **Auto-scaffold prevents review starting blind** | A scaffolded leaf with even 6 lines of context anchors the review and prevents broad code grepping |
+| **Skills on-demand** | Senior lenses cost zero unless the task matches the skill description |
+| **Senior baseline rule small** | ~600 tokens always-on buys consistent senior persona; prevents low-quality first drafts that would cost more in correction |
+| **Model routing** | Haiku for routine commands; Opus reserved for synthesis — same as pre-v2.1 |
+| **Subtask isolation** | Commands run in their own context; main conversation stays small |
+| **Structured refresh + Preflight summary** | Agent gets exactly what it needs; humans + agents share the same `## Preflight summary` block |
+| **Lite mode + lightweight workflows** | Unchanged from pre-v2.1 |
+
+### ROI rule of thumb
+
+For a mid-sized monorepo (~200 leaves and ~30 changed files / week), the **first** preflight run on a branch pays for itself within 3-5 messages by avoiding exploratory grep + read loops on missing knowledge. Subsequent runs on the same leaf are near-free (existing file + no new churn -> no scaffold, no stale flag).
 
 ### Estimated savings per session
 
-| Session type | Without kit | With kit | Savings |
-|-------------|-------------|----------|---------|
+| Session type | Without kit | With kit (post-v2.1) | Savings |
+|-------------|-------------|----------------------|---------|
 | Quick lint fix (5 messages) | ~$0.50 | ~$0.35 | ~30% |
 | Feature development (30 messages) | ~$4.50 | ~$3.00 | ~33% |
-| Full code review (15 messages) | ~$2.50 | ~$1.50 | ~40% |
+| Full code review (15 messages, 2 missing leaves auto-scaffolded) | ~$2.80 | ~$1.55 | ~45% |
+| Onboarding session on unfamiliar leaf (10 messages) | ~$2.00 | ~$1.10 | ~45% |
 
 ### Best practices to minimize cost
 
@@ -519,6 +548,8 @@ The kit is designed to minimize token usage while maximizing agent productivity.
 3. **Let Haiku handle routine tasks** — refresh, checkpoint, lint, types are all Haiku-routed
 4. **Use skills instead of asking** — skill-guided workflows are more efficient than multi-turn conversations
 5. **Keep rules concise** — stay under 30KB total; prune rules that overlap
+6. **Run `/scaffold-knowledge dry-run`** before bulk scaffolds to confirm intent at zero cost
+7. **Leave preflight on** unless you're in a doc-only branch — the savings on missing-context exploration outweigh the small overhead
 
 ## Bedrock / provider caveat
 

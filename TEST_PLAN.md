@@ -74,16 +74,43 @@ Verify the setup is wired correctly before testing behavior.
 
 1. Run `/scaffold-knowledge testkit`.
 2. Select one or more areas when prompted.
-3. If prompted, add one pseudo-package (or skip).
+3. If prompted, accept the auto-detected leaves (or skip).
 
 ### Expected result
 
 - `~/.config/opencode/projects/testkit/AGENTS.md` has project routing/context hierarchy guidance.
 - Selected areas have `~/.config/opencode/projects/testkit/<area>/AGENTS.md`.
-- If provided, pseudo-package files exist at `~/.config/opencode/projects/testkit/<area>/packages/<pkg>/AGENTS.md`.
+- For descriptors with `descriptorSchemaVersion: 2`: detected leaves get a sparse `AGENTS.md` at the **convention path** `<opencodeRoot>/<rel>/AGENTS.md` (where `<rel>` mirrors the leaf's path under `projectRootPath`). For legacy descriptors the legacy override path is honored.
 - Existing operational content (if any) is merged/preserved rather than replaced.
 
 **Pass**: shared knowledge files are scaffolded once; rerun is only needed for new areas/packages or major stack changes.
+
+### 3a) `/scaffold-knowledge <projectKey> list`
+
+1. Run `/scaffold-knowledge testkit list`.
+
+**Expected**: a markdown table grouped by area showing tracked leaves and their resolved path / status. **No writes.**
+
+### 3b) `/scaffold-knowledge <projectKey> dry-run`
+
+1. Add a new directory under an `area` that matches a `pseudoPackageDetection` rule.
+2. Run `/scaffold-knowledge testkit dry-run`.
+
+**Expected**: the new leaf is listed as untracked with the convention-path target. **No writes.**
+
+### 3c) Discovery re-run idempotency
+
+1. Run `/scaffold-knowledge testkit` again with no new directories.
+
+**Expected**: command reports "no new leaves to track" and exits without writes.
+
+### 3d) Safety guardrails
+
+1. Add a directory whose name violates the package-name regex (e.g. starts with `-` or contains `..`).
+2. Add a symlink at the would-be convention path.
+3. Run `/scaffold-knowledge testkit dry-run`.
+
+**Expected**: the bad name surfaces as `invalid_package_name`; the symlink target surfaces as `symlink_refused`. Other valid leaves are unaffected.
 
 ---
 
@@ -321,8 +348,59 @@ Modify the project or area `AGENTS.md` with a timestamp significantly older than
 - Structured output block with `artifact_type`, `path`, and `suggested_verifications`.
 - Suggested verifications are listed but NOT executed.
 - Content is branch-specific (references actual files/areas from the diff, not generic placeholders).
+- A `## Preflight summary` subsection appears at the top of `REVIEW.md` with `created` / `existing` / `stale` / `skipped` lists (when preflight ran; absent only when `no-preflight` was passed).
 
 **Pass**: review file generated, suggestions listed, nothing executed.
+
+### 12a) Knowledge preflight — auto-scaffold
+
+#### Setup
+
+On a branch, modify a file under an existing area that matches a `pseudoPackageDetection` rule but where the leaf has **no** `AGENTS.md` yet.
+
+#### Steps
+
+1. Run `/project-review <projectKey>`.
+
+#### Expected result
+
+- The missing leaf gets a sparse `AGENTS.md` at its convention path.
+- One audit line is appended to the branch `LOG.md` of the form `preflight: scaffolded <area>/<leaf> at <path> (commit: <sha>)`.
+- `## Preflight summary` lists the leaf under `created`.
+- The new file is included in the agent's read context for the rest of the review.
+
+**Pass**: scaffold + audit + summary all present; existing files untouched.
+
+### 12b) Knowledge preflight — stale flag
+
+#### Setup
+
+On a branch, ensure a leaf has **multiple** changed files since merge-base with `baselineBranchForMaterialChanges` and its `AGENTS.md` has **no** commits in that range.
+
+#### Steps
+
+1. Run `/project-review <projectKey>`.
+
+#### Expected result
+
+- `## Preflight summary` lists the leaf under `stale`.
+- An `F-xx` "Knowledge stale for `<area>/<leaf>`" finding appears with severity `Medium` and suggested action `/project-knowledge-refresh <projectKey>`.
+
+**Pass**: stale leaf surfaced as a triageable finding without auto-modifying knowledge.
+
+### 12c) Knowledge preflight — opt-out
+
+#### Steps
+
+1. Run `/project-review <projectKey> no-preflight`.
+
+#### Expected result
+
+- No `## Preflight summary` block.
+- No auto-scaffold writes.
+- No stale findings produced by preflight.
+
+**Pass**: opt-out is honored.
 
 ---
 

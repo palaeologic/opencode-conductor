@@ -28,6 +28,9 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 |-----------|---------|--------|
 | First time using kit on a project | `init` | Scans repo, drafts descriptor, user approves; only needed once per project |
 | First-time knowledge scaffolding | `scaffold-knowledge` | Run once after `init`; creates shared `AGENTS.md` orientation files |
+| Add new package / module to tracked knowledge | `scaffold-knowledge` | Default discovery mode auto-detects untracked leaves (no JSON edits) |
+| Audit currently tracked leaves | `scaffold-knowledge <key> list` | Read-only table grouped by area |
+| Preview a bulk scaffold | `scaffold-knowledge <key> dry-run` | No writes; shows what discovery would create |
 | Session start | `refresh` | Auto-suggests `init` if no descriptor found |
 | First visit to branch (tracked) | `bootstrap` then `refresh` | Creates MR/LOG (+ optional PHASES) |
 | Branch switch | `refresh` | Avoid carry-over |
@@ -35,7 +38,7 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Large branch | `phases` | Milestones in `PHASES.md` |
 | Pausing mid-task (tracked) | `checkpoint` | Structured `LOG.md` entry |
 | Ending session (tracked) | `close` | Summary + next step |
-| Before code review | `review` | Generates `REVIEW.md` (checklist review, diff-first, or checklist + diff); findings table with `F-xx`; preserve/replace triage |
+| Before code review | `review` | Generates `REVIEW.md` (checklist review, diff-first, or checklist + diff); findings table with `F-xx`; preserve/replace triage; **runs silent knowledge preflight** (auto-scaffolds missing leaf `AGENTS.md`, flags stale ones) — pass `no-preflight` to skip |
 | After MR edits + commits (light sync) | `review-sync` | Merges MR checklist into `REVIEW.md`, optional append-only `F-xx`, refreshes MR `OpenCode:` blocks — not a full regenerate |
 | After substantial review/progress | `update-mr` | Refreshes `MERGE_REQUEST.md` `OpenCode:` blocks (+ optional legacy ops headings) while preserving narrative |
 | Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |

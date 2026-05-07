@@ -16,6 +16,8 @@ Replace **`<projectKey>`** with your descriptor key. The descriptor file is alwa
 8. [Knowledge and housekeeping](#8-knowledge-and-housekeeping)
 9. [Reviewing](#9-reviewing)
 10. [Using skills](#10-using-skills)
+11. [Knowledge-aware review preflight](#11-knowledge-aware-review-preflight)
+12. [Worked examples](#12-worked-examples)
 
 ---
 
@@ -188,9 +190,17 @@ Still run **`/manual-refresh`** first if you **switched branches**, **rebased**,
 | Goal | Command |
 |------|---------|
 | Re-orient AGENTS after areas/packages change | **`/scaffold-knowledge`** (idempotent merge) |
+| Discover untracked leaves and scaffold them | **`/scaffold-knowledge <projectKey>`** (default discovery mode) |
+| List currently tracked leaves | **`/scaffold-knowledge <projectKey> list`** |
+| Preview what discovery would scaffold | **`/scaffold-knowledge <projectKey> dry-run`** |
 | Propose durable AGENTS updates from branch learning | **`/project-knowledge-refresh`** |
+| Auto-scaffold missing knowledge during review | **`/project-review`** (preflight, silent default) |
 | List stale `branches/*` folders | **`/project-cleanup-candidates`** (read-only) |
 | End session with summary | **`/project-close`** |
+
+> **Knowledge audience.** `AGENTS.md` files are **dual-audience by design**: agents load them deterministically during refresh and review preflight; humans read them as onboarding and reference material. Authors should write for both — short, factual prose with concrete file paths, framework names, and verification steps.
+
+> **Convention path for leaves.** With `descriptorSchemaVersion: 2`, leaf `AGENTS.md` files live at `<opencodeProjectRootPath>/<rel>/AGENTS.md`, where `<rel>` mirrors the leaf's path under `projectRootPath` (the **source-tree-mirror** convention). See [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) for the stem derivation contract.
 
 ---
 
@@ -199,7 +209,7 @@ Still run **`/manual-refresh`** first if you **switched branches**, **rebased**,
 ### 9.1 Start a branch review
 
 1. **`/manual-refresh <projectKey>`** (or **`/project-refresh`**).
-2. **`/project-review <projectKey>`** — prefer **Checklist + diff (full)** for non-trivial branches.
+2. **`/project-review <projectKey>`** — prefer **Checklist + diff (full)** for non-trivial branches. The command runs a silent **knowledge preflight** first (auto-scaffolds missing leaf `AGENTS.md`, flags stale ones); see §11.
 3. Edit **`F-xx` triage** under `## Review findings / questions` in `REVIEW.md`.
 4. Optionally **`/project-checkpoint`** with a one-line note.
 
@@ -304,8 +314,10 @@ You can also say explicitly: *“Load the `<skill-name>` skill and follow it.”
 | Skill | Load when… |
 |-------|------------|
 | `session-lifecycle` | Starting/ending a session, checkpoint discipline |
-| `review-branch` | Pre-merge review, `REVIEW.md`, MR sync |
+| `review-branch` | Pre-merge review, `REVIEW.md`, MR sync (now also carries the **Senior Reviewer lens**) |
 | `onboard-area` | Unfamiliar module, “how does X work?” |
+| `discover-knowledge` | Authoring or refreshing `AGENTS.md`; running `/scaffold-knowledge`, `/project-knowledge-refresh`, or the `/project-review` preflight |
+| `plan-phases` | Drafting or refining `PHASES.md` for a long-lived branch |
 | `verify-changes` | “Does everything still work?” after edits |
 | `systematic-debugging` | Bug unknown, test fails mysteriously |
 | `refactor-safely` | Rename/move/structure without behavior change |
@@ -422,6 +434,115 @@ You can also say explicitly: *“Load the `<skill-name>` skill and follow it.”
 - “These tests mock too much — rewrite to assert observable behavior.”
 - “Generate a minimal test matrix for this form validator edge cases.”
 - “Load `write-tests` for the new API route.”
+
+---
+
+## 11. Knowledge-aware review preflight
+
+`/project-review` runs a **silent knowledge preflight** before generating `REVIEW.md`. Goals: ensure the agent sees the right area / leaf `AGENTS.md` files, auto-scaffold any leaves whose code changed but whose knowledge file is missing, and flag stale knowledge as findings. Default behavior is silent (no prompts; failures surface as `F-xx` notes). Pass `no-preflight` in `$ARGUMENTS` to disable.
+
+### Review preflight flow
+
+```mermaid
+flowchart TD
+  start[/project-review_called/]
+  refresh[Run_refresh: changed_files]
+  detect[Apply_pseudoPackageDetection_rules]
+  classify[Classify_each_leaf]
+  miss{Missing?}
+  scaffold[Auto_scaffold_at_convention_path]
+  audit[Append_LOG_md_audit_line]
+  stale{Stale_per_git_heuristic?}
+  finding[Emit_F_xx_Knowledge_stale]
+  reread[Augment_reread_list_with_leaf_AGENTS]
+  summary[Emit_Preflight_summary_at_top_of_REVIEW]
+  build[Build_REVIEW_md_normally]
+
+  start --> refresh --> detect --> classify --> miss
+  miss -->|yes| scaffold --> audit --> reread
+  miss -->|no| stale
+  stale -->|yes| finding --> reread
+  stale -->|no| reread
+  reread --> summary --> build
+```
+
+### Scaffold discovery flow (`/scaffold-knowledge` discovery mode)
+
+```mermaid
+flowchart TD
+  s1[/scaffold-knowledge_called/]
+  s2[Load_descriptor_normalize_rules]
+  s3[git_ls-files_directory_under_projectRoot]
+  s4[Apply_rules_emit_candidate_leaves]
+  s5[Resolve_path_convention_or_override]
+  s6[lstat_check_root_containment_name_regex]
+  s7{Mode}
+  s8[List_table_no_writes]
+  s9[Dry_run_preview_no_writes]
+  s10[Prompt_user_checklist_of_untracked_leaves]
+  s11[Write_leaf_AGENTS_at_convention_path]
+  s12[Report_created_existing_skipped]
+
+  s1 --> s2 --> s3 --> s4 --> s5 --> s6 --> s7
+  s7 -->|list| s8
+  s7 -->|dry-run| s9
+  s7 -->|discovery| s10 --> s11 --> s12
+```
+
+> The kit never writes through symlinks, never overwrites existing `AGENTS.md`, and rejects any path that escapes `opencodeProjectRootPath`. See [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) for the complete safety guardrails.
+
+---
+
+## 12. Worked examples
+
+### Example A — User asks about a function inside a tracked package
+
+A user asks: *"What does `validate_files()` in `base_files` do, and where is it called from?"*
+
+1. Agent loads (free of charge until used) `discover-knowledge` and `onboard-area` skills.
+2. Agent reads the area `AGENTS.md` (`<opencodeRoot>/<area>/AGENTS.md`) for the stack and naming conventions.
+3. Agent reads the leaf `AGENTS.md` at the convention path (`<opencodeRoot>/<area>/<package>/AGENTS.md`) for purpose, entry points, and known pitfalls.
+4. Agent grep / reads the source for the actual function and its callers.
+5. Agent answers using both: leaf `AGENTS.md` for "what this package owns / why it exists" and source for "what this function actually does."
+
+The leaf `AGENTS.md` was written **once** (via `/scaffold-knowledge`) and now serves both the agent and any human onboarding to that area.
+
+### Example B — `/project-review` end-to-end with preflight
+
+Branch `feat/reports-export` touches `<area>/<pkg-A>/...` and `<area>/<pkg-B>/...`. Only `<pkg-A>/AGENTS.md` exists.
+
+1. User runs `/project-review <projectKey>`.
+2. Refresh reports `changed_files` covering both leaves.
+3. Preflight maps files to `(<area>, <pkg-A>)` and `(<area>, <pkg-B>)`. `<pkg-B>` has no convention-path `AGENTS.md`.
+4. Preflight applies safety guardrails (name regex, root containment, lstat) and writes a sparse leaf scaffold for `<pkg-B>` at `<opencodeRoot>/<area>/<pkg-B>/AGENTS.md`.
+5. Preflight appends one audit line to `LOG.md`:
+
+   ```
+   preflight: scaffolded <area>/<pkg-B> at <path> (commit: a1b2c3d)
+   ```
+6. Preflight checks `<pkg-A>` against the stale heuristic. Because `<pkg-A>/...` has 7 changed files since merge-base but `<pkg-A>/AGENTS.md` itself has no commits in that range, it flags `<pkg-A>` as stale.
+7. `REVIEW.md` opens with:
+
+   ```
+   ## Preflight summary
+   - created: [<area>/<pkg-B> -> <path>]
+   - existing: 1
+   - stale: [<area>/<pkg-A>]
+   - skipped: []
+   ```
+
+   plus an `F-xx` "Knowledge stale for `<area>/<pkg-A>`" finding (severity Medium, suggested action `/project-knowledge-refresh <projectKey>`).
+8. The reviewer triages findings as usual; they may run `/project-knowledge-refresh` afterwards to resolve the stale flag with a real proposal.
+
+### Example C — Adding a new package later, no JSON edit needed
+
+A team merges `<area>/<pkg-C>/...` to `main`. No descriptor change is required.
+
+1. Author runs `/scaffold-knowledge <projectKey>` (default discovery mode).
+2. Discovery walks `git ls-files` under `projectRootPath`, applies the `pseudoPackageDetection` rules, and surfaces `<pkg-C>` as untracked.
+3. Author confirms the checklist; a sparse leaf `AGENTS.md` lands at `<opencodeRoot>/<area>/<pkg-C>/AGENTS.md`.
+4. Author runs `/project-knowledge-refresh <projectKey>` after the next substantial work session to fill in real content (purpose, invariants, entry points).
+5. From this point on, the next `/project-review` over a branch touching `<pkg-C>` will see the file and not auto-scaffold again. New packages onboard with **zero** descriptor edits.
 
 ---
 

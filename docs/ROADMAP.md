@@ -44,6 +44,28 @@ This file is intentionally lightweight. Add, remove, and reorder entries freely.
 
 ---
 
+## Knowledge
+
+### Optional `/track-package` command
+
+- **Idea:** A focused command that wraps `/scaffold-knowledge` discovery for a single named leaf, useful in CI / pre-commit pipelines or when a user knows exactly which package they want tracked next.
+- **Why:** Discovery is interactive by design; some teams want a scriptable single-leaf path that does the same safety guardrails (root containment, symlink refusal, package-name regex) without prompting.
+- **Open questions:** Should it accept `--area` and `--leaf` flags, or auto-resolve the leaf from cwd? Should it integrate with the legacy descriptor `sharedPackageKnowledge` section for non-default paths?
+- **Trade-offs:** Extra surface area and two ways to do the same thing — vs unblocking automation.
+
+### Removal of legacy `pseudoPackageDetection` object form
+
+- **Idea:** Drop the legacy single-object form of `pseudoPackageDetection` once `descriptorSchemaVersion: 2` is universally adopted.
+- **Why:** Reduces normalize-on-read branches in commands, simplifies tests, and lets the schema migration close out.
+- **Open questions:** When? Tied to a major release. Does the install script proactively migrate?
+- **Trade-offs:** A clean cut after one minor release reduces complexity at the cost of mild upgrade friction.
+
+### Removal of legacy `<area>/packages/<pkg>` redirect stubs
+
+- **Idea:** After one release cycle of source-tree-mirror convention, drop redirect stubs left at the legacy `<opencodeRoot>/<area>/packages/<pkg>/AGENTS.md` paths.
+- **Why:** The convention path is the long-term home; redirect stubs are a migration aid only.
+- **Open questions:** What is the deprecation window — one minor release or one major?
+
 ## Conventions for this file
 
 - New entries go to the bottom of their section.
