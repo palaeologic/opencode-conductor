@@ -57,10 +57,14 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
    - changed files count and primary areas
    - notable adds/deletes/renames
 5. Ask user whether to:
-   - **A) Update in place (safe merge)**
-   - **B) Append an update section only**
-   - **C) Regenerate full MR draft (preserve protected sections)**
-   - **D) Ingest pasted MR/issue/testing context into narrative sections (safe merge)**
+   - Print the menu **exactly** as the fenced block below, preserving all four lettered options. Do not paraphrase, renumber, omit option **D**, or collapse the choices into prose.
+
+   ```text
+   A) Update in place (safe merge)
+   B) Append an update section only
+   C) Regenerate full MR draft (preserve protected sections)
+   D) Ingest pasted MR/issue/testing context into narrative sections (safe merge)
+   ```
 
    Paste-ingest is also available in `/project-review-sync` (scope D); pick whichever command matches your intent.
 6. Update `MERGE_REQUEST.md` according to chosen mode(s):
