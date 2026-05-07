@@ -4,6 +4,8 @@
   "opencodeProjectRootPath": "~/.config/opencode/projects/my-project",
   "baselineBranchForMaterialChanges": "main",
   "handoffModeDefault": "tracked",
+  "conductorStateLocation": "global",
+  "localStateDirname": ".opencode-conductor",
   "subtaskModels": {
     "refresh": "your-provider/your-model-id",
     "bootstrap": "your-provider/your-model-id",
@@ -31,15 +33,24 @@
   "pseudoPackageDetection": {
     "kind": "pathAndAlias",
     "pathPattern": "frontend/src/{packageName}/**/*",
-    "aliases": ["@org/{packageName}"]
+    "aliases": [
+      "@org/{packageName}"
+    ]
   },
   "trackedKnowledgeTargets": {
     "sharedPackageKnowledge": {},
-    "trackedAreas": ["frontend", "backend", "cli"]
+    "trackedAreas": [
+      "frontend",
+      "backend",
+      "cli"
+    ]
   },
   "branchHandoff": {
     "contextDirTemplate": "~/.config/opencode/projects/{projectKey}/branches/{branchName}",
-    "mrFilenames": ["MERGE_REQUEST.md", "MR.md"],
+    "mrFilenames": [
+      "MERGE_REQUEST.md",
+      "MR.md"
+    ],
     "logFilename": "LOG.md",
     "phasesFilename": "PHASES.md",
     "phasesOptional": true,
@@ -51,7 +62,11 @@
     "mrBranchPlaceholder": "<branch-name>"
   },
   "refreshToolHeuristics": {
-    "changedFilesAreaPrefixes": ["frontend/", "backend/", "cli/"],
+    "changedFilesAreaPrefixes": [
+      "frontend/",
+      "backend/",
+      "cli/"
+    ],
     "highSignalChangedSubstrings": [
       "package.json",
       "tsconfig",
@@ -61,4 +76,3 @@
     ]
   }
 }
-

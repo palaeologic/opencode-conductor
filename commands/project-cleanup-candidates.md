@@ -14,7 +14,7 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
 Produce a **read-only** report of branch handoff folders that may be stale.
 
 Workflow:
-1. Read `~/.config/opencode/projects/$ARGUMENTS/descriptor.json` and resolve `branchHandoff.contextDirTemplate` parent: typically `~/.config/opencode/projects/$ARGUMENTS/branches/`.
+1. Read `~/.config/opencode/projects/$ARGUMENTS/descriptor.json`. Derive the **parent of each branch folder** from `branchHandoff.contextDirTemplate` (strip the `/{branchName}` segment). Default global example: `~/.config/opencode/projects/$ARGUMENTS/branches/`. Project-local descriptors use whatever directory prefixes `contextDirTemplate` uses.
 2. List immediate child directories (one per branch name).
 3. For each child, stat `LOG.md` and `MERGE_REQUEST.md` (or files in `mrFilenames` if present) mtime and optional last log heading.
 4. Flag candidates when:

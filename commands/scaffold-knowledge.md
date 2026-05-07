@@ -38,7 +38,7 @@ This command generates `AGENTS.md` files for detected project areas so that futu
    - Look for `Makefile` / `Justfile` → extract targets as commands
    - List top-level subdirectories for folder structure hints
 
-5. **Generate area-level AGENTS.md** — for each area, write to `~/.config/opencode/projects/<projectKey>/<areaName>/AGENTS.md`:
+5. **Generate area-level AGENTS.md** — for each area, write to that area’s **`areaAgentsPath`** from the descriptor (default global example: `~/.config/opencode/projects/<projectKey>/<areaName>/AGENTS.md`; project-local example: `<git-root>/.opencode-conductor/<areaName>/AGENTS.md`):
 
    ```markdown
    # <ProjectKey> <AreaName> Instructions
@@ -128,7 +128,7 @@ This command generates `AGENTS.md` files for detected project areas so that futu
    Do not update for branch-specific progress or temporary debugging.
    ```
 
-8. **Enrich project-root AGENTS.md** — ensure the root `~/.config/opencode/projects/<projectKey>/AGENTS.md` contains a project routing section listing all areas with their paths.
+8. **Enrich project-root AGENTS.md** — ensure the file at **`opencodeProjectRootPath`/AGENTS.md** (from the descriptor) contains a project routing section listing all areas with their paths.
 
 9. **Report**: list all files created or updated.
 

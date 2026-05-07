@@ -1,7 +1,7 @@
 ---
-
-## description: Generate a review artifact for the current branch
+description: Generate a review artifact for the current branch
 subtask: true
+---
 
 Generate a review artifact for the current project.
 
@@ -36,9 +36,7 @@ Ask the user in **plain language** first; you may show the letter as a shorthand
 4. Ask whether to include **`## Appendix: change statistics`** (approximate file/churn breakdown and high / medium / low focus tiers). **yes** or **no**.
 5. Ask whether to add **additional reviewer context now** (free-text notes from the user, e.g. rollout cautions, known flaky tests, data assumptions, environment caveats). If yes, collect the text and include it in `REVIEW.md` under `## Additional reviewer context`.
 6. Generate the chosen artifact based on actual branch state (not generic templates), merging any user-provided additional context and honoring findings merge mode when `REVIEW.md` existed.
-7. Write it to the branch context folder as `REVIEW.md`:
-   `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/REVIEW.md`  
-   (use resolved `projectKey` and current branch name.)
+7. Write it to the branch context folder as `REVIEW.md` under **`branchHandoff.contextDirTemplate`** (expand `{projectKey}` and `{branchName}`; default global example: `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/REVIEW.md`).
 8. Suggest verification commands the user may want to run (do NOT execute them).
 
 ## Output format (MUST use exactly)
