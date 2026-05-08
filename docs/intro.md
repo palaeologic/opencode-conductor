@@ -6,13 +6,10 @@ slug: /intro
 
 # OpenCode Conductor
 
-This docs tree is the Docusaurus-friendly view of the kit. Root files such as `README.md` and `CHANGELOG.md` remain at repository root for GitHub-first workflows, while this tree organizes workflows, command references, architecture, skills, and knowledge contracts for static-site publishing.
+Use `docs/docusaurus/index.md` as the canonical publishing entry point.
 
-Start here:
+This page intentionally stays minimal to avoid redundant documentation.
 
-- Architecture deep dive: `docs/architecture/`
-- Workflow playbooks: `docs/workflows/`
-- Command matrix and references: `docs/commands/`
-- Testing guidance: `docs/contributing/testing.md`
-- Knowledge contracts: `docs/knowledge/`
-- Skills overview: `docs/skills/`
+Primary Docusaurus entry:
+
+- `docs/docusaurus/index.md`

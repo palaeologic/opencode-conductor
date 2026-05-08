@@ -18,6 +18,7 @@ Branch-local context (default **under `~/.config`**, or **beside the clone** whe
 
 - [`README.md`](README.md) — canonical guide (architecture, workflows, commands, rules, skills, cost analysis)
 - [`docs/intro.md`](docs/intro.md) — Docusaurus entry point for this kit
+- [`docs/docusaurus/`](docs/docusaurus/) — canonical Docusaurus publishing entry and descriptor reference
 - [`docs/architecture/`](docs/architecture/) — 10-page architecture deep dive with mermaid diagrams
 - [`docs/help-docs-authoring/`](docs/help-docs-authoring/) — code-to-help-doc workflow and publishing guardrails
 - [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review** with preflight, skills, Mermaid diagrams, **knowledge across branches**, **worked examples**); start here for ordered procedures

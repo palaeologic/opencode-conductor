@@ -4,6 +4,12 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ## [Unreleased]
 
+### Changed — Docs consolidation for Docusaurus entry
+
+- Added canonical Docusaurus namespace at [`docs/docusaurus/`](docs/docusaurus/) to reduce entry-point ambiguity and avoid duplicate onboarding text across doc indices.
+- Added descriptor reference page at [`docs/docusaurus/descriptors/descriptor-json.md`](docs/docusaurus/descriptors/descriptor-json.md) with schema-v2 examples and field-by-field guidance.
+- Slimmed [`docs/intro.md`](docs/intro.md) into a pointer page so `docs/docusaurus/index.md` remains the single publishing entry.
+
 ### Added — Help-docs authoring skill (Plan 5)
 
 - Added [`skills/help-docs-author/SKILL.md`](skills/help-docs-author/SKILL.md) with the five-phase authoring workflow (Discovery -> Code-reading -> Plan -> Generation -> Audit) for generating end-user help-center documentation from source code.
