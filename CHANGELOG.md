@@ -67,6 +67,17 @@ Why ship foundation first:
 
 Backwards compatibility: every gate is silent on no-finding and ships with an opt-out flag. Existing flows are unchanged unless drift / missing source / structural change is actually detected.
 
+### Commands release notes (C1)
+
+Phase C1 lands the two user-facing kickoff commands on top of the foundation:
+
+- **`/project-branch-new`** is the entry point when the user is on any branch (typically `main`/`master`) and wants a brand-new branch off the latest integration base. It owns the per-step git confirmations (`fetch` → `checkout <base>` → `pull --ff-only` → `checkout -b <new>`) so the agent never silently mutates git state. It can chain into `/project-branch-kickoff` for the full scaffold, or stop after the audit step if the work does not match the big-project criteria.
+- **`/project-branch-kickoff`** is the entry point when the user is already on a fresh / empty feature branch. It owns the drift gate, big-project criteria check, model selection, and orchestration of `/project-bootstrap` / `/project-knowledge-refresh` → `skills/plan-phases` → `/scaffold-knowledge` (dry-run then discovery).
+
+Both commands set `subtask: false` because the kickoff session is the audit unit; we explicitly want the LOG / MR audit blocks to be appended in the same context window the user is observing. Upstream leaves `model` unset so consumers can configure their own; the fork wires top-tier reasoning at mirror time.
+
+Trade-off: fewer kickoff calls per session keeps audit blocks atomic, but it means more state lives in the primary context during a long kickoff. We accept that cost in exchange for transparent audit. If the cost becomes an issue, a future plan can split the orchestrator into a thin command + heavyweight subtask that returns a structured audit blob.
+
 ## [v2.1.0] - 2026-05-07
 
 ### Added
