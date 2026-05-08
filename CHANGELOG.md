@@ -4,6 +4,11 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ## [Unreleased]
 
+### Added — Branch Kickoff Commands (Plan 1, Phase C1)
+
+- [`commands/project-branch-new.md`](commands/project-branch-new.md) — create a new branch from the latest integration base, with `git-safety` preflight, fixed read-only shell injections (status / HEAD / origin/HEAD anchors), per-step git confirmations (`fetch` / `checkout <base>` / `pull --ff-only` / `checkout -b <new>`), model-selection prompt with provider warning, optional chain into `/project-branch-kickoff`, and structured audit trail (`LOG.md` + MR `## OpenCode:` block). Positional `$1` for branch name skips the prompt. Frontmatter: `subtask: false` (kickoff stays in primary context for audit). Upstream model unset; fork sets `claude-opus-4-7-thinking-xhigh` at mirror time.
+- [`commands/project-branch-kickoff.md`](commands/project-branch-kickoff.md) — scaffold a big project on a fresh / empty feature branch: `git-safety` preflight, branch-readiness gate (refuse on `main`/`master`; confirm on commits-ahead), drift gate (silent on 0; finding on 1–5; block-with-confirm on >5), big-project criteria check, then orchestrates `/project-bootstrap` or `/project-knowledge-refresh` → `skills/plan-phases` → `/scaffold-knowledge dry-run` → `/scaffold-knowledge discovery`. Honors `no-preflight` / `no-stash-check` / `no-source-guard` / `no-mermaid` opt-outs (composable). Audit trail per kit-wide contract.
+
 ### Added — Branch Kickoff Foundation (Plan 1, Phases F1–F3)
 
 - [`skills/git-safety/SKILL.md`](skills/git-safety/SKILL.md) — standalone safety primitive: refuse-on-dirty preflight, attached-HEAD check, base-branch resolution (`origin/HEAD` → `main` → `master`), kit-stash naming convention (`opencode-kit:<command>:<original-branch>:<iso-timestamp>`), reminder hook with cross-check warning. Never auto-stashes; never loads other skills. Recommended permission: `ask`.

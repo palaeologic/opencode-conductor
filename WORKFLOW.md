@@ -18,7 +18,8 @@ Replace **`<projectKey>`** with your descriptor key. The descriptor file is alwa
 10. [Using skills](#10-using-skills)
 11. [Knowledge-aware review preflight](#11-knowledge-aware-review-preflight)
 12. [Knowledge across branches](#12-knowledge-across-branches)
-13. [Worked examples](#13-worked-examples)
+13. [Big branch kickoff](#13-big-branch-kickoff)
+14. [Worked examples](#14-worked-examples)
 
 ---
 
@@ -543,7 +544,7 @@ Steps:
 
 A short worked example lives in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) § AGENTS.md conflict playbook.
 
-### 12.5 Decision flow
+### 12.5 Storage-mode decision flow
 
 ```mermaid
 flowchart TD
@@ -567,7 +568,117 @@ flowchart TD
 
 ---
 
-## 13. Worked examples
+## 13. Big branch kickoff
+
+Two commands cover "starting a big project" with no copy-paste prompts:
+
+| Situation | Command |
+| --- | --- |
+| You are on any branch and want a brand-new branch off the latest integration base | `/project-branch-new [<branch-name>]` |
+| You are already on a fresh / empty feature branch and want the full scaffold | `/project-branch-kickoff [<projectKey>]` |
+
+Both commands load `skills/branch-kickoff` (which loads `skills/git-safety`) and apply the kit-wide drift gate, big-project criteria, model selection, mermaid policy, and audit-trail contract.
+
+### 13.1 `/project-branch-new` — create from base
+
+```mermaid
+flowchart TD
+  invoke[/project-branch-new $1/]
+  safety[git-safety preflight]
+  refused{refused?}
+  abort[Abort_with_remediation]
+  resolveName[Resolve_branch_name_kebab_case_recommendation]
+  resolveBase[Resolve_integration_branch_origin_HEAD_main_master]
+  step1[Confirm_git_fetch_origin]
+  step2[Confirm_git_checkout_base]
+  step3[Confirm_git_pull_ff_only]
+  step4[Confirm_git_checkout_b_new]
+  modelChoice[Model_selection_with_provider_warning]
+  bigQ{Big_project_criteria_match?}
+  chainQ{Chain_into_kickoff?}
+  bootRefresh[/project-bootstrap_or_project-knowledge-refresh/]
+  audit[Audit_LOG_md_and_OpenCode_block]
+  done[Emit_next_step_checklist]
+  light[Recommend_lighter_bootstrap_plus_scaffold]
+
+  invoke --> safety --> refused
+  refused -->|yes| abort
+  refused -->|no| resolveName --> resolveBase --> step1 --> step2 --> step3 --> step4 --> modelChoice --> bigQ
+  bigQ -->|no| light --> done
+  bigQ -->|yes| chainQ
+  chainQ -->|no| audit --> done
+  chainQ -->|yes| bootRefresh --> audit --> done
+```
+
+### 13.2 `/project-branch-kickoff` — scaffold on a fresh branch
+
+```mermaid
+flowchart TD
+  invokeK[/project-branch-kickoff $1/]
+  safetyK[git-safety preflight]
+  readyQ{Branch_ready_attached_not_main_master?}
+  driftGate[Knowledge_drift_gate]
+  bigQ2{Big_project_criteria_match?}
+  light2[Recommend_lighter_bootstrap_plus_scaffold]
+  bootRefresh2[/project-bootstrap_or_project-knowledge-refresh/]
+  phasesStep[skills_plan-phases_drafts_PHASES_md]
+  scaffoldDry[/scaffold-knowledge_dry_run/]
+  scaffoldDisc[/scaffold-knowledge_discovery_with_source_guard/]
+  auditK[Audit_LOG_md_and_OpenCode_block]
+  doneK[Emit_next_step_checklist]
+  abortK[Abort_with_remediation]
+
+  invokeK --> safetyK --> readyQ
+  readyQ -->|no| abortK
+  readyQ -->|yes| driftGate --> bigQ2
+  bigQ2 -->|no| light2 --> doneK
+  bigQ2 -->|yes| bootRefresh2 --> phasesStep --> scaffoldDry --> scaffoldDisc --> auditK --> doneK
+```
+
+### 13.3 Worked example — start a multi-area project
+
+User goal: introduce a new pseudo-package across an existing service plus a new frontend route. The work is expected to span ~1 week.
+
+1. User is on `main` with a clean tree.
+2. User runs `/project-branch-new feature/widget-bulk-action`.
+3. Command loads `branch-kickoff` and `git-safety`. Banner shows: working tree clean, HEAD attached on `main`, base resolved to `main`, 0 kit stashes on this branch.
+4. Branch name accepted (no prompt because `$1` provided).
+5. Per-step confirms: `fetch` → confirm → run; `checkout main` (no-op) → confirm; `pull --ff-only` → confirm; `checkout -b feature/widget-bulk-action` → confirm.
+6. Model prompt preselects "Use default (your provider's top-tier reasoning model)" — user accepts.
+7. Big-project criteria: 2 of 4 matched (new pseudo-package, multi-area). Recommend chaining into kickoff. User accepts.
+8. Bootstrap-or-refresh decision: descriptor exists, kit state present → refresh. Recommendation accepted.
+9. `/project-knowledge-refresh` runs; drift preflight is silent (branch is on top of base).
+10. `skills/plan-phases` prompts user through `PHASES.md` draft. Mermaid prompt fires (5 phases > 3); user accepts.
+11. `/scaffold-knowledge dry-run` shows two new leaves under `<area>` paths; source-path guard skips one because the directory does not exist on this branch yet. User reviews dry-run, then promotes to discovery for the existing leaf only.
+12. Audit trail appended:
+    ```
+    ### Kickoff 2026-05-08T08:11:54Z
+    - command: /project-branch-new
+    - base: main
+    - new branch: feature/widget-bulk-action
+    - model: provider/top-tier-reasoning (fallback: none)
+    - mermaid: phases=true review=false mr=false
+    - confirmations: fetch, checkout-base, pull-ff, checkout-new
+    ```
+    Plus a matching `## OpenCode:` block in `MERGE_REQUEST.md`.
+13. Next-step checklist suggests: open `PHASES.md` to confirm the active phase; rerun `/project-knowledge-refresh` after the first substantial work session; rerun `/scaffold-knowledge` once the second leaf's source lands.
+
+### 13.4 Opt-out flags
+
+Each gate ships with a flag for emergency bypass and CI predictability. Flags compose:
+
+| Flag | Disables |
+| --- | --- |
+| `no-preflight` | drift gate (silent or finding) inside `/project-branch-kickoff` |
+| `no-stash-check` | stash reminder hook in `git-safety` |
+| `no-source-guard` | `/scaffold-knowledge` source-path existence check during the chained discovery step |
+| `no-mermaid` | every mermaid prompt across `PHASES.md`, `REVIEW.md`, `MERGE_REQUEST.md` for this run |
+
+See [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) § Opt-out flags for the kit-wide table.
+
+---
+
+## 14. Worked examples
 
 ### Example A — User asks about a function inside a tracked package
 

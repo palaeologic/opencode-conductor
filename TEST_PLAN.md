@@ -585,6 +585,64 @@ Use a descriptor with `descriptorSchemaVersion: 2` and at least one `pseudoPacka
 
 ---
 
+## 14) `/project-branch-new` — create a new big-project branch
+
+> Test creating a brand-new branch from the latest integration base, with safety preflight and per-step git confirmations.
+
+### Setup
+
+- Local clone with a clean working tree on a non-base branch (or on the base itself).
+- Remote `origin` configured.
+
+### Steps
+
+1. Run `/project-branch-new feature/widget-bulk-action`.
+2. Observe: command loads `skills/branch-kickoff` (which loads `skills/git-safety`).
+3. Observe: read-only state anchors print (`git status`, `HEAD`, base ref, commits ahead).
+4. Observe: per-step confirmations for `git fetch origin --prune`, `git checkout <base>`, `git pull --ff-only origin <base>`, `git checkout -b feature/widget-bulk-action`.
+5. Observe: model prompt with the kit's "default vs. top-tier reasoning" guidance; choose default.
+6. Confirm chain into `/project-branch-kickoff`.
+7. Observe: `LOG.md` appends a `## OpenCode: branch-new` block; `MERGE_REQUEST.md` mirrors a tiny `## OpenCode: branch-new` block (no PII, no raw user prompt).
+
+### Dirty-tree refusal
+
+1. Make an unstaged change.
+2. Run `/project-branch-new`.
+3. **Expected**: `git-safety` refuses and lists options (commit, kit-stash, abort). No git mutations occur.
+
+**Pass**: command refuses on dirty tree; on clean tree, executes confirmed steps; audit blocks present and well-formed; `no-mermaid` (if passed) is honored downstream.
+
+---
+
+## 14a) `/project-branch-kickoff` — scaffold on a fresh / empty branch
+
+> Test scaffolding a big project on an existing fresh / empty branch.
+
+### Setup
+
+- A fresh feature branch with zero or near-zero commits ahead of base.
+- Clean working tree.
+
+### Steps
+
+1. Run `/project-branch-kickoff` (positional projectKey optional, auto-detected from descriptor).
+2. Observe: `skills/branch-kickoff` runs `git-safety`, branch-readiness gate (refuses on `main`/`master`; confirms on > N commits ahead), and drift gate.
+3. Observe: drift gate emits `F-xx` finding when AGENTS.md drift between base and tip is detected; silent on 0 drift.
+4. Observe: big-project criteria check; if borderline, asks user.
+5. Observe: orchestrates either `/project-bootstrap` (if no project state) or `/project-knowledge-refresh` (if state exists).
+6. Observe: `skills/plan-phases` drafts `PHASES.md`; user iterates; mermaid prompt fires when phases > 3.
+7. Observe: `/scaffold-knowledge dry-run` runs first, then `/scaffold-knowledge discovery` after confirmation.
+8. Observe: structured audit blocks appended to `LOG.md` and MR.
+
+### Opt-out flags
+
+1. Re-run with `no-preflight no-stash-check no-source-guard no-mermaid`.
+2. **Expected**: each opt-out is honored individually; all four can compose.
+
+**Pass**: kickoff runs end-to-end; each gate is enforced; flags are honored; audit blocks well-formed; no engine changes required.
+
+---
+
 ## 15) Pass/Fail checklist
 
 - [ ] Preflight: all files present, no stale artifacts
@@ -613,4 +671,6 @@ Use a descriptor with `descriptorSchemaVersion: 2` and at least one `pseudoPacka
 - [ ] `git-safety`: prompts with `permission.skill: ask`; refuses on dirty; stash reminder + cross-check banner correct
 - [ ] Frontmatter conventions: `subtask: true` set on long-output commands per the table in `docs/PATH_CONTRACT.md`
 - [ ] Security rule: zero `!\`...\$ARGUMENTS...\`` matches kit-wide
+- [ ] `/project-branch-new`: refuses on dirty; per-step confirms; model prompt; audit blocks present
+- [ ] `/project-branch-kickoff`: drift gate behavior correct; bootstrap-vs-refresh decision correct; phases mermaid prompt fires when > 3; scaffold dry-run before discovery; opt-out flags honored
 - [ ] Rule layering: both generic + overlay loaded correctly

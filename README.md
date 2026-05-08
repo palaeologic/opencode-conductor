@@ -273,6 +273,8 @@ flowchart TD
 | `/project-init <projectKey>`               | **First-time setup**: scan repo, draft descriptor.json, present for approval, write project structure |
 | `/project-refresh <projectKey>`            | Sync context; returns `changed_areas`, `reread_files`, nudges. Auto-suggests init if no descriptor    |
 | `/project-bootstrap <projectKey>`          | Seed tracked branch files (asks phases yes/no; can ingest pasted MR/issue/testing text into narrative sections) |
+| `/project-branch-new [<branch-name>]`      | Create a new branch from latest integration base with `git-safety` preflight, per-step confirmations, and optional chain into kickoff. Loads `skills/branch-kickoff` |
+| `/project-branch-kickoff [<projectKey>]`   | Scaffold a big project on an empty / fresh branch — bootstrap-or-refresh, plan-phases, knowledge discovery, audit trail. Loads `skills/branch-kickoff` |
 | `/project-phases <projectKey>`             | Create or refine `PHASES.md`                                                                          |
 | `/project-checkpoint <projectKey>`         | Append checkpoint to `LOG.md`                                                                         |
 | `/project-close <projectKey>`              | Session-close summary in `LOG.md`                                                                     |
@@ -305,6 +307,8 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 | Start a new session on an existing branch | `/manual-refresh` or `/project-refresh` |
 | First-time project on this kit | `/project-init` → `/scaffold-knowledge` (see **WORKFLOW §2**) |
 | Long-lived branch / checkpoints / MR sync | **WORKFLOW §3**; `/project-checkpoint`, `/project-update-mr` |
+| **Big-project kickoff** — start a brand-new branch from base | `/project-branch-new [<branch-name>]` (loads `branch-kickoff` skill, runs `git-safety` preflight, optional chain into kickoff) |
+| **Big-project kickoff** — scaffold a fresh / empty branch | `/project-branch-kickoff [<projectKey>]` (drafts `PHASES.md`, runs knowledge discovery, writes audit trail) |
 | Review before merge | `/manual-refresh` → `/project-review` (**WORKFLOW §9**, with auto knowledge preflight per **§11**); optional `review-branch` skill |
 | Add a new package / module to tracked knowledge | `/scaffold-knowledge <projectKey>` (discovery); `/scaffold-knowledge <projectKey> list` to audit |
 | Author or refine `PHASES.md` for a long-lived branch | `/project-phases <projectKey>` (loads `plan-phases` skill) |

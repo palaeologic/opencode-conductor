@@ -9,6 +9,8 @@ Quick reference for **which command** to run and **when**. For numbered scenario
 | `/project-init <projectKey>` | yes | default |
 | `/project-refresh <projectKey>` | yes | smaller / default |
 | `/project-bootstrap <projectKey>` | yes | default |
+| `/project-branch-new [<branch-name>]` | **no** | upstream: unset; fork: top-tier reasoning |
+| `/project-branch-kickoff [<projectKey>]` | **no** | upstream: unset; fork: top-tier reasoning |
 | `/project-phases <projectKey>` | yes | default or stronger |
 | `/project-checkpoint <projectKey>` | yes | smaller |
 | `/project-close <projectKey>` | yes | smaller |
@@ -27,6 +29,8 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Situation | Command | Notes |
 |-----------|---------|--------|
 | First time using kit on a project | `init` | Scans repo, drafts descriptor, user approves; only needed once per project |
+| Start a brand-new branch from the latest integration base | `project-branch-new` | Loads `branch-kickoff` skill, runs `git-safety` preflight (refuses on dirty), per-step git confirms (`fetch` → `checkout <base>` → `pull --ff-only` → `checkout -b <new>`), optional chain into kickoff. Positional `$1` for branch name skips the prompt |
+| Scaffold a big project on a fresh / empty feature branch | `project-branch-kickoff` | Loads `branch-kickoff`, runs drift gate, big-project criteria, then `bootstrap` or `knowledge-refresh` → `plan-phases` → `scaffold-knowledge` (dry-run then discovery). Audits to `LOG.md` + MR `OpenCode` block |
 | First-time knowledge scaffolding | `scaffold-knowledge` | Run once after `init`; creates shared `AGENTS.md` orientation files |
 | Add new package / module to tracked knowledge | `scaffold-knowledge` | Default discovery mode auto-detects untracked leaves (no JSON edits); skips leaves whose source is missing on the current branch (`no-source-guard` to bypass) |
 | Audit currently tracked leaves | `scaffold-knowledge <key> list` | Read-only table grouped by area |
@@ -49,6 +53,8 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 
 | Command | Positional args | Example |
 |---------|-----------------|---------|
+| `/project-branch-new` | `$1` = branch name (optional); additional tokens are flags | `/project-branch-new feature/widget-bulk-action no-mermaid` |
+| `/project-branch-kickoff` | `$1` = projectKey (optional, auto-detected); additional tokens are flags | `/project-branch-kickoff myapp no-source-guard` |
 | `/scaffold-knowledge` | `$1` = mode (`list` / `dry-run` / `discovery`); additional tokens are flags | `/scaffold-knowledge myapp dry-run no-source-guard` |
 | `/project-review` | additional tokens are flags | `/project-review myapp no-preflight no-mermaid` |
 | `/project-knowledge-refresh` | additional tokens are flags | `/project-knowledge-refresh myapp no-preflight` |
@@ -100,6 +106,8 @@ Not all commands require the Bun tool engine. When tools are in `tools-off/` or 
 | `/project-phases` | No | Works as-is (creates/edits PHASES.md) |
 | `/project-knowledge-refresh` | No | Works as-is (reads + proposes) |
 | `/scaffold-knowledge` | No | Works as-is (creates/merges shared knowledge files) |
+| `/project-branch-new` | No | Works as-is (only invokes git CLI + chained commands; safety preflight is shell-only) |
+| `/project-branch-kickoff` | No | Works as-is (orchestrates other commands; safety preflight is shell-only) |
 | `/project-refresh` | **Yes** | Use `/manual-refresh` instead |
 | `/project-bootstrap` | **Yes** | Use `/manual-refresh` instead (auto-seeds missing files) |
 
