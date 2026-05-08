@@ -4,6 +4,13 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ## [Unreleased]
 
+### Added — Kit Docusaurus restructure (Plan 4)
+
+- Added Docusaurus entry page [`docs/intro.md`](docs/intro.md) and categorized docs sections for workflows, commands, contributing, skills, and knowledge (`_category_.yml` + landing pages).
+- Added architecture documentation set in [`docs/architecture/`](docs/architecture/) with ten focused pages: mental model, components, data flow, lifecycles, core sequences, extension points, invariants, security model, trade-offs, and failure modes.
+- Added at least one mermaid diagram per architecture page to make system behavior and constraints easier to communicate to both engineers and technical leads.
+- Updated root [`README.md`](README.md) docs map to include the Docusaurus docs entry and architecture section.
+
 ### Added — Branch explore guide (Plan 3)
 
 - [`commands/project-branch-explore.md`](commands/project-branch-explore.md) — advisory branch exploration command: confirmed branch switch, read-only context gathering, and `EXPLORE_GUIDE.md` generation (`Setup`, `What's new`, `How to try it`, `Caveats`) with no browser automation and no auto-run setup.

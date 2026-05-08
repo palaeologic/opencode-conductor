@@ -17,6 +17,8 @@ Branch-local context (default **under `~/.config`**, or **beside the clone** whe
 ## Docs map
 
 - [`README.md`](README.md) — canonical guide (architecture, workflows, commands, rules, skills, cost analysis)
+- [`docs/intro.md`](docs/intro.md) — Docusaurus entry point for this kit
+- [`docs/architecture/`](docs/architecture/) — 10-page architecture deep dive with mermaid diagrams
 - [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review** with preflight, skills, Mermaid diagrams, **knowledge across branches**, **worked examples**); start here for ordered procedures
 - [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — quick command decision matrix
 - [`TEST_PLAN.md`](TEST_PLAN.md) — smoke test checklist

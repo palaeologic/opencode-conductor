@@ -90,13 +90,12 @@ The current Plan 1 (Branch Kickoff Automation) lands the kit-wide foundation (Ph
 - **What shipped:** `commands/project-branch-explore.md`, `skills/branch-explore/SKILL.md`, and read-only `commands/project-state.md`.
 - **Out of scope remains:** browser automation, screenshots, console-error checks (handled by separate verification skills).
 
-### Kit Docusaurus restructure (Plan 4)
+### Kit Docusaurus restructure (Plan 4) — shipped
 
-- **Goal:** Reorganize the kit's flat markdown into a Docusaurus-compatible `docs/` tree so consumers can drop the folder into any Docusaurus host. Keep `README.md` and `CHANGELOG.md` at repo root.
-- **Scope:** Move `WORKFLOW.md` / `COMMAND_WORKFLOW.md` / `TEST_PLAN.md` / `SECURITY.md` / `docs/PATH_CONTRACT.md` / `docs/UPGRADING.md` / `docs/ROADMAP.md` into the new tree with frontmatter and `_category_.yml`. Add `docs/skills/` and `docs/knowledge/` pages. Architecture documentation (10 pages) covering mental model, components, data-flow, lifecycles, sequences, extension-points, invariants, security-model, trade-offs, failure-modes — each with at least one mermaid diagram.
-- **Out of scope:** shipping `docusaurus.config.js` / `sidebars.js` (the folder is portable; consumers wire their own host). Kit-owned demo site deferred.
-- **Fork additions:** `docs/architecture/differences-from-upstream.md`; `docs/recipes/`; `docs/help-docs-authoring/`.
-- **Opens after:** Phase C3 completes. Can ship in parallel with Plan 2.
+- **Status:** Implemented and graduated into `[Unreleased]` in `CHANGELOG.md`.
+- **What shipped:** Docusaurus-friendly docs entry (`docs/intro.md`), architecture section with 10 pages and mermaid diagrams, plus new categorized sections for workflows, commands, contributing/testing, skills, and knowledge.
+- **Scope decision:** Root `README.md` and `CHANGELOG.md` remain canonical for GitHub-first workflows; docs pages provide structured entry points for static-site hosting.
+- **Out of scope remains:** `docusaurus.config.js` and hosted demo-site wiring (consumer-owned integration surface).
 
 ### Help-docs authoring skill (Plan 5)
 
