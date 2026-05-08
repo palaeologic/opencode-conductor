@@ -59,7 +59,7 @@ Placement:
 
 - **Sparse beats verbose.** Each section earns its keep. Empty placeholders are fine and common.
 - **Human-readable headings** double as agent cues: Stack, Purpose, Use When, Avoid When, Key Entry Points, Conventions, Verification, Known Pitfalls.
-- **Code citations** over narration: `base_graphql/forms.py` rather than "the forms file in the GraphQL folder."
+- **Code citations** over narration: `<area>/<pkg>/forms.py` rather than "the forms file in the GraphQL folder."
 - **Imperative voice for rules:** "Prefer relative imports within a package" — not "we tend to."
 
 ## Evidence sourcing

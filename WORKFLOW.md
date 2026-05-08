@@ -17,7 +17,8 @@ Replace **`<projectKey>`** with your descriptor key. The descriptor file is alwa
 9. [Reviewing](#9-reviewing)
 10. [Using skills](#10-using-skills)
 11. [Knowledge-aware review preflight](#11-knowledge-aware-review-preflight)
-12. [Worked examples](#12-worked-examples)
+12. [Knowledge across branches](#12-knowledge-across-branches)
+13. [Worked examples](#13-worked-examples)
 
 ---
 
@@ -493,11 +494,84 @@ flowchart TD
 
 ---
 
-## 12. Worked examples
+## 12. Knowledge across branches
+
+`AGENTS.md` files describe **durable** knowledge. Two storage modes affect how that knowledge moves between branches and how the kit detects discrepancies. Full details live in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) § Knowledge across branches; this section is the operational summary.
+
+### 12.1 Choose a storage mode at bootstrap
+
+| Mode | Where files live | Per-branch behavior | Drift preflight applies? |
+| --- | --- | --- | --- |
+| **Project-local** | `<git-root>/.opencode-conductor/...` (or `.opencode/`) | Knowledge is stable across branches; not part of the working-tree diff | No |
+| **Committed-in-repo** | `<repo>/<area>/AGENTS.md` (alongside source) | Knowledge moves with the branch; visible in diffs and PRs | Yes |
+
+Recommendation:
+
+- **Project-local** for fast-moving forks where knowledge needs to stay stable across many in-flight branches and should not pollute PR diffs.
+- **Committed-in-repo** for shared kits, vendor-neutral upstream, or any project where per-branch self-consistency of knowledge is desirable.
+
+The choice is recorded in `descriptor.json`. Switching modes mid-project is expensive; treat it as a migration.
+
+### 12.2 Drift preflight (committed mode only)
+
+`/project-knowledge-refresh` and `/project-review` run a silent knowledge-drift preflight by default:
+
+1. Resolve the integration base via `origin/HEAD` → `main` → `master`.
+2. `git fetch origin <base>` (read-only; cached for 5 minutes per session, fixed).
+3. Compute the symmetric diff of `AGENTS.md` files between `merge-base(HEAD, origin/<base>)` and `origin/<base>`.
+4. Emit `F-xx` finding "Knowledge drift vs base: <files>" if drift exists.
+5. Recommend rebase, or `git checkout <base> -- <AGENTS.md path>` for a single-file pull-up.
+
+The preflight is silent on no drift. Pass `no-preflight` in `$ARGUMENTS` to bypass for CI / batch scenarios.
+
+### 12.3 Source-path guard (project-local mode pitfalls)
+
+When you switch to a branch that lacks a package present on other branches, `/scaffold-knowledge` will not write a leaf `AGENTS.md` for the missing source — it skips and logs instead. This prevents "ghost knowledge" — a durable file describing a package that does not exist on the current branch.
+
+Bypass with the `no-source-guard` argument when you intentionally want to stage knowledge ahead of the source landing.
+
+### 12.4 AGENTS.md merge-conflict playbook
+
+Two parallel branches editing the same area `AGENTS.md` is a normal occurrence; bullets are typically additive, so the kit never auto-resolves.
+
+Steps:
+
+1. **Take both sides.** Resolve the merge by keeping content from both branches.
+2. **Dedupe by bullet.** Remove exact-duplicate bullets across the two sides.
+3. **Reconcile contradictions manually.** Two competing rules require a human decision, not an automated merge.
+4. **Rerun `/project-knowledge-refresh`** after manual resolution. The refresh proposes follow-up edits if any newly-merged bullets need rewording or relocation.
+
+A short worked example lives in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) § AGENTS.md conflict playbook.
+
+### 12.5 Decision flow
+
+```mermaid
+flowchart TD
+  start[Switching_branch_or_running_review]
+  modeQ{Storage_mode?}
+  driftQ{Drift_preflight_finds_changes?}
+  rebaseAction[Sync_AGENTS_from_integration_branch]
+  conflict{Merge_conflict_in_AGENTS_md?}
+  playbook[Take_both_dedupe_reconcile_manually]
+  refresh[Rerun_project-knowledge-refresh]
+  proceed[Proceed_with_normal_flow]
+
+  start --> modeQ
+  modeQ -->|project-local| proceed
+  modeQ -->|committed| driftQ
+  driftQ -->|yes| rebaseAction --> proceed
+  driftQ -->|no| conflict
+  conflict -->|yes| playbook --> refresh --> proceed
+  conflict -->|no| proceed
+```
+
+---
+
+## 13. Worked examples
 
 ### Example A — User asks about a function inside a tracked package
 
-A user asks: *"What does `validate_files()` in `base_files` do, and where is it called from?"*
+A user asks: *"What does `validate_payload()` in `<area>/<pkg>` do, and where is it called from?"*
 
 1. Agent loads (free of charge until used) `discover-knowledge` and `onboard-area` skills.
 2. Agent reads the area `AGENTS.md` (`<opencodeRoot>/<area>/AGENTS.md`) for the stack and naming conventions.
