@@ -4,6 +4,13 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ## [Unreleased]
 
+### Added — Branch explore guide (Plan 3)
+
+- [`commands/project-branch-explore.md`](commands/project-branch-explore.md) — advisory branch exploration command: confirmed branch switch, read-only context gathering, and `EXPLORE_GUIDE.md` generation (`Setup`, `What's new`, `How to try it`, `Caveats`) with no browser automation and no auto-run setup.
+- [`skills/branch-explore/SKILL.md`](skills/branch-explore/SKILL.md) — guide-synthesis lens that prioritizes MR narrative, commit history, code comments, and dependency diffs; outputs deterministic manual exploration steps.
+- [`commands/project-state.md`](commands/project-state.md) — read-only kit-state command (working tree, HEAD/base divergence, optional drift summary, kit stashes, recent kickoff audit entries), with `verbose` and `no-preflight` flags.
+- Docs/test coverage for Plan 3 in [`README.md`](README.md), [`WORKFLOW.md`](WORKFLOW.md), [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md), [`TEST_PLAN.md`](TEST_PLAN.md), and roadmap status in [`docs/ROADMAP.md`](docs/ROADMAP.md).
+
 ### Added — Verification-scripts knowledge (Plan 2)
 
 - Deterministic verification synthesis in [`commands/project-review.md`](commands/project-review.md): suggested verifications are now derived from area-level `## Verification scripts` tables (`Trigger | Command | When`) by matching triggers against `git diff --name-only`, with dedupe preserving first-seen order.

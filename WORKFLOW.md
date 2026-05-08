@@ -19,7 +19,8 @@ Replace **`<projectKey>`** with your descriptor key. The descriptor file is alwa
 11. [Knowledge-aware review preflight](#11-knowledge-aware-review-preflight)
 12. [Knowledge across branches](#12-knowledge-across-branches)
 13. [Big branch kickoff](#13-big-branch-kickoff)
-14. [Worked examples](#14-worked-examples)
+14. [Branch explore and project state](#14-branch-explore-and-project-state)
+15. [Worked examples](#15-worked-examples)
 
 ---
 
@@ -678,7 +679,37 @@ See [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) § Opt-out flags for the ki
 
 ---
 
-## 14. Worked examples
+## 14. Branch explore and project state
+
+### 14.1 `/project-branch-explore`
+
+Use when you want to manually try branch changes without browser automation.
+
+1. Run `/project-branch-explore [<target-branch>]`.
+2. Command loads `git-safety` and refuses on dirty tree by default.
+3. Confirm `git fetch origin --prune` and `git checkout <target>`.
+4. Command loads `branch-explore` and writes `EXPLORE_GUIDE.md` with:
+   - `## Setup` (dependency/setup commands to run manually)
+   - `## What's new` (user-facing changes with source hints)
+   - `## How to try it` (URL paths + button/action sequences)
+   - `## Caveats` (feature flags, TODOs, partials)
+5. Optionally return to original branch; if a kit-stash exists, command reminds to pop/drop.
+
+### 14.2 `/project-state` (read-only)
+
+Run `/project-state` to get a sectioned state report without mutations:
+
+- working tree status
+- HEAD/base and ahead/behind
+- optional knowledge-drift summary (skip with `no-preflight`)
+- kit stashes on current branch
+- recent kickoff audit entries from `LOG.md`
+
+Use `verbose` for expanded details.
+
+---
+
+## 15. Worked examples
 
 ### Example A — User asks about a function inside a tracked package
 

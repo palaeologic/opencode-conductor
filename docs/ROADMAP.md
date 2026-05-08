@@ -84,12 +84,11 @@ The current Plan 1 (Branch Kickoff Automation) lands the kit-wide foundation (Ph
 - **What shipped:** deterministic `/project-review` verification synthesis from `## Verification scripts` tables, missing-block `F-xx` note, scaffold starter block in `/scaffold-knowledge`, and script-manifest refresh proposals in `/project-knowledge-refresh`.
 - **Follow-up:** keep extending table coverage in project `AGENTS.md`; core schema/consumption is no longer a roadmap item.
 
-### Branch explore guide (Plan 3)
+### Branch explore guide (Plan 3) — shipped
 
-- **Goal:** Advisory `/project-branch-explore` command that switches to a target branch and emits a markdown `EXPLORE_GUIDE.md` (Setup / What's new / How to try it / Caveats), plus the read-only `/project-state` command.
-- **Scope:** `commands/project-branch-explore.md`; `skills/branch-explore/SKILL.md`; `commands/project-state.md` (loads `git-safety` from F1); fork mirror with worked example.
-- **Out of scope:** browser automation, screenshots, console-error checks (separate skills).
-- **Opens after:** Plan 2 is complete and can start now — reuses the structured-knowledge-in-AGENTS pattern for `## Run locally` blocks.
+- **Status:** Implemented and graduated into `[Unreleased]` in `CHANGELOG.md`.
+- **What shipped:** `commands/project-branch-explore.md`, `skills/branch-explore/SKILL.md`, and read-only `commands/project-state.md`.
+- **Out of scope remains:** browser automation, screenshots, console-error checks (handled by separate verification skills).
 
 ### Kit Docusaurus restructure (Plan 4)
 

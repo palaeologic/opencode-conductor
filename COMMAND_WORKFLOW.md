@@ -11,6 +11,8 @@ Quick reference for **which command** to run and **when**. For numbered scenario
 | `/project-bootstrap <projectKey>` | yes | default |
 | `/project-branch-new [<branch-name>]` | **no** | upstream: unset; fork: top-tier reasoning |
 | `/project-branch-kickoff [<projectKey>]` | **no** | upstream: unset; fork: top-tier reasoning |
+| `/project-branch-explore [<branch>]` | **no** | upstream: unset; fork: default |
+| `/project-state` | yes | default |
 | `/project-phases <projectKey>` | yes | default or stronger |
 | `/project-checkpoint <projectKey>` | yes | smaller |
 | `/project-close <projectKey>` | yes | smaller |
@@ -31,6 +33,8 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | First time using kit on a project | `init` | Scans repo, drafts descriptor, user approves; only needed once per project |
 | Start a brand-new branch from the latest integration base | `project-branch-new` | Loads `branch-kickoff` skill, runs `git-safety` preflight (refuses on dirty), per-step git confirms (`fetch` → `checkout <base>` → `pull --ff-only` → `checkout -b <new>`), optional chain into kickoff. Positional `$1` for branch name skips the prompt |
 | Scaffold a big project on a fresh / empty feature branch | `project-branch-kickoff` | Loads `branch-kickoff`, runs drift gate, big-project criteria, then `bootstrap` or `knowledge-refresh` → `plan-phases` → `scaffold-knowledge` (dry-run then discovery). Audits to `LOG.md` + MR `OpenCode` block |
+| Explore a target branch and get manual try steps | `project-branch-explore` | Loads `git-safety`, confirms branch switch, then emits `EXPLORE_GUIDE.md` (Setup / What's new / How to try it / Caveats). No browser automation, no auto-run setup |
+| Inspect current kit/git state without mutations | `project-state` | Read-only report: working tree, HEAD/base divergence, knowledge drift summary, kit stashes, recent kickoff audit entries |
 | First-time knowledge scaffolding | `scaffold-knowledge` | Run once after `init`; creates shared `AGENTS.md` orientation files plus starter `## Verification scripts` table in area files |
 | Add new package / module to tracked knowledge | `scaffold-knowledge` | Default discovery mode auto-detects untracked leaves (no JSON edits); skips leaves whose source is missing on the current branch (`no-source-guard` to bypass) |
 | Audit currently tracked leaves | `scaffold-knowledge <key> list` | Read-only table grouped by area |
@@ -55,11 +59,13 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 |---------|-----------------|---------|
 | `/project-branch-new` | `$1` = branch name (optional); additional tokens are flags | `/project-branch-new feature/widget-bulk-action no-mermaid` |
 | `/project-branch-kickoff` | `$1` = projectKey (optional, auto-detected); additional tokens are flags | `/project-branch-kickoff myapp no-source-guard` |
+| `/project-branch-explore` | `$1` = target branch (optional; prompts if omitted) | `/project-branch-explore feature/widget-bulk-action` |
 | `/scaffold-knowledge` | `$1` = mode (`list` / `dry-run` / `discovery`); additional tokens are flags | `/scaffold-knowledge myapp dry-run no-source-guard` |
 | `/project-review` | additional tokens are flags | `/project-review myapp no-preflight no-mermaid` |
 | `/project-knowledge-refresh` | additional tokens are flags | `/project-knowledge-refresh myapp no-preflight` |
 | `/project-phases` | additional tokens are flags | `/project-phases myapp no-mermaid` |
 | `/project-update-mr` | additional tokens are flags | `/project-update-mr myapp no-mermaid` |
+| `/project-state` | additional tokens are flags (`verbose`, `no-preflight`) | `/project-state verbose` |
 
 ## Opt-out flags (cross-command)
 
@@ -108,6 +114,8 @@ Not all commands require the Bun tool engine. When tools are in `tools-off/` or 
 | `/scaffold-knowledge` | No | Works as-is (creates/merges shared knowledge files) |
 | `/project-branch-new` | No | Works as-is (only invokes git CLI + chained commands; safety preflight is shell-only) |
 | `/project-branch-kickoff` | No | Works as-is (orchestrates other commands; safety preflight is shell-only) |
+| `/project-branch-explore` | No | Works as-is (git preflight + branch switch + guide generation) |
+| `/project-state` | No | Works as-is (pure read-only report) |
 | `/project-refresh` | **Yes** | Use `/manual-refresh` instead |
 | `/project-bootstrap` | **Yes** | Use `/manual-refresh` instead (auto-seeds missing files) |
 

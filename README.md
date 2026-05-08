@@ -275,6 +275,8 @@ flowchart TD
 | `/project-bootstrap <projectKey>`          | Seed tracked branch files (asks phases yes/no; can ingest pasted MR/issue/testing text into narrative sections) |
 | `/project-branch-new [<branch-name>]`      | Create a new branch from latest integration base with `git-safety` preflight, per-step confirmations, and optional chain into kickoff. Loads `skills/branch-kickoff` |
 | `/project-branch-kickoff [<projectKey>]`   | Scaffold a big project on an empty / fresh branch — bootstrap-or-refresh, plan-phases, knowledge discovery, audit trail. Loads `skills/branch-kickoff` |
+| `/project-branch-explore [<branch>]`       | Switch to a target branch and generate `EXPLORE_GUIDE.md` (setup, what changed, manual try steps, caveats). Loads `skills/branch-explore` + `git-safety` |
+| `/project-state`                            | Read-only sectioned state report (working tree, head/base divergence, knowledge drift summary, kit stashes, recent kickoff audit) |
 | `/project-phases <projectKey>`             | Create or refine `PHASES.md`                                                                          |
 | `/project-checkpoint <projectKey>`         | Append checkpoint to `LOG.md`                                                                         |
 | `/project-close <projectKey>`              | Session-close summary in `LOG.md`                                                                     |
@@ -309,6 +311,8 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 | Long-lived branch / checkpoints / MR sync | **WORKFLOW §3**; `/project-checkpoint`, `/project-update-mr` |
 | **Big-project kickoff** — start a brand-new branch from base | `/project-branch-new [<branch-name>]` (loads `branch-kickoff` skill, runs `git-safety` preflight, optional chain into kickoff) |
 | **Big-project kickoff** — scaffold a fresh / empty branch | `/project-branch-kickoff [<projectKey>]` (drafts `PHASES.md`, runs knowledge discovery, writes audit trail) |
+| **Explore a feature branch manually** | `/project-branch-explore [<branch>]` (generates `EXPLORE_GUIDE.md` with setup + URL paths + click-through actions) |
+| **Inspect current kit/git state (read-only)** | `/project-state` |
 | Review before merge | `/manual-refresh` → `/project-review` (**WORKFLOW §9**, with auto knowledge preflight per **§11**); optional `review-branch` skill |
 | Add a new package / module to tracked knowledge | `/scaffold-knowledge <projectKey>` (discovery); `/scaffold-knowledge <projectKey> list` to audit |
 | Author or refine `PHASES.md` for a long-lived branch | `/project-phases <projectKey>` (loads `plan-phases` skill) |
@@ -390,6 +394,7 @@ Skills are NOT loaded unless relevant — unlike rules which are always present.
 | ----- | ---------------------- | ------------ |
 | `git-safety` | A command intends to mutate git state (fetch, checkout, pull, branch ops, stash) | Refuse-on-dirty preflight, attached-HEAD check, base-branch resolution (`origin/HEAD` → `main` → `master`), kit-stash convention with reminder hook and cross-check warning. Never auto-stashes; never loads other skills. Recommended permission: `ask`. |
 | `branch-kickoff` | A kickoff command runs (commands ship in C1) | Loads `git-safety`; runs drift gate, big-project criteria, model selection, mermaid policy, audit trail. Recommended permission: `ask`. |
+| `branch-explore` | User wants a manual branch exploration guide (no browser automation) | Produces `EXPLORE_GUIDE.md` from MR narrative + commits + code comments + dependency diffs. |
 | `discover-knowledge` | Authoring or refreshing `AGENTS.md`; running `/scaffold-knowledge`, `/project-knowledge-refresh`, or the `/project-review` preflight | Senior Architect lens; promotion rubric; source-path existence guard for leaf scaffolds. |
 | `plan-phases` | Drafting or refining `PHASES.md` for a long-lived branch | Senior Architect / PM lens; phase template, sizing heuristics, anti-patterns. |
 | `review-branch` | User asks to review a branch, or says "check before merge" | Orchestrates: `/manual-refresh` → `/project-review` with deterministic verification-scripts synthesis (falls back to generic checks when missing) → optional `/project-update-mr` or `/project-review-sync` |

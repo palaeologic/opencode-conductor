@@ -678,6 +678,51 @@ Use a descriptor with `descriptorSchemaVersion: 2` and at least one `pseudoPacka
 
 ---
 
+## 14b) `/project-branch-explore` — advisory branch walkthrough
+
+> Test branch switching + `EXPLORE_GUIDE.md` generation without browser automation.
+
+### Steps
+
+1. Run `/project-branch-explore feature/widget-bulk-action`.
+2. Observe: `git-safety` preflight runs first.
+3. Observe: per-step confirms for `fetch` and `checkout`.
+4. Observe: command writes `EXPLORE_GUIDE.md` in branch context folder with sections:
+   - `## Setup`
+   - `## What's new`
+   - `## How to try it`
+   - `## Caveats`
+5. Confirm no browser automation or setup command execution occurred.
+
+### Dirty-tree refusal
+
+1. Make an unstaged local change.
+2. Run `/project-branch-explore`.
+3. **Expected**: command refuses (unless user explicitly chooses stash flow).
+
+**Pass**: guide is generated deterministically, branch switch is confirmed, no side-effect automation runs.
+
+---
+
+## 14c) `/project-state` — read-only status report
+
+### Steps
+
+1. Run `/project-state`.
+2. Verify report sections include working tree, head/base divergence, drift summary, kit stashes, recent kickoff audit.
+3. Run `/project-state verbose`.
+4. Run `/project-state no-preflight`.
+
+### Expected
+
+- No files are written.
+- `verbose` expands details only.
+- `no-preflight` skips drift sub-check while preserving other sections.
+
+**Pass**: command is read-only and consistently reports state.
+
+---
+
 ## 15) Pass/Fail checklist
 
 - [ ] Preflight: all files present, no stale artifacts
@@ -709,4 +754,6 @@ Use a descriptor with `descriptorSchemaVersion: 2` and at least one `pseudoPacka
 - [ ] Security rule: zero `!\`...\$ARGUMENTS...\`` matches kit-wide
 - [ ] `/project-branch-new`: refuses on dirty; per-step confirms; model prompt; audit blocks present
 - [ ] `/project-branch-kickoff`: drift gate behavior correct; bootstrap-vs-refresh decision correct; phases mermaid prompt fires when > 3; scaffold dry-run before discovery; opt-out flags honored
+- [ ] `/project-branch-explore`: guide generated with four sections; no browser automation; branch switch confirms; dirty-tree refusal works
+- [ ] `/project-state`: read-only report contains expected sections; `verbose` and `no-preflight` flags honored
 - [ ] Rule layering: both generic + overlay loaded correctly
