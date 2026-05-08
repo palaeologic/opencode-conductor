@@ -13,6 +13,13 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
 3. Match cwd against each descriptor's `projectRootPath`.
 4. If exactly one matches, use that `projectKey`. If zero or multiple match, ask the user.
 
+## Argument flags
+
+`$ARGUMENTS` may include:
+
+- `no-mermaid` — skip mermaid prompts.
+- `mode-hint-only` — do not draft/update `PHASES.md`; return only a structured mode recommendation for demos.
+
 ## Workflow
 
 1. Call `opencode_bootstrap_branch` with:
@@ -36,7 +43,7 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
 8. If `PHASES.md` already existed:
    - refine only if user asked for updates
 
-8.5. **Mermaid prompt (default ON when phases > 3).** Per the kit-wide mermaid policy in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) § Mermaid policy, ask whether to include one phase-dependency diagram in `PHASES.md`.
+8.5. **Mermaid prompt (default ON when phases > 3).** Per the kit-wide mermaid policy in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) § Mermaid policy, ask whether to include one phase-dependency diagram in `PHASES.md`.
 
    - **Default:** ON when the draft has **>3 phases**; OFF otherwise.
    - **Recommendation in prompt:** "Include when phases > 3 and dependencies are non-trivial."
@@ -49,4 +56,10 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
    - active phase
    - suggested next phase task
    - whether a phase-dependency diagram was included
+
+10. **Mode hint dry-run (optional).**
+    - If `mode-hint-only` is present, skip file writes and return:
+      - `recommended_mode_next: build` when phase plan is stable and implementation-ready.
+      - `recommended_mode_next: plan` when dependencies, scope, or risk are still unresolved.
+    - Include one `why:` line.
 

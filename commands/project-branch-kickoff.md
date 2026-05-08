@@ -16,6 +16,7 @@ Use when you are already on a fresh feature branch (zero commits ahead of base, 
 - `no-stash-check` — skip the stash reminder hook in `git-safety`.
 - `no-source-guard` — bypass source-path existence guard in `/scaffold-knowledge`.
 - `no-mermaid` — skip mermaid prompts on every artifact created during this run.
+- `mode-hint-only` — do not run kickoff actions; return only a structured mode recommendation for demos.
 
 Fail closed on any other token. **Security rule:** never interpolate `$ARGUMENTS` or `$1` into `!`...`` shell-injection blocks.
 
@@ -47,6 +48,12 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
 
    If any gate refuses or is declined, abort with the remediation hint and emit no audit entry.
 
+2.5. **Mode hint dry-run (optional).**
+   - If `mode-hint-only` is present, stop here and emit:
+     - `recommended_mode_next: build` when branch is kickoff-ready and requirements are sufficiently stable.
+     - `recommended_mode_next: plan` when drift, readiness uncertainty, or unresolved scope is detected.
+   - Include one `why:` line and exit without running bootstrap/refresh/phases/scaffold/audit.
+
 3. **Bootstrap or refresh.**
    - Inspect the descriptor's branch-context folder (`branchHandoff.contextDirTemplate` expanded for the current branch).
    - If the folder does not exist or `MERGE_REQUEST.md` / `LOG.md` are missing → run `/project-bootstrap <projectKey>`.
@@ -61,7 +68,7 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
    - **Recommendation in prompt:** Dry-run first, then promote to Discovery — preserves auditability.
    - Pass `no-source-guard` through to `/scaffold-knowledge` if the kickoff received it; otherwise the source-path guard runs by default.
 
-6. **Mermaid policy hand-off.** The chained commands (`/project-phases`, `/project-knowledge-refresh`) apply their own mermaid policies as documented in `documentation/PATH_CONTRACT.md` § Mermaid policy. This kickoff command never injects mermaid into artifacts itself; it only orchestrates.
+6. **Mermaid policy hand-off.** The chained commands (`/project-phases`, `/project-knowledge-refresh`) apply their own mermaid policies as documented in `docs/PATH_CONTRACT.md` § Mermaid policy. This kickoff command never injects mermaid into artifacts itself; it only orchestrates.
 
 7. **Audit trail.** Per `skills/branch-kickoff` § Audit trail, append:
    - `LOG.md` block:
@@ -101,6 +108,15 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
   - Open <path to PHASES.md> and confirm the active phase
   - <follow-up 2>
   - ...
+```
+
+When `mode-hint-only` is set, emit exactly:
+
+```
+## Mode hint
+- recommended_mode_next: <plan|build>
+- why: <short rationale>
+- explicit_switch: required
 ```
 
 ## Constraints

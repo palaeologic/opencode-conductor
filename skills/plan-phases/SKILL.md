@@ -79,6 +79,10 @@ Each phase gets a section like this in `PHASES.md`:
 3. **Draft 3–6 phases** using the template. Resist 8+ phases on a single branch — that signals scope creep or a missed split into multiple branches.
 4. **Cross-link**: `MERGE_REQUEST.md` references phase ids; checkpoints in `LOG.md` mention the active phase.
 5. **Iterate**: present the draft, ask which phases are too big / too coupled, refine.
+6. **Mode-switch suggestion (explicit).** After presenting the refined phases, add a short recommendation:
+   - Recommend `build` when the active phase has clear deliverables + exit criteria.
+   - Recommend `plan` when dependencies or risk gates are still unresolved.
+   - Never auto-switch; ask the user to confirm mode change explicitly.
 
 ## Output
 

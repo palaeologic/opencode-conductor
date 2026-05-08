@@ -70,6 +70,42 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | `/project-state` | additional tokens are flags (`verbose`, `no-preflight`) | `/project-state verbose` |
 | `/project-help-docs` | `$1` = output root (optional; prompts if omitted); additional tokens are flags | `/project-help-docs ~/tmp/help --scope=frontend --no-mermaid` |
 
+## Mode routing policy (Plan vs Build)
+
+Mode impacts quality and cost. Use this policy:
+
+| Task shape | Recommended mode | Why |
+|------|---------|---------|
+| Ambiguous requirement, architecture decision, multi-path tradeoff | **Plan** | Better exploration and option comparison before edits |
+| Simple implementation with clear acceptance criteria | **Build** | Faster execution with fewer turns |
+| Large refactor across files with risk to invariants | **Plan** first, then **Build** | De-risk design first, then execute |
+| Bugfix with unknown root cause | **Plan** first | Isolate, hypothesize, verify before writing |
+| Bugfix with confirmed root cause and narrow diff | **Build** | Direct implementation is usually safest |
+
+Suggested command alignment:
+
+- Start in **Plan**: `/project-branch-kickoff`, `/project-phases`, `/project-review`, `/project-help-docs`.
+- Stay in or switch to **Build** for concrete coding tasks after plan sign-off.
+- Use `/project-state` after mode switches to confirm branch/context health.
+
+When a command/skill detects planning is complete, it should **suggest** switching to Build, not force it.
+
+## Combining prompts with commands and skills
+
+You do not need to choose between plain prompts and slash commands. Best practice:
+
+1. Use a short plain-language prompt to specify intent/constraints.
+2. Run the command that owns the workflow.
+3. Let skills load on demand; only add extra prompt detail if output is too generic.
+
+Examples:
+
+- Prompt: "Focus on performance and low-risk migration." + `/project-branch-kickoff my-app`
+- Prompt: "Review from security + maintainability lens; keep false positives low." + `/project-review my-app`
+- Prompt: "Generate docs for support agents and end-users; avoid internal jargon." + `/project-help-docs ~/tmp/help --scope=frontend`
+
+This pattern keeps commands deterministic while still letting the user steer tone, depth, and lens.
+
 ## Opt-out flags (cross-command)
 
 | Flag | Disables | Default |

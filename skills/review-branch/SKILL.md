@@ -78,6 +78,9 @@ Present:
 - Open vs resolved `F-xx` items
 - Verification outcome (or “skipped by user”)
 - What changed in `MERGE_REQUEST.md` `OpenCode:` sections (or “not updated”)
+- Mode-switch suggestion (explicit, never automatic):
+  - Recommend `build` when findings are narrow and implementation-ready.
+  - Recommend `plan` when findings reveal unresolved design or cross-area decisions.
 
 ## Decision points
 
@@ -152,6 +155,6 @@ Respect the existing 25-row cap in `commands/project-review.md`; the senior lens
 
 ## Related docs
 
-- Scenarios: `documentation/WORKFLOW.md` (repo root)
-- Commands: `documentation/COMMAND_WORKFLOW.md` (repo root)
+- Scenarios: `WORKFLOW.md` (repo root)
+- Commands: `COMMAND_WORKFLOW.md` (repo root)
 - Baseline persona: `rules/SENIOR_ENGINEERING.md`

@@ -95,6 +95,39 @@ Your branch is behind `main`. The kit:
 - Suggests a single-file pull-up for stale `AGENTS.md` files.
 - Does not auto-rebase; you control the merge strategy.
 
+## Scenario I — Combining prompts with commands and skills
+
+You can combine a short prompt with a command to shape output without losing deterministic behavior.
+
+```mermaid
+flowchart LR
+  Intent[User intent in plain language] --> Cmd[Run command]
+  Cmd --> Skill[Relevant skills load]
+  Skill --> Artifact[Structured artifact output]
+  Artifact --> Refine{Needs refinement?}
+  Refine -- yes --> Prompt2[Add tighter prompt constraints]
+  Prompt2 --> Cmd
+  Refine -- no --> Done[Proceed]
+```
+
+Recommended pattern:
+
+1. State constraints in one sentence.
+2. Execute the owning command.
+3. Refine with a second prompt only if needed.
+
+Examples:
+
+- "Think like a senior architect; optimize for low operational risk." + `/project-branch-kickoff my-app`
+- "Review for correctness + security; avoid noisy style findings." + `/project-review my-app`
+- "Draft docs for support staff; exclude internal-only terms." + `/project-help-docs ~/tmp/help --scope=commands`
+
+### Plan vs Build in real sessions
+
+- Use **Plan mode** for discovery, architecture, roadmap, risk analysis, and review framing.
+- Switch to **Build mode** when the task is implementation-ready.
+- Commands/skills can suggest mode switches; users should confirm before switching.
+
 ## What a real session looks like
 
 ```markdown

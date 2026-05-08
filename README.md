@@ -52,6 +52,7 @@ When the two diverge, `/documentation/` wins.
 - [`docusaurus/skills/`](docusaurus/skills/) — full skill catalog (per-skill pages)
 - [`docusaurus/knowledge/`](docusaurus/knowledge/) — AGENTS.md hierarchy, source-tree-mirror convention, structured-knowledge tables, drift preflight
 - [`docusaurus/workflows/`](docusaurus/workflows/) — tutorial walkthroughs of the canonical scenarios
+- [`docusaurus/workflows/mode-and-prompt-playbook.md`](docusaurus/workflows/mode-and-prompt-playbook.md) — one-page guide for Plan vs Build and combining prompts + commands + skills
 - [`docusaurus/contributing/`](docusaurus/contributing/) — testing the kit, extending the kit, using TEST_PLAN.md
 - [`docusaurus/help-docs-authoring/`](docusaurus/help-docs-authoring/) — five-phase end-user docs generation
 - [`docusaurus/descriptors/descriptor-json.md`](docusaurus/descriptors/descriptor-json.md) — `descriptor.json` schema reference
