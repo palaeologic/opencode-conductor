@@ -127,6 +127,12 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
     ## Verification order
     <ordered list based on detected tooling: lint → typecheck → test → build>
 
+    ## Verification scripts
+    <!-- Structured-knowledge-table schema: Trigger | Command | When -->
+    | Trigger | Command | When |
+    | --- | --- | --- |
+    | `<area-path>/**` | `<primary verify command>` | baseline check for this area |
+
     ## Conventions
     <!-- Fill with local conventions as they are discovered -->
     ```

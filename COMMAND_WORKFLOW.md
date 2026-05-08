@@ -31,7 +31,7 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | First time using kit on a project | `init` | Scans repo, drafts descriptor, user approves; only needed once per project |
 | Start a brand-new branch from the latest integration base | `project-branch-new` | Loads `branch-kickoff` skill, runs `git-safety` preflight (refuses on dirty), per-step git confirms (`fetch` → `checkout <base>` → `pull --ff-only` → `checkout -b <new>`), optional chain into kickoff. Positional `$1` for branch name skips the prompt |
 | Scaffold a big project on a fresh / empty feature branch | `project-branch-kickoff` | Loads `branch-kickoff`, runs drift gate, big-project criteria, then `bootstrap` or `knowledge-refresh` → `plan-phases` → `scaffold-knowledge` (dry-run then discovery). Audits to `LOG.md` + MR `OpenCode` block |
-| First-time knowledge scaffolding | `scaffold-knowledge` | Run once after `init`; creates shared `AGENTS.md` orientation files |
+| First-time knowledge scaffolding | `scaffold-knowledge` | Run once after `init`; creates shared `AGENTS.md` orientation files plus starter `## Verification scripts` table in area files |
 | Add new package / module to tracked knowledge | `scaffold-knowledge` | Default discovery mode auto-detects untracked leaves (no JSON edits); skips leaves whose source is missing on the current branch (`no-source-guard` to bypass) |
 | Audit currently tracked leaves | `scaffold-knowledge <key> list` | Read-only table grouped by area |
 | Preview a bulk scaffold | `scaffold-knowledge <key> dry-run` | No writes; shows what discovery would create |
@@ -42,11 +42,11 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Large branch | `phases` | Milestones in `PHASES.md`; mermaid prompt with default ON when phases > 3 (`no-mermaid` to skip) |
 | Pausing mid-task (tracked) | `checkpoint` | Structured `LOG.md` entry |
 | Ending session (tracked) | `close` | Summary + next step |
-| Before code review | `review` | Generates `REVIEW.md` (checklist / diff-first / checklist + diff); findings table with `F-xx`; preserve/replace triage; **runs silent knowledge preflight** (auto-scaffolds missing leaf `AGENTS.md`, flags stale ones, drift-vs-base finding); optional opt-in `## Architecture` mermaid section. Pass `no-preflight` to skip preflight; `no-mermaid` to skip diagram prompt |
+| Before code review | `review` | Generates `REVIEW.md` (checklist / diff-first / checklist + diff); findings table with `F-xx`; preserve/replace triage; **runs silent knowledge preflight** (auto-scaffolds missing leaf `AGENTS.md`, flags stale ones, drift-vs-base finding); derives suggested verifications from `## Verification scripts` tables by diff-trigger match; emits `F-xx` note when a changed area lacks the block; optional opt-in `## Architecture` mermaid section. Pass `no-preflight` to skip preflight; `no-mermaid` to skip diagram prompt |
 | After MR edits + commits (light sync) | `review-sync` | Merges MR checklist into `REVIEW.md`, optional append-only `F-xx`, refreshes MR `OpenCode:` blocks — not a full regenerate |
 | After substantial review/progress | `update-mr` | Refreshes `MERGE_REQUEST.md` `OpenCode:` blocks (+ optional legacy ops headings) while preserving narrative; opt-in mermaid prompt for architectural / migration MRs (`no-mermaid` to skip) |
 | Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |
-| Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file; runs silent **knowledge-drift preflight** vs `origin/HEAD` → `main` → `master` (5-min fixed session fetch cache); pass `no-preflight` to skip |
+| Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file; runs silent **knowledge-drift preflight** vs `origin/HEAD` → `main` → `master` (5-min fixed session fetch cache); proposes `## Verification scripts` refresh when script manifests changed; pass `no-preflight` to skip |
 | Tools unavailable | `manual-refresh` | Bootstraps if needed, then delta |
 
 ## Positional-argument shorthand

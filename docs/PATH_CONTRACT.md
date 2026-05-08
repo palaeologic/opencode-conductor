@@ -127,7 +127,7 @@ Area-level `AGENTS.md` files may contain structured tables that pair a diff trig
 ### Semantics
 
 - Multiple rows for the same command are allowed (different triggers); consumers dedupe before emitting.
-- Block names that consume this schema in this release: `## Verification scripts` (planned). Future block names following this schema must be added to the consuming skill's documentation.
+- Block names that consume this schema in this release: `## Verification scripts`. Future block names following this schema (for example `## Run locally`) must be added to the consuming skill's documentation.
 - The schema is content; the engine never parses it. Skills parse it on demand and cache nothing.
 
 ### Authoring rules

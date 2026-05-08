@@ -4,6 +4,14 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ## [Unreleased]
 
+### Added — Verification-scripts knowledge (Plan 2)
+
+- Deterministic verification synthesis in [`commands/project-review.md`](commands/project-review.md): suggested verifications are now derived from area-level `## Verification scripts` tables (`Trigger | Command | When`) by matching triggers against `git diff --name-only`, with dedupe preserving first-seen order.
+- Missing-block finding in review: when a changed area lacks `## Verification scripts`, `/project-review` emits one `F-xx` note-level finding with suggested action to scaffold/add the block; generic fallback suggestions remain available.
+- Starter verification-table scaffold in [`commands/scaffold-knowledge.md`](commands/scaffold-knowledge.md): new area-level `AGENTS.md` templates now include a minimal `## Verification scripts` block so teams have a deterministic starting point.
+- Script-manifest awareness in [`commands/project-knowledge-refresh.md`](commands/project-knowledge-refresh.md): proposals now include refreshing area verification tables when script manifests change (`package.json`, `pyproject.toml`, `requirements.txt`, `Makefile`, `Justfile`, etc.).
+- Pre-write secret-scan enforcement documented in refresh workflow: approved durable writes must run the regex-based secret scan from [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) before writing.
+
 ### Added — Branch Kickoff Commands (Plan 1, Phase C1)
 
 - [`commands/project-branch-new.md`](commands/project-branch-new.md) — create a new branch from the latest integration base, with `git-safety` preflight, fixed read-only shell injections (status / HEAD / origin/HEAD anchors), per-step git confirmations (`fetch` / `checkout <base>` / `pull --ff-only` / `checkout -b <new>`), model-selection prompt with provider warning, optional chain into `/project-branch-kickoff`, and structured audit trail (`LOG.md` + MR `## OpenCode:` block). Positional `$1` for branch name skips the prompt. Frontmatter: `subtask: false` (kickoff stays in primary context for audit). Upstream model unset; fork sets `claude-opus-4-7-thinking-xhigh` at mirror time.

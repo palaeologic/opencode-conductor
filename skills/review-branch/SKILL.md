@@ -43,15 +43,24 @@ Run `/project-checkpoint` with a short note (e.g. “review stopped at F-03”) 
 
 ### 5. Optional automated verification
 
-**Ask the user** whether to run any of:
+Prefer deterministic recommendations from structured area knowledge before offering generic checks.
 
-- `/check-types` (per affected area or cwd)
-- `/run-tests`
-- `/lint-fix`
+1. Parse each changed area's area-level `AGENTS.md` for a `## Verification scripts` block using the structured-knowledge-table schema (`Trigger | Command | When`).
+2. Match each row's `Trigger` glob against `git diff --name-only` for the current review window.
+3. Treat `(added or modified)` as an extra qualifier: trigger only when at least one matching file is added or modified.
+4. Dedupe matched `Command` values, preserving first-seen order.
+5. Present those commands first as **recommended verifications** (still optional; do not auto-run).
 
-**Or skip all** when the review is documentation-only or time-boxed.
+Fallback behavior when the block is absent for a changed area:
 
-If the project’s own docs (`AGENTS.md`, team handoff, or overlay) describe a **single bundled script** that runs multiple checks, you may offer that as **one** alternative to the three commands — do not assume every repo has such a script.
+- Emit one finding: `F-xx`, severity `Note`, question "Missing verification scripts block in <area>/AGENTS.md".
+- Suggested action: "Add `## Verification scripts` table or run `/scaffold-knowledge <projectKey>` to seed one."
+- Offer generic checks as fallback only:
+  - `/check-types` (per affected area or cwd)
+  - `/run-tests`
+  - `/lint-fix`
+
+If a project's docs describe a single bundled script that runs multiple checks, offer it as one alternative. Never assume such a script exists.
 
 ### 6. Optional MR alignment
 

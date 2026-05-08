@@ -78,19 +78,18 @@ This file is intentionally lightweight. Add, remove, and reorder entries freely.
 
 The current Plan 1 (Branch Kickoff Automation) lands the kit-wide foundation (Phases F1–F3) and the two kickoff commands (Phases C1–C3). Four follow-up plans are queued to extend the foundation; each ships independently with its own documentation completion criteria.
 
-### Verification-scripts knowledge (Plan 2)
+### Verification-scripts knowledge (Plan 2) — shipped
 
-- **Goal:** Turn the structured-knowledge-table schema (already shipped in F1) into a first-class kit feature: `/project-review` deterministically derives `## Verification` from `## Verification scripts` tables in area-level `AGENTS.md` files matched against `git diff --name-only`.
-- **Scope:** `skills/review-branch` verification-synthesis subsection; `commands/scaffold-knowledge` starter block in new area-level files; `commands/project-knowledge-refresh` proposal-on-script-change; `F-xx` finding when block is absent; pre-write secret scan extension.
-- **Opens after:** Phase C3 of the current plan completes.
-- **Tracks:** ROADMAP entry until the new plan is opened in `~/.cursor/plans/verification_scripts_knowledge_<id>.plan.md`.
+- **Status:** Implemented and graduated into `[Unreleased]` in `CHANGELOG.md`.
+- **What shipped:** deterministic `/project-review` verification synthesis from `## Verification scripts` tables, missing-block `F-xx` note, scaffold starter block in `/scaffold-knowledge`, and script-manifest refresh proposals in `/project-knowledge-refresh`.
+- **Follow-up:** keep extending table coverage in project `AGENTS.md`; core schema/consumption is no longer a roadmap item.
 
 ### Branch explore guide (Plan 3)
 
 - **Goal:** Advisory `/project-branch-explore` command that switches to a target branch and emits a markdown `EXPLORE_GUIDE.md` (Setup / What's new / How to try it / Caveats), plus the read-only `/project-state` command.
 - **Scope:** `commands/project-branch-explore.md`; `skills/branch-explore/SKILL.md`; `commands/project-state.md` (loads `git-safety` from F1); fork mirror with worked example.
 - **Out of scope:** browser automation, screenshots, console-error checks (separate skills).
-- **Opens after:** Plan 2 (verification-scripts) completes — reuses the structured-knowledge-in-AGENTS pattern for `## Run locally` blocks.
+- **Opens after:** Plan 2 is complete and can start now — reuses the structured-knowledge-in-AGENTS pattern for `## Run locally` blocks.
 
 ### Kit Docusaurus restructure (Plan 4)
 

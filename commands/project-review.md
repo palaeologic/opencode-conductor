@@ -108,7 +108,13 @@ Ask the user in **plain language** first; you may show the letter as a shorthand
 
 6. Generate the chosen artifact based on actual branch state (not generic templates), merging any user-provided additional context and honoring findings merge mode when `REVIEW.md` existed. If the user opted into mermaid in step 5.5, insert one `## Architecture` section between `## Risks and cross-area concerns` and `## Focus for review`, containing one diagram (component / data-flow / sequence appropriate to the change).
 7. Write it to the branch context folder as `REVIEW.md` under **`branchHandoff.contextDirTemplate`** (expand `{projectKey}` and `{branchName}`; default global example: `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/REVIEW.md`).
-8. Suggest verification commands the user may want to run (do NOT execute them).
+8. Suggest verification commands the user may want to run (do NOT execute them), using deterministic synthesis:
+   - For each changed area, read the area-level `AGENTS.md` and look for `## Verification scripts` table rows matching the schema in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) (`Trigger | Command | When`).
+   - Match each row's `Trigger` against `git diff --name-only` in the review window.
+   - Support the qualifier `(added or modified)` on triggers exactly as documented in the schema.
+   - Dedupe commands preserving first-seen order.
+   - If a changed area lacks a `## Verification scripts` block, emit one `F-xx` finding with severity `Note`: "Missing verification scripts block in `<area>/AGENTS.md`", suggested action `/scaffold-knowledge <projectKey>` (or add the block manually).
+   - If no structured rows match, fall back to generic suggestions (`/check-types`, `/run-tests`, `/lint-fix`).
 
 ## Output format (MUST use exactly)
 

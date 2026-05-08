@@ -191,7 +191,7 @@ Still run **`/manual-refresh`** first if you **switched branches**, **rebased**,
 
 | Goal | Command |
 |------|---------|
-| Re-orient AGENTS after areas/packages change | **`/scaffold-knowledge`** (idempotent merge) |
+| Re-orient AGENTS after areas/packages change | **`/scaffold-knowledge`** (idempotent merge; seeds starter `## Verification scripts` in new area files) |
 | Discover untracked leaves and scaffold them | **`/scaffold-knowledge <projectKey>`** (default discovery mode) |
 | List currently tracked leaves | **`/scaffold-knowledge <projectKey> list`** |
 | Preview what discovery would scaffold | **`/scaffold-knowledge <projectKey> dry-run`** |
@@ -211,7 +211,7 @@ Still run **`/manual-refresh`** first if you **switched branches**, **rebased**,
 ### 9.1 Start a branch review
 
 1. **`/manual-refresh <projectKey>`** (or **`/project-refresh`**).
-2. **`/project-review <projectKey>`** — prefer **Checklist + diff (full)** for non-trivial branches. The command runs a silent **knowledge preflight** first (auto-scaffolds missing leaf `AGENTS.md`, flags stale ones); see §11.
+2. **`/project-review <projectKey>`** — prefer **Checklist + diff (full)** for non-trivial branches. The command runs a silent **knowledge preflight** first (auto-scaffolds missing leaf `AGENTS.md`, flags stale ones), then synthesizes suggested verification commands from area-level `## Verification scripts` tables; see §11.
 3. Edit **`F-xx` triage** under `## Review findings / questions` in `REVIEW.md`.
 4. Optionally **`/project-checkpoint`** with a one-line note.
 
@@ -441,7 +441,7 @@ You can also say explicitly: *“Load the `<skill-name>` skill and follow it.”
 
 ## 11. Knowledge-aware review preflight
 
-`/project-review` runs a **silent knowledge preflight** before generating `REVIEW.md`. Goals: ensure the agent sees the right area / leaf `AGENTS.md` files, auto-scaffold any leaves whose code changed but whose knowledge file is missing, and flag stale knowledge as findings. Default behavior is silent (no prompts; failures surface as `F-xx` notes). Pass `no-preflight` in `$ARGUMENTS` to disable.
+`/project-review` runs a **silent knowledge preflight** before generating `REVIEW.md`. Goals: ensure the agent sees the right area / leaf `AGENTS.md` files, auto-scaffold any leaves whose code changed but whose knowledge file is missing, and flag stale knowledge as findings. After preflight, review synthesizes suggested verification commands from area-level `## Verification scripts` tables by matching triggers to `git diff --name-only`; if a changed area has no block, it emits one `F-xx` note. Default behavior is silent (no prompts; failures surface as `F-xx` notes). Pass `no-preflight` in `$ARGUMENTS` to disable.
 
 ### Review preflight flow
 

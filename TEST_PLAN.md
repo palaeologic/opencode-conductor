@@ -404,6 +404,41 @@ On a branch, ensure a leaf has **multiple** changed files since merge-base with 
 
 ---
 
+### 12d) Verification-scripts synthesis in `/project-review`
+
+#### Setup
+
+Ensure at least one changed area-level `AGENTS.md` contains:
+
+```markdown
+## Verification scripts
+| Trigger | Command | When |
+| --- | --- | --- |
+| `src/**` | `bun run typecheck` | baseline |
+| `**/*.story.tsx` (added or modified) | `bun scripts/collect-stories.ts` | story updates |
+```
+
+#### Steps
+
+1. Change files matching both triggers.
+2. Run `/project-review <projectKey>`.
+
+#### Expected result
+
+- `suggested_verifications` includes both matched commands in first-seen order.
+- Commands are deduped when multiple rows map to the same command.
+- No command is executed automatically.
+
+#### Missing-block behavior
+
+1. Run `/project-review <projectKey>` on a changed area without `## Verification scripts`.
+
+**Expected**: one `F-xx` note appears: missing verification scripts block for that area; generic fallback suggestions (`/check-types`, `/run-tests`, `/lint-fix`) are still provided.
+
+**Pass**: review suggestions are deterministic from tables, and missing blocks are surfaced as notes.
+
+---
+
 ## 13) Rule layering validation
 
 ### Steps
@@ -665,6 +700,7 @@ Use a descriptor with `descriptorSchemaVersion: 2` and at least one `pseudoPacka
 - [ ] Merge closure: respects user choice
 - [ ] agents_stale_vs_branch: nudge present when applicable
 - [ ] Review artifact: generated correctly, suggestions not executed
+- [ ] Verification-scripts synthesis: table-driven suggestions are deduped and ordered; missing block emits `F-xx` note with generic fallback
 - [ ] Drift preflight: silent on synced; F-xx finding on stale; cache TTL holds; `no-preflight` honored
 - [ ] Source-path guard: ghost-knowledge prevented; `no-source-guard` opt-out works
 - [ ] Mermaid prompts: review structural ON / typo OFF / phases >3 ON / MR migration prompt; `no-mermaid` honored; HTML comment markers recorded
