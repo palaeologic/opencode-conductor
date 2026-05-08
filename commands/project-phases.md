@@ -35,8 +35,18 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
    - set a clear active phase
 8. If `PHASES.md` already existed:
    - refine only if user asked for updates
+
+8.5. **Mermaid prompt (default ON when phases > 3).** Per the kit-wide mermaid policy in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) § Mermaid policy, ask whether to include one phase-dependency diagram in `PHASES.md`.
+
+   - **Default:** ON when the draft has **>3 phases**; OFF otherwise.
+   - **Recommendation in prompt:** "Include when phases > 3 and dependencies are non-trivial."
+   - **Honor `no-mermaid`** in `$ARGUMENTS` (e.g. `/project-phases <projectKey> no-mermaid`) to skip the prompt entirely.
+   - **Record the choice** as an HTML comment near the top of `PHASES.md`: `<!-- mermaid: included on user opt-in -->` or `<!-- mermaid: skipped -->`.
+   - **Place the diagram** under a single `## Phase dependencies` section near the top, before the per-phase sections; do not duplicate the dependencies in prose.
+
 9. Return:
    - whether `PHASES.md` was newly created (`created.phasesFile`)
    - active phase
    - suggested next phase task
+   - whether a phase-dependency diagram was included
 

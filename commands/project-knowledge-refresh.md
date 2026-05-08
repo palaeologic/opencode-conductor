@@ -15,6 +15,32 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
 
 **Propose** updates to shared knowledge files (not branch diaries).
 
+## Knowledge-drift preflight (silent default)
+
+Run before any work in the Workflow section. Goal: detect when the current branch's `AGENTS.md` files have drifted relative to the integration base, so the user can rebase or pull up specific files before proposing edits.
+
+1. **Resolve the integration base** in this order: `git symbolic-ref refs/remotes/origin/HEAD` → `main` → `master`. Strip the `refs/remotes/origin/` prefix.
+2. **Fetch** the base read-only: `git fetch origin <base>`. **Cache** the fetch for **5 minutes per session, fixed**: track an in-memory timestamp; on subsequent invocations within 5 minutes, skip the fetch.
+3. **Compute the AGENTS.md drift set**:
+   - `MERGE_POINT = git merge-base HEAD origin/<base>`
+   - `TIP_AGENTS_FILES = git ls-tree -r --name-only origin/<base> -- '*AGENTS.md'`
+   - `MERGE_POINT_AGENTS_FILES = git ls-tree -r --name-only $MERGE_POINT -- '*AGENTS.md'`
+   - For every file in either set, compare `git rev-parse origin/<base>:<path>` to `git rev-parse $MERGE_POINT:<path>`; differing or one-sided entries form the **drift set**.
+4. **Skip the preflight entirely** when storage mode is project-local (per [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) § Knowledge across branches). The drift preflight only meaningfully applies to committed-in-repo storage.
+5. **Emit a single `F-xx` finding** (severity `Medium`) of the form:
+
+   ```
+   Knowledge drift vs base: <count> file(s) changed in origin/<base> since merge-base.
+   - <path/to/AGENTS.md>
+   - <path/to/AGENTS.md>
+   Suggested action: rebase onto origin/<base>, or `git checkout origin/<base> -- <path>` for a single-file pull-up; then re-run /project-knowledge-refresh.
+   ```
+
+   The finding is **silent on no drift** — no banner, no prompt.
+6. **Default behavior is silent**: do not interrupt the user with prompts. Surface the finding inline in the proposal output as a leading section. Pass `no-preflight` (in `$ARGUMENTS`, e.g. `/project-knowledge-refresh <projectKey> no-preflight`) to skip this step entirely.
+
+The drift preflight does not write or modify files; it only reads and reports. If the drift set is non-empty, the proposal output **must surface it before** any individual knowledge edit suggestions so the user can decide whether to rebase first.
+
 ## Workflow
 
 1. Run `opencode_refresh_context` with `projectKey: $ARGUMENTS`. Capture `changed_areas`, `changed_files_preview`, and `reread_files`.

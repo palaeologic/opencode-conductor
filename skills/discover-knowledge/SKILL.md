@@ -69,6 +69,14 @@ Placement:
 3. Cross-check the existing `AGENTS.md` hierarchy to avoid duplicating rules already at a higher level.
 4. If a fact would be in the README of the area or repo, link to that source instead of restating.
 
+## Source-path existence guard
+
+Before recommending a write to a **leaf** `AGENTS.md`, verify the leaf's source directory exists in the current working tree. If the source is missing — typical when the current branch lacks a package that exists on other branches — classify the leaf as `skipped` with reason `source_missing` and do **not** propose a write. This prevents "ghost knowledge" — durable files describing packages absent from the current branch — which is especially important in **project-local** storage mode where `AGENTS.md` files are shared across branches.
+
+The guard is **on by default** in `/scaffold-knowledge`. Bypass only when intentionally staging knowledge ahead of the source landing (e.g. parallel teams, planned scaffold), via the command's `no-source-guard` argument.
+
+Area- and project-level files are unaffected — they describe the project itself, not a per-branch source tree.
+
 ## Authoring tone
 
 Write for two audiences at once:

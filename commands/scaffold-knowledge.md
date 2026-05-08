@@ -17,6 +17,10 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
 - **list** — print the table of all currently tracked leaves, grouped by area, showing convention vs override path and per-leaf existence. **No writes.**
 - **dry-run** — same as discovery but only **previews** what would be written. **No writes.**
 
+### Opt-out flag
+
+- **`no-source-guard`** — disable the source-path existence guard so leaves whose source directory is missing on the current branch are still considered for scaffolding. Default is on; bypass only when intentionally staging knowledge ahead of source. Composes with `discovery` and `dry-run`; ignored in `list` mode.
+
 ## When to run
 
 - **Typical:** once after `/project-init`, then **re-run any time** you add a new module / package / source folder you want recorded. Shared knowledge under `AGENTS.md` is **not branch-specific** — switching Git branches does **not** require re-running this command.
@@ -45,11 +49,13 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
    - For each surviving leaf, derive the convention path per the **stem derivation contract** in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md): `<opencodeProjectRootPath>/<rel>/AGENTS.md`.
    - Resolve overrides: if `sharedPackageKnowledge[packageName]` is set, that path wins.
    - Apply safety guardrails: verify root containment under `opencodeProjectRootPath`; refuse symlinks (`lstat` -> if symlink at target, mark `symlink_refused`).
+   - **Source-path existence guard (default on):** for every candidate leaf, resolve the leaf's expected source directory under `projectRootPath` (the path the leaf's stem mirrors) and verify it exists in the **current working tree** (`git ls-tree --name-only HEAD <leaf-source-rel>` non-empty, or `test -d <abs-leaf-source>`). If missing, classify the leaf as `skipped` with reason `source_missing` and **do not write** an `AGENTS.md` for it. Prevents "ghost knowledge" — durable files about packages absent on the current branch (matters in project-local storage where knowledge is shared across branches). Pass `no-source-guard` (in `$ARGUMENTS`, e.g. `/scaffold-knowledge <projectKey> discovery no-source-guard`) to bypass; useful when intentionally staging knowledge ahead of the source landing.
 
 5. **Classify each leaf**:
    - `existing` — `AGENTS.md` already present at the resolved path.
    - `override` — `sharedPackageKnowledge` declares the path; respect it (still classified `existing`/`untracked` based on file presence).
    - `untracked` — neither convention path nor override has the file.
+   - `skipped` — guardrail tripped (e.g. `symlink_refused`, `path_outside_root`, `invalid_package_name`, or `source_missing` from the source-path guard). Records the reason but performs no write.
 
 6. **Mode dispatch**:
 

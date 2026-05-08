@@ -79,6 +79,15 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
      - `## Next steps`
    - **Never** inject automated git/findings prose into unstructured author checklists, `## Goal` body, or narrative outside OpenCode (and outside legacy ops headings listed above).
 7. For mode **D**, ask the user to paste the source text, then parse labels such as `Issue`, `MR`, `Pod URL`, `Stakeholders`, `Description`, `Proposal`, `Acceptance criteria`, `Blocked by`, testing instructions/focus, and feedback request text; merge into narrative sections (`Goal`, `In scope`, `Acceptance criteria`, `Constraints`, `Verification target`, `External links`, `Stakeholders`, `Feedback requested`, `Notes`) without touching machine blocks. Replace placeholder template text; do not overwrite non-placeholder human-authored narrative without explicit approval.
+
+7.5. **Mermaid prompt (opt-in for architectural / migration MRs).** Per the kit-wide mermaid policy in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) § Mermaid policy, ask whether to include a single mermaid diagram under a narrative `## Architecture` section (in the protected narrative range, never inside an `## OpenCode:` block).
+
+   - **Default:** OFF. Prompt only when the git summary suggests an **architectural / migration** change — heuristics: ≥3 areas changed; presence of `migrations/`, `*.graphql`, `schema.*`, `routes.*`, or files matching `descriptor.refreshToolHeuristics.highSignalChangedSubstrings` in the diff.
+   - **Recommendation in prompt:** "Include for migrations, multi-service refactors, schema changes."
+   - **Honor `no-mermaid`** in `$ARGUMENTS` (e.g. `/project-update-mr <projectKey> no-mermaid`) to skip the prompt entirely.
+   - **Record the choice** as an HTML comment immediately above the `## Architecture` section: `<!-- mermaid: included on user opt-in -->` or `<!-- mermaid: skipped -->`.
+   - **Never** place mermaid inside any `## OpenCode:` block (those are agent-machine-readable).
+
 8. Write updated file and report path.
 
 ## Promotion from `REVIEW.md`

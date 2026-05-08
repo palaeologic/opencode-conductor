@@ -29,12 +29,18 @@ Run the safety preflight (clean tree, attached HEAD, base resolution) and the st
 
 ### 2. Knowledge drift gate (kickoff-only)
 
-When invoked from `/project-branch-kickoff` (i.e. on an existing branch), run the knowledge-drift preflight against the resolved base from step 1:
+When invoked from `/project-branch-kickoff` (i.e. on an existing branch), run the knowledge-drift preflight against the resolved base from step 1. The check uses the same logic as `/project-knowledge-refresh` and `/project-review` so behavior is consistent across the kit:
 
-- Compute the symmetric diff of `AGENTS.md` files between `merge-base(HEAD, origin/<base>)` and `origin/<base>`.
-- If drift is detected on >0 files, surface an `F-xx` finding "Knowledge drift vs base: <files>" with the recommended action "Rebase, then re-run".
-- Honor `--no-preflight` to bypass.
-- The drift gate does not apply to `/project-branch-new` because the user is not yet on the new branch — drift is computed after the branch is created and on subsequent kickoff.
+- Resolve base via `git symbolic-ref refs/remotes/origin/HEAD` → `main` → `master` (already done in step 1; reuse the cached value).
+- `git fetch origin <base>` (read-only). Reuse the **5-minute fixed session cache** to avoid repeated fetches when chained with refresh/review in the same session.
+- Compute the AGENTS.md drift set: let `MERGE_POINT = git merge-base HEAD origin/<base>`; for every `AGENTS.md` reachable from either `MERGE_POINT` or `origin/<base>`, compare blob ids and collect the differing paths.
+- Skip when storage mode is project-local (per `docs/PATH_CONTRACT.md` § Knowledge across branches) — drift cannot be computed against branch state when knowledge is not branch-scoped.
+- **Behavior on drift**:
+  - 0 drifted files → silent; proceed.
+  - 1–5 drifted files → emit a `F-xx` finding "Knowledge drift vs base: <count> file(s)" inline in the kickoff banner; recommend rebase but do **not** block; user confirms whether to proceed.
+  - >5 drifted files → emit the finding and **block** scaffolding by default, with a single confirm prompt to override. Rationale: scaffolding into a heavily drifted branch produces low-quality knowledge; rebasing first is almost always the right move.
+- Suggested action in every case: `Rebase onto origin/<base>, or git checkout origin/<base> -- <path> for a single-file pull-up; then re-run /project-branch-kickoff`.
+- Honor `--no-preflight` to bypass entirely. The drift gate does not apply to `/project-branch-new` because the user is not yet on the new branch — drift is computed after the branch is created and on subsequent kickoff.
 
 ### 3. Big-project criteria check
 
