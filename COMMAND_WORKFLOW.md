@@ -28,22 +28,47 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 |-----------|---------|--------|
 | First time using kit on a project | `init` | Scans repo, drafts descriptor, user approves; only needed once per project |
 | First-time knowledge scaffolding | `scaffold-knowledge` | Run once after `init`; creates shared `AGENTS.md` orientation files |
-| Add new package / module to tracked knowledge | `scaffold-knowledge` | Default discovery mode auto-detects untracked leaves (no JSON edits) |
+| Add new package / module to tracked knowledge | `scaffold-knowledge` | Default discovery mode auto-detects untracked leaves (no JSON edits); skips leaves whose source is missing on the current branch (`no-source-guard` to bypass) |
 | Audit currently tracked leaves | `scaffold-knowledge <key> list` | Read-only table grouped by area |
 | Preview a bulk scaffold | `scaffold-knowledge <key> dry-run` | No writes; shows what discovery would create |
 | Session start | `refresh` | Auto-suggests `init` if no descriptor found |
 | First visit to branch (tracked) | `bootstrap` then `refresh` | Creates MR/LOG (+ optional PHASES) |
 | Branch switch | `refresh` | Avoid carry-over |
 | After rebase / squash | `refresh` | Re-anchor checkpoint; append HISTORY note in `LOG.md` |
-| Large branch | `phases` | Milestones in `PHASES.md` |
+| Large branch | `phases` | Milestones in `PHASES.md`; mermaid prompt with default ON when phases > 3 (`no-mermaid` to skip) |
 | Pausing mid-task (tracked) | `checkpoint` | Structured `LOG.md` entry |
 | Ending session (tracked) | `close` | Summary + next step |
-| Before code review | `review` | Generates `REVIEW.md` (checklist review, diff-first, or checklist + diff); findings table with `F-xx`; preserve/replace triage; **runs silent knowledge preflight** (auto-scaffolds missing leaf `AGENTS.md`, flags stale ones) — pass `no-preflight` to skip |
+| Before code review | `review` | Generates `REVIEW.md` (checklist / diff-first / checklist + diff); findings table with `F-xx`; preserve/replace triage; **runs silent knowledge preflight** (auto-scaffolds missing leaf `AGENTS.md`, flags stale ones, drift-vs-base finding); optional opt-in `## Architecture` mermaid section. Pass `no-preflight` to skip preflight; `no-mermaid` to skip diagram prompt |
 | After MR edits + commits (light sync) | `review-sync` | Merges MR checklist into `REVIEW.md`, optional append-only `F-xx`, refreshes MR `OpenCode:` blocks — not a full regenerate |
-| After substantial review/progress | `update-mr` | Refreshes `MERGE_REQUEST.md` `OpenCode:` blocks (+ optional legacy ops headings) while preserving narrative |
+| After substantial review/progress | `update-mr` | Refreshes `MERGE_REQUEST.md` `OpenCode:` blocks (+ optional legacy ops headings) while preserving narrative; opt-in mermaid prompt for architectural / migration MRs (`no-mermaid` to skip) |
 | Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |
-| Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file |
+| Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file; runs silent **knowledge-drift preflight** vs `origin/HEAD` → `main` → `master` (5-min fixed session fetch cache); pass `no-preflight` to skip |
 | Tools unavailable | `manual-refresh` | Bootstraps if needed, then delta |
+
+## Positional-argument shorthand
+
+| Command | Positional args | Example |
+|---------|-----------------|---------|
+| `/scaffold-knowledge` | `$1` = mode (`list` / `dry-run` / `discovery`); additional tokens are flags | `/scaffold-knowledge myapp dry-run no-source-guard` |
+| `/project-review` | additional tokens are flags | `/project-review myapp no-preflight no-mermaid` |
+| `/project-knowledge-refresh` | additional tokens are flags | `/project-knowledge-refresh myapp no-preflight` |
+| `/project-phases` | additional tokens are flags | `/project-phases myapp no-mermaid` |
+| `/project-update-mr` | additional tokens are flags | `/project-update-mr myapp no-mermaid` |
+
+## Opt-out flags (cross-command)
+
+| Flag | Disables | Default |
+|------|----------|---------|
+| `no-preflight` | All preflight checks (drift, knowledge alignment) on `/project-review` and `/project-knowledge-refresh` | gate active |
+| `no-source-guard` | `/scaffold-knowledge` source-path existence check | gate active |
+| `no-mermaid` | Mermaid prompts in any artifact | prompt active per kit-wide policy |
+| `no-stash-check` | Kit-stash reminder hook (when commands surface it; future kickoff commands ship in C1) | gate active |
+
+Opt-outs compose. Documented in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) § Opt-out flags.
+
+## Permission policy (recommended)
+
+The kit ships [`opencode.json.example`](opencode.json.example) at the repo root with vendor-neutral defaults: any skill that mutates git state or orchestrates kickoff prompts users with `ask`; everything else stays loose for low-friction loading. Copy / merge into your real `~/.config/opencode/opencode.json`.
 
 ## Refresh outcomes
 

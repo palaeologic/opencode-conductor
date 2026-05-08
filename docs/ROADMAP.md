@@ -66,6 +66,83 @@ This file is intentionally lightweight. Add, remove, and reorder entries freely.
 - **Why:** The convention path is the long-term home; redirect stubs are a migration aid only.
 - **Open questions:** What is the deprecation window — one minor release or one major?
 
+### `/project-state` (read-only kit-state command)
+
+- **Idea:** Thin command that loads `skills/git-safety` and emits a sectioned markdown report (working tree, HEAD state, divergence vs base, knowledge drift, kit-managed stashes, recent kickoff audit entries from `LOG.md`).
+- **Why:** Users sometimes want to ask "what does the kit think of my git state?" without invoking a workflow command. Today they have to read several files manually.
+- **Status:** Ships in the **Branch Explore** follow-up plan (after the verification-scripts plan completes; see below).
+
+---
+
+## Branch Kickoff Automation — follow-up plans
+
+The current Plan 1 (Branch Kickoff Automation) lands the kit-wide foundation (Phases F1–F3) and the two kickoff commands (Phases C1–C3). Four follow-up plans are queued to extend the foundation; each ships independently with its own documentation completion criteria.
+
+### Verification-scripts knowledge (Plan 2)
+
+- **Goal:** Turn the structured-knowledge-table schema (already shipped in F1) into a first-class kit feature: `/project-review` deterministically derives `## Verification` from `## Verification scripts` tables in area-level `AGENTS.md` files matched against `git diff --name-only`.
+- **Scope:** `skills/review-branch` verification-synthesis subsection; `commands/scaffold-knowledge` starter block in new area-level files; `commands/project-knowledge-refresh` proposal-on-script-change; `F-xx` finding when block is absent; pre-write secret scan extension.
+- **Opens after:** Phase C3 of the current plan completes.
+- **Tracks:** ROADMAP entry until the new plan is opened in `~/.cursor/plans/verification_scripts_knowledge_<id>.plan.md`.
+
+### Branch explore guide (Plan 3)
+
+- **Goal:** Advisory `/project-branch-explore` command that switches to a target branch and emits a markdown `EXPLORE_GUIDE.md` (Setup / What's new / How to try it / Caveats), plus the read-only `/project-state` command.
+- **Scope:** `commands/project-branch-explore.md`; `skills/branch-explore/SKILL.md`; `commands/project-state.md` (loads `git-safety` from F1); fork mirror with worked example.
+- **Out of scope:** browser automation, screenshots, console-error checks (separate skills).
+- **Opens after:** Plan 2 (verification-scripts) completes — reuses the structured-knowledge-in-AGENTS pattern for `## Run locally` blocks.
+
+### Kit Docusaurus restructure (Plan 4)
+
+- **Goal:** Reorganize the kit's flat markdown into a Docusaurus-compatible `docs/` tree so consumers can drop the folder into any Docusaurus host. Keep `README.md` and `CHANGELOG.md` at repo root.
+- **Scope:** Move `WORKFLOW.md` / `COMMAND_WORKFLOW.md` / `TEST_PLAN.md` / `SECURITY.md` / `docs/PATH_CONTRACT.md` / `docs/UPGRADING.md` / `docs/ROADMAP.md` into the new tree with frontmatter and `_category_.yml`. Add `docs/skills/` and `docs/knowledge/` pages. Architecture documentation (10 pages) covering mental model, components, data-flow, lifecycles, sequences, extension-points, invariants, security-model, trade-offs, failure-modes — each with at least one mermaid diagram.
+- **Out of scope:** shipping `docusaurus.config.js` / `sidebars.js` (the folder is portable; consumers wire their own host). Kit-owned demo site deferred.
+- **Fork additions:** `docs/architecture/differences-from-upstream.md`; `docs/recipes/`; `docs/help-docs-authoring/`.
+- **Opens after:** Phase C3 completes. Can ship in parallel with Plan 2.
+
+### Help-docs authoring skill (Plan 5)
+
+- **Goal:** New `skills/help-docs-author/SKILL.md` and `commands/project-help-docs.md` that automate generating end-user help-center documentation from frontend + backend code, following a five-phase Discovery → Code-reading → Plan → Generation → Audit workflow.
+- **Scope:** Skill + command (parameterized upstream; preloaded with domain defaults in fork mirror); output-folder containment with in-repo refusal by default; vocabulary ban-list grep verification; brand replacement; required Docusaurus frontmatter; opt-out flags (`--no-frontmatter`, `--no-mermaid`, `--no-vocab-grep`, `--allow-in-repo`).
+- **Vendor-neutrality reinforcement:** upstream `SKILL.md` and command markdown contain zero domain vocabulary; pre-push grep blocks any leaks.
+- **Opens after:** Phase C3 completes. Can ship in parallel with Plan 2.
+
+---
+
+## Operational
+
+### `LOG.md` rotation at >100KB
+
+- **Idea:** When `LOG.md` exceeds ~100KB, archive older entries (e.g. monthly) into `LOG.archive.md` while keeping the active file scannable.
+- **Why:** Append-only `LOG.md` grows unbounded; long-lived branches eventually slow down both human reading and agent context loading.
+- **Open questions:** Threshold, format (calendar-month buckets vs commit-bound), single archive file vs rolling. Should `/project-checkpoint` or `/project-close` trigger the rotation?
+- **Trade-offs:** Active file stays manageable vs one more piece of state to verify.
+
+### Kickoff metrics counters (`metrics.jsonl`)
+
+- **Idea:** Optional structured event log (`metrics.jsonl`) per branch that records kickoff / refresh / review events with timestamps and sanitized metadata.
+- **Why:** Lets teams measure the kit's actual usage (which commands fire, how often gates trip, model fallback rates) without scraping `LOG.md` text.
+- **Open questions:** Schema, retention, opt-out by default vs opt-in. PII handling (must follow the same audit-log security rules).
+
+### `tools/lint-kit.sh`
+
+- **Idea:** A repository-side linter that enforces kit conventions (frontmatter table compliance, no `$ARGUMENTS` in shell-injection blocks, vendor-neutrality grep upstream-only) before push.
+- **Why:** Today these checks are ad-hoc; a single script makes pre-push verification routine.
+- **Open questions:** Run as a pre-push hook? Part of `bin/install-opencode-conductor.sh`?
+
+### Cross-branch kickoff resume
+
+- **Idea:** Detect when a kickoff was started on a previous branch and offer to resume on the current branch.
+- **Why:** Kickoff is multi-step; a session might be interrupted mid-flow. Resume avoids re-confirming completed steps.
+- **Open questions:** Resume token storage; confirmation discipline on the destination branch.
+
+### Automated AGENTS.md conflict resolution
+
+- **Idea:** Heuristic merge-conflict resolver for additive `AGENTS.md` bullets (take-both + dedupe automated; human-only path for contradictions).
+- **Why:** The conflict playbook is currently manual. Automation would speed up the most common case.
+- **Open questions:** Detection of contradictions vs additive bullets; safety guardrails for false positives.
+- **Status:** Deferred — manual playbook ships in F1.
+
 ## Conventions for this file
 
 - New entries go to the bottom of their section.

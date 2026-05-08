@@ -434,6 +434,157 @@ On a branch, ensure a leaf has **multiple** changed files since merge-base with 
 
 ---
 
+## 13a) Knowledge-drift preflight
+
+Validate the silent drift gate added to `/project-knowledge-refresh` and `/project-review`.
+
+### Setup
+
+- Storage mode: **committed-in-repo** (the gate is skipped in project-local mode by design).
+- Have at least one area-level `AGENTS.md` committed to the integration base (`origin/<base>`).
+
+### 13a.i) Branch synced with base
+
+1. From a freshly-rebased branch, run `/project-knowledge-refresh <projectKey>`.
+
+**Expected**: silent on drift; no `F-xx` "Knowledge drift vs base" finding; the rest of the proposal flow runs normally.
+
+### 13a.ii) Branch behind base on AGENTS.md
+
+1. On the integration base, edit and push a change to an `AGENTS.md`. Do **not** rebase the test branch.
+2. Run `/project-review <projectKey>` on the test branch.
+
+**Expected**: `## Preflight summary` includes `drift_vs_base: [<path>]`. An `F-xx` "Knowledge drift vs base: 1 file(s)" appears with severity Medium and Suggested action `Rebase onto origin/<base>...`.
+
+### 13a.iii) Drift fetch cache TTL
+
+1. Within 5 minutes of step 13a.ii, run `/project-review <projectKey>` again.
+
+**Expected**: the drift detection runs but the read-only `git fetch` is skipped (cached). At minute 6, the next invocation re-fetches.
+
+### 13a.iv) `no-preflight` opt-out
+
+1. Run `/project-review <projectKey> no-preflight` on the same branch.
+
+**Expected**: no `## Preflight summary`, no drift finding, no auto-scaffold.
+
+**Pass**: drift surfacing is silent on green, surfaces correctly on stale, honors the cache TTL, and the opt-out flag is respected.
+
+---
+
+## 13b) Source-path existence guard in `/scaffold-knowledge`
+
+### Setup
+
+Use a descriptor with `descriptorSchemaVersion: 2` and at least one `pseudoPackageDetection` rule. Storage mode: **project-local** (the guard matters most when knowledge is shared across branches).
+
+### Steps
+
+1. From a branch where `<area>/<pkg>/` directory does **not** exist on disk (e.g. you switched to an older branch), run `/scaffold-knowledge <projectKey> dry-run`.
+
+**Expected**: the leaf does **not** appear under "would create"; instead it appears (or is logged) as `skipped` with `source_missing` reason. No `AGENTS.md` is written.
+
+### Opt-out
+
+1. Run `/scaffold-knowledge <projectKey> dry-run no-source-guard`.
+
+**Expected**: the leaf re-appears under "would create".
+
+**Pass**: ghost knowledge is prevented by default; the opt-out works.
+
+---
+
+## 13c) Mermaid prompts (review / phases / update-mr)
+
+### 13c.i) `/project-review` structural diff
+
+1. On a branch with multi-area diff (≥3 areas) or schema/route changes, run `/project-review <projectKey>`.
+
+**Expected**: the mermaid prompt appears with default ON; choose Yes; `REVIEW.md` includes a `## Architecture` section with one diagram; an HTML comment `<!-- mermaid: included on user opt-in -->` precedes the section.
+
+### 13c.ii) `/project-review` typo-only diff
+
+1. On a branch with a single typo fix in one file, run `/project-review <projectKey>`.
+
+**Expected**: the mermaid prompt appears with default OFF; selecting default skips the diagram and records `<!-- mermaid: skipped -->`.
+
+### 13c.iii) `no-mermaid` opt-out
+
+1. Run `/project-review <projectKey> no-mermaid`.
+
+**Expected**: no mermaid prompt; no `## Architecture` section; no comment.
+
+### 13c.iv) `/project-phases` default ON for >3 phases
+
+1. Run `/project-phases <projectKey>` and draft 4+ phases.
+
+**Expected**: mermaid prompt with default ON; `PHASES.md` includes a `## Phase dependencies` section with one diagram and the comment marker.
+
+### 13c.v) `/project-update-mr` opt-in for migration MRs
+
+1. On a branch touching `migrations/` or `*.graphql`, run `/project-update-mr <projectKey>`.
+
+**Expected**: the mermaid prompt appears (opt-in); the diagram lands in narrative `## Architecture`, never inside `## OpenCode:` blocks.
+
+**Pass**: all mermaid behavior matches the kit-wide policy in `docs/PATH_CONTRACT.md` § Mermaid policy.
+
+---
+
+## 13d) `git-safety` skill smoke test
+
+> The skill ships in F1; commands wire in C1. Validate the load + permission contract directly via prompt-mode skill loading.
+
+### Steps
+
+1. Confirm `~/.config/opencode/opencode.json` has the recommended permission policy from [`opencode.json.example`](opencode.json.example).
+2. In an OpenCode session say: "Load the `git-safety` skill and run the safety preflight banner."
+
+### Expected
+
+- First invocation prompts with `permission.skill: ask` for `git-safety`.
+- Subsequent invocations in the same session are allowed without prompting.
+- The banner contains: working tree (clean / dirty), HEAD state (attached / detached, current branch), resolved base, count of kit-managed stashes on this branch.
+- If the working tree is dirty, the banner ends with `STATUS: refused` and an actionable remediation hint; no git operation is attempted.
+
+### Stash reminder hook
+
+1. With a clean tree, run `git stash push -m "opencode-kit:test:<branch>:2026-05-08T000000Z"`.
+2. Re-load `git-safety` (or run a kickoff command in C1).
+
+**Expected**: the reminder banner appears with the stash entry and a `git stash pop` / drop suggestion. After `git stash drop`, re-loading the skill emits a cross-check warning if a `LOG.md` `### Stash` entry references the now-missing stash.
+
+**Pass**: skill loads under the recommended policy, refuses on dirty, and the stash discipline is reliable.
+
+---
+
+## 13e) Frontmatter conventions in existing commands
+
+### Steps
+
+1. Open `commands/project-review.md` and `commands/project-knowledge-refresh.md`.
+
+**Expected**: each has `subtask: true` per the kit-wide convention table in `docs/PATH_CONTRACT.md` § Frontmatter conventions; long advisory output stays out of the primary context window when run as a subtask.
+
+**Pass**: review / refresh / scaffold commands all set `subtask: true`; output remains in subtask context.
+
+---
+
+## 13f) `$ARGUMENTS` shell-injection check (security rule)
+
+### Steps
+
+1. Run a kit-wide grep for any `!`...`` shell-injection block referencing `$ARGUMENTS` or `$1`–`$9`:
+
+   ```
+   grep -rEn '!\`[^`]*\$(ARGUMENTS|[1-9])[^`]*\`' commands/ skills/
+   ```
+
+**Expected**: zero matches.
+
+**Pass**: the kit-contract rule from `docs/PATH_CONTRACT.md` § Security rules is upheld kit-wide.
+
+---
+
 ## 15) Pass/Fail checklist
 
 - [ ] Preflight: all files present, no stale artifacts
@@ -456,4 +607,10 @@ On a branch, ensure a leaf has **multiple** changed files since merge-base with 
 - [ ] Merge closure: respects user choice
 - [ ] agents_stale_vs_branch: nudge present when applicable
 - [ ] Review artifact: generated correctly, suggestions not executed
+- [ ] Drift preflight: silent on synced; F-xx finding on stale; cache TTL holds; `no-preflight` honored
+- [ ] Source-path guard: ghost-knowledge prevented; `no-source-guard` opt-out works
+- [ ] Mermaid prompts: review structural ON / typo OFF / phases >3 ON / MR migration prompt; `no-mermaid` honored; HTML comment markers recorded
+- [ ] `git-safety`: prompts with `permission.skill: ask`; refuses on dirty; stash reminder + cross-check banner correct
+- [ ] Frontmatter conventions: `subtask: true` set on long-output commands per the table in `docs/PATH_CONTRACT.md`
+- [ ] Security rule: zero `!\`...\$ARGUMENTS...\`` matches kit-wide
 - [ ] Rule layering: both generic + overlay loaded correctly

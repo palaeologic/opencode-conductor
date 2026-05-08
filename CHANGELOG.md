@@ -4,7 +4,22 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ## [Unreleased]
 
-### Added
+### Added — Branch Kickoff Foundation (Plan 1, Phases F1–F3)
+
+- [`skills/git-safety/SKILL.md`](skills/git-safety/SKILL.md) — standalone safety primitive: refuse-on-dirty preflight, attached-HEAD check, base-branch resolution (`origin/HEAD` → `main` → `master`), kit-stash naming convention (`opencode-kit:<command>:<original-branch>:<iso-timestamp>`), reminder hook with cross-check warning. Never auto-stashes; never loads other skills. Recommended permission: `ask`.
+- [`skills/branch-kickoff/SKILL.md`](skills/branch-kickoff/SKILL.md) — kickoff orchestration (loads `git-safety`); covers drift gate, big-project criteria, model selection policy, mermaid policy, audit trail (`LOG.md` + MR `## OpenCode:` block), confirmation discipline. Commands wire in C1 (Plan 1 commands phase).
+- [`opencode.json.example`](opencode.json.example) — vendor-neutral `permission.skill` policy: `git-safety: ask`, `branch-kickoff: ask`, others `allow`. Plan-mode override relaxes `git-safety` to `allow`. Copy / merge into real `~/.config/opencode/opencode.json`.
+- **Knowledge-drift preflight** in [`commands/project-knowledge-refresh.md`](commands/project-knowledge-refresh.md) and [`commands/project-review.md`](commands/project-review.md) — silent default; resolves base via `origin/HEAD` → `main` → `master`; fetches read-only with **5-minute fixed session cache**; computes AGENTS.md symmetric diff vs base; emits `F-xx` "Knowledge drift vs base" finding with rebase / single-file pull-up suggestion; project-local mode skipped; `no-preflight` opt-out.
+- **Source-path existence guard** in [`commands/scaffold-knowledge.md`](commands/scaffold-knowledge.md) and [`skills/discover-knowledge/SKILL.md`](skills/discover-knowledge/SKILL.md) — leaves whose source directory is missing on the current branch are classified `skipped` with `source_missing` and not written; prevents "ghost knowledge" in project-local mode; `no-source-guard` opt-out.
+- **Mermaid policy** in [`commands/project-review.md`](commands/project-review.md), [`commands/project-phases.md`](commands/project-phases.md), [`commands/project-update-mr.md`](commands/project-update-mr.md) — review opt-in with structural-change default ON, phases default ON when phases > 3, MR opt-in for architectural / migration MRs; `no-mermaid` opt-out kit-wide. Choices recorded as HTML comments in artifacts; mermaid never inside `## OpenCode:` blocks.
+- **Structured-knowledge-table schema** in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) — `Trigger` / `Command` / `When` columns; consumed by future verification-script and run-locally tables; literal command strings only (no `$ARGUMENTS`).
+- **Frontmatter conventions** in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) — table covering kickoff / review-advisory / read-only / bootstrap-refresh defaults for `agent`, `subtask`, `model`. Replaces ad-hoc runtime model prompts.
+- **Security rules** in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) — no user-prompt text in audit logs; no `$ARGUMENTS` inside `!` shell-injection blocks; structured stash messages only; no skill recursion (single exception: `git-safety` as foundational primitive); provider-switch trust boundary; pre-write secret scan (extended in Plan 2); output containment.
+- **Kit-stash convention** documented in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) (full detail in `skills/git-safety/SKILL.md`).
+- **Knowledge across branches** in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) and [`WORKFLOW.md`](WORKFLOW.md) §12 — storage modes table, drift behavior, source-path guard pitfalls in project-local mode, `AGENTS.md` merge-conflict playbook with worked example, decision flow diagram.
+- **Audit trail contract**, **mermaid policy table**, **positional-argument support**, **opt-out flags** documented in [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md).
+
+### Added — earlier in this release cycle
 
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — captures deferred ideas (`kitVersion` field, descriptor-from-repo engine work, descriptor-driven path guard, governance template). Items are graduated into `[Unreleased]` here when they become active work.
 - **`descriptorSchemaVersion: 2`** — `pseudoPackageDetection` is now an **array of rules** so a single project can declare multiple detection strategies per area. Two `kind`s ship: `pathAndAlias` and `pathPrefix`. Legacy object form is normalized to a single-element array on read; deprecated for one minor release. See [`docs/UPGRADING.md`](docs/UPGRADING.md) for migration steps.
@@ -31,6 +46,21 @@ All notable changes to this kit are documented here. This project follows a ligh
 - `descriptor.json` is **backward compatible**: omit `descriptorSchemaVersion` and keep `pseudoPackageDetection` as an object — commands normalize on read. Migrating to `descriptorSchemaVersion: 2` is recommended; the legacy form is deprecated.
 - After `git pull`, re-run `bash bin/install-opencode-conductor.sh` from this clone.
 - If you adopt the new `SENIOR_ENGINEERING.md` rule, add it to the `instructions` array in your `opencode.json`. Always-on cost is small (~600 tokens).
+- The new `git-safety` and `branch-kickoff` skills default to `permission.skill: ask`. Copy [`opencode.json.example`](opencode.json.example) into your real `~/.config/opencode/opencode.json` to enable the recommended policy.
+- All new gates (drift preflight, source-path guard, mermaid prompts) are silent or opt-in by default and ship with `no-*` opt-out flags for CI / batch flows. See [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) § Opt-out flags.
+
+### Foundation release notes (F1–F3)
+
+The Branch Kickoff Foundation phases land the kit-wide primitives (skills, safety preflight, drift / source-path / mermaid gates, schema, conventions, security rules, recommended permission policy) **without** user-facing kickoff commands. The two kickoff commands (`/project-branch-new`, `/project-branch-kickoff`) ship in the next phase (C1) and consume these primitives.
+
+Why ship foundation first:
+
+- **Smaller blast radius** per push; each phase verifies independently.
+- **Existing commands gain the gates** immediately: `/project-review` and `/project-knowledge-refresh` get the drift preflight; `/scaffold-knowledge` gets the source-path guard; `/project-review`, `/project-phases`, `/project-update-mr` get the mermaid policy. No new user commands needed to benefit.
+- **`opencode.json.example`** lets users adopt the recommended permission policy at their own pace.
+- **`docs/PATH_CONTRACT.md`** becomes the single source of truth for schema, conventions, security rules, mermaid policy, audit trail contract, kit-stash convention, and knowledge-across-branches modes.
+
+Backwards compatibility: every gate is silent on no-finding and ships with an opt-out flag. Existing flows are unchanged unless drift / missing source / structural change is actually detected.
 
 ## [v2.1.0] - 2026-05-07
 

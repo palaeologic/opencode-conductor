@@ -17,13 +17,14 @@ Branch-local context (default **under `~/.config`**, or **beside the clone** whe
 ## Docs map
 
 - [`README.md`](README.md) — canonical guide (architecture, workflows, commands, rules, skills, cost analysis)
-- [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review** with preflight, skills, Mermaid diagrams, **worked examples**); start here for ordered procedures
+- [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review** with preflight, skills, Mermaid diagrams, **knowledge across branches**, **worked examples**); start here for ordered procedures
 - [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — quick command decision matrix
 - [`TEST_PLAN.md`](TEST_PLAN.md) — smoke test checklist
 - [`CHANGELOG.md`](CHANGELOG.md) — notable kit changes (read after every `git pull`)
+- [`opencode.json.example`](opencode.json.example) — vendor-neutral `permission.skill` defaults; copy/merge into your real `~/.config/opencode/opencode.json`
 - [`docs/UPGRADING.md`](docs/UPGRADING.md) — stale clone catch-up, global vs project-local migration
 - [`SECURITY.md`](SECURITY.md) — vulnerability reporting + operator checklist
-- [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) — how tools resolve `descriptor.json` vs branch paths
+- [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) — how tools resolve `descriptor.json` vs branch paths; structured-knowledge schema, frontmatter conventions, security rules, mermaid policy, audit trail contract, kit-stash convention, knowledge-across-branches modes
 - [`docs/ROADMAP.md`](docs/ROADMAP.md) — deferred ideas (kitVersion, descriptor-from-repo, governance)
 - [`CHANGELOG-v2.md`](CHANGELOG-v2.md) — v1 to Conductor evolution notes
 - [`docs/presentations/`](docs/presentations/) — teammate-facing deck assets
@@ -383,6 +384,10 @@ Skills are NOT loaded unless relevant — unlike rules which are always present.
 
 | Skill | Agent loads it when... | What it does |
 | ----- | ---------------------- | ------------ |
+| `git-safety` | A command intends to mutate git state (fetch, checkout, pull, branch ops, stash) | Refuse-on-dirty preflight, attached-HEAD check, base-branch resolution (`origin/HEAD` → `main` → `master`), kit-stash convention with reminder hook and cross-check warning. Never auto-stashes; never loads other skills. Recommended permission: `ask`. |
+| `branch-kickoff` | A kickoff command runs (commands ship in C1) | Loads `git-safety`; runs drift gate, big-project criteria, model selection, mermaid policy, audit trail. Recommended permission: `ask`. |
+| `discover-knowledge` | Authoring or refreshing `AGENTS.md`; running `/scaffold-knowledge`, `/project-knowledge-refresh`, or the `/project-review` preflight | Senior Architect lens; promotion rubric; source-path existence guard for leaf scaffolds. |
+| `plan-phases` | Drafting or refining `PHASES.md` for a long-lived branch | Senior Architect / PM lens; phase template, sizing heuristics, anti-patterns. |
 | `review-branch` | User asks to review a branch, or says "check before merge" | Orchestrates: `/manual-refresh` → `/project-review` → optional verification → optional `/project-update-mr` or `/project-review-sync` (see skill) |
 | `session-lifecycle` | User starts/ends a session, or asks "how should I checkpoint?" | Guides the refresh → work → checkpoint → close flow with decision points |
 | `onboard-area` | User asks about unfamiliar code, or agent needs to understand a new area before making changes | Reads AGENTS.md hierarchy, scans key files, builds a mental model |
@@ -401,19 +406,37 @@ cp -r skills/* ~/.config/opencode/skills/
 
 Each skill follows OpenCode's discovery format: `skills/<name>/SKILL.md` with YAML frontmatter (`name` + `description` required).
 
-### Permissions (optional)
+### Permissions (recommended `permission.skill` policy)
 
-Control skill access in `opencode.json`:
+Control skill access in `opencode.json`. The kit recommends a stricter default for any skill that mutates git state or orchestrates multi-step kickoff flows; everything else stays loose for low-friction loading.
+
+A vendor-neutral example ships in [`opencode.json.example`](opencode.json.example) at the repo root — copy / merge into your real `~/.config/opencode/opencode.json`:
 
 ```json
 {
   "permission": {
     "skill": {
-      "*": "allow"
+      "*": "allow",
+      "git-safety": "ask",
+      "branch-kickoff": "ask",
+      "discover-knowledge": "allow",
+      "plan-phases": "allow",
+      "review-branch": "allow"
+    }
+  },
+  "agent": {
+    "plan": {
+      "permission": {
+        "skill": {
+          "git-safety": "allow"
+        }
+      }
     }
   }
 }
 ```
+
+Plan-mode agents may relax `git-safety` to `allow` because plan mode is read-mostly: any actual mutation still surfaces the per-step confirmation that `git-safety` enforces. Keep it strict if you want explicit consent inside plan mode too.
 
 ## Refresh tool output
 

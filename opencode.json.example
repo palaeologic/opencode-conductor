@@ -1,0 +1,22 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "skill": {
+      "*": "allow",
+      "git-safety": "ask",
+      "branch-kickoff": "ask",
+      "discover-knowledge": "allow",
+      "plan-phases": "allow",
+      "review-branch": "allow"
+    }
+  },
+  "agent": {
+    "plan": {
+      "permission": {
+        "skill": {
+          "git-safety": "allow"
+        }
+      }
+    }
+  }
+}
