@@ -34,7 +34,7 @@ When invoked from `/project-branch-kickoff` (i.e. on an existing branch), run th
 - Resolve base via `git symbolic-ref refs/remotes/origin/HEAD` → `main` → `master` (already done in step 1; reuse the cached value).
 - `git fetch origin <base>` (read-only). Reuse the **5-minute fixed session cache** to avoid repeated fetches when chained with refresh/review in the same session.
 - Compute the AGENTS.md drift set: let `MERGE_POINT = git merge-base HEAD origin/<base>`; for every `AGENTS.md` reachable from either `MERGE_POINT` or `origin/<base>`, compare blob ids and collect the differing paths.
-- Skip when storage mode is project-local (per `docs/PATH_CONTRACT.md` § Knowledge across branches) — drift cannot be computed against branch state when knowledge is not branch-scoped.
+- Skip when storage mode is project-local (per `documentation/PATH_CONTRACT.md` § Knowledge across branches) — drift cannot be computed against branch state when knowledge is not branch-scoped.
 - **Behavior on drift**:
   - 0 drifted files → silent; proceed.
   - 1–5 drifted files → emit a `F-xx` finding "Knowledge drift vs base: <count> file(s)" inline in the kickoff banner; recommend rebase but do **not** block; user confirms whether to proceed.
@@ -68,7 +68,7 @@ Each handoff is one user confirmation; do not bundle.
 
 ### 6. Mermaid policy
 
-Apply the kit-wide mermaid policy (see `docs/PATH_CONTRACT.md` § Mermaid policy):
+Apply the kit-wide mermaid policy (see `documentation/PATH_CONTRACT.md` § Mermaid policy):
 
 - `PHASES.md`: prompt with default ON when phases > 3.
 - `MERGE_REQUEST.md`: prompt opt-in for migrations / multi-service refactors / schema changes.
@@ -140,7 +140,7 @@ If any step refuses or is declined, the banner ends with a `STATUS: aborted | de
 - **Auto-spawning subtasks without consent.** Frontmatter sets defaults; runtime overrides require an explicit prompt.
 - **Bundling confirmations.** Each mutation gets its own one-line preview; long aggregate confirms hide intent.
 - **Writing audit metadata at multiple times.** Audit writes are atomic at the end so a half-finished run is observable as "no audit entry yet".
-- **Embedding raw user prompts in audit metadata.** Audit fields are structured (command name, base, branch, model, choices) and never include free-text user messages. See `docs/PATH_CONTRACT.md` § Security rules.
+- **Embedding raw user prompts in audit metadata.** Audit fields are structured (command name, base, branch, model, choices) and never include free-text user messages. See `documentation/PATH_CONTRACT.md` § Security rules.
 
 ## Related
 
@@ -148,4 +148,4 @@ If any step refuses or is declined, the banner ends with a `STATUS: aborted | de
 - Senior reviewer / architect lens for adjacent flows: `skills/discover-knowledge`, `skills/plan-phases`, `skills/review-branch`.
 - Baseline persona: `rules/SENIOR_ENGINEERING.md`.
 - Commands wired in this plan: `commands/project-branch-new.md`, `commands/project-branch-kickoff.md`.
-- Contract: `docs/PATH_CONTRACT.md` § Audit trail, § Mermaid policy, § Frontmatter conventions, § Security rules.
+- Contract: `documentation/PATH_CONTRACT.md` § Audit trail, § Mermaid policy, § Frontmatter conventions, § Security rules.

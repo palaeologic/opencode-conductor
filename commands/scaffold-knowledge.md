@@ -46,7 +46,7 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
    - For `pathAndAlias` rules: enumerate directories matching `pathPattern`'s `{packageName}` slot.
    - For `pathPrefix` rules: filter by basename (`namePrefixes` OR `namedExtras`).
    - Reject any leaf name that does not match `^[A-Za-z0-9_][A-Za-z0-9_-]*$` — emit `invalid_package_name` with the offending name; continue with remaining leaves.
-   - For each surviving leaf, derive the convention path per the **stem derivation contract** in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md): `<opencodeProjectRootPath>/<rel>/AGENTS.md`.
+   - For each surviving leaf, derive the convention path per the **stem derivation contract** in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md): `<opencodeProjectRootPath>/<rel>/AGENTS.md`.
    - Resolve overrides: if `sharedPackageKnowledge[packageName]` is set, that path wins.
    - Apply safety guardrails: verify root containment under `opencodeProjectRootPath`; refuse symlinks (`lstat` -> if symlink at target, mark `symlink_refused`).
    - **Source-path existence guard (default on):** for every candidate leaf, resolve the leaf's expected source directory under `projectRootPath` (the path the leaf's stem mirrors) and verify it exists in the **current working tree** (`git ls-tree --name-only HEAD <leaf-source-rel>` non-empty, or `test -d <abs-leaf-source>`). If missing, classify the leaf as `skipped` with reason `source_missing` and **do not write** an `AGENTS.md` for it. Prevents "ghost knowledge" — durable files about packages absent on the current branch (matters in project-local storage where knowledge is shared across branches). Pass `no-source-guard` (in `$ARGUMENTS`, e.g. `/scaffold-knowledge <projectKey> discovery no-source-guard`) to bypass; useful when intentionally staging knowledge ahead of the source landing.
@@ -139,7 +139,7 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
 
     If the file already exists, **merge**: prepend the Stack/Folder/Commands sections above the existing content, preserving all existing rules.
 
-11. **Leaf-level AGENTS.md template** — used by step 6 (discovery mode) when writing scaffolds. The convention path is `<opencodeProjectRootPath>/<rel>/AGENTS.md` (source-tree-mirror; see [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md)). For overrides, use the path from `sharedPackageKnowledge`.
+11. **Leaf-level AGENTS.md template** — used by step 6 (discovery mode) when writing scaffolds. The convention path is `<opencodeProjectRootPath>/<rel>/AGENTS.md` (source-tree-mirror; see [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md)). For overrides, use the path from `sharedPackageKnowledge`.
 
     ```markdown
     ---
@@ -203,7 +203,7 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
 - Leaf-level templates are intentionally sparse — they get filled during real work sessions.
 - Do not include secrets or environment-specific paths.
 - Always ask for user confirmation before writing in discovery mode. `list` and `dry-run` never write.
-- Apply the safety guardrails from [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md): package name regex, root containment, symlink refusal.
+- Apply the safety guardrails from [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md): package name regex, root containment, symlink refusal.
 - Do not mutate `descriptor.json` for convention-path leaves; only write descriptor entries when the user explicitly chose a non-default path.
 
 ## Output

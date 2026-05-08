@@ -7,7 +7,7 @@ Initialize handoff kit for project key `$ARGUMENTS`.
 
 This command scans the current repository, drafts a `descriptor.json`, presents it for user approval, and writes the project structure.
 
-**Progressive disclosure:** keep init prompts short. For tradeoffs (gitignore, secrets, clone behavior), point to README → **Where does handoff state live?** and [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md).
+**Progressive disclosure:** keep init prompts short. For tradeoffs (gitignore, secrets, clone behavior), point to README → **Where does handoff state live?** and [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md).
 
 Workflow:
 
@@ -39,7 +39,7 @@ Workflow:
    - `projectKey`: from `$ARGUMENTS`
    - `projectRootPath`: from git toplevel (prefer `~/` when applicable)
    - **If global:** `opencodeProjectRootPath`: `~/.config/opencode/projects/$ARGUMENTS`
-   - **If project-local** (locked path scheme — see [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md)):
+   - **If project-local** (locked path scheme — see [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md)):
      - Let `<dir>` be `.opencode-conductor` or `.opencode` as chosen. Let `<R>` = same path style as `projectRootPath` + `/<dir>` (no trailing slash).
      - `opencodeProjectRootPath`: `<R>`
      - `branchHandoff.contextDirTemplate`: `<R>/branches/{branchName}`

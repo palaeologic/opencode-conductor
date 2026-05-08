@@ -19,7 +19,7 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
 ## Procedure
 
 1. Resolve branch and repo root from git.
-2. Load descriptor at `~/.config/opencode/projects/<resolved key>/descriptor.json` (kit contract — see [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md)).
+2. Load descriptor at `~/.config/opencode/projects/<resolved key>/descriptor.json` (kit contract — see [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md)).
 3. Determine handoff mode from `handoffModeDefault` (default: `tracked`).
 4. **Tracked**: if branch context files (`MERGE_REQUEST.md`, `LOG.md`) are missing under the folder from `branchHandoff.contextDirTemplate`, seed from `branchHandoff.templatesDir`. **Lite**: skip — no branch files required.
 5. Read context in order: **`opencodeProjectRootPath`/AGENTS.md** → active area’s **`areaAgentsPath`** → package `AGENTS.md` (if applicable) → branch `MERGE_REQUEST.md` → `PHASES.md` (if present) → latest `LOG.md` (paths under expanded `contextDirTemplate`).

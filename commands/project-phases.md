@@ -36,7 +36,7 @@ If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
 8. If `PHASES.md` already existed:
    - refine only if user asked for updates
 
-8.5. **Mermaid prompt (default ON when phases > 3).** Per the kit-wide mermaid policy in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) § Mermaid policy, ask whether to include one phase-dependency diagram in `PHASES.md`.
+8.5. **Mermaid prompt (default ON when phases > 3).** Per the kit-wide mermaid policy in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) § Mermaid policy, ask whether to include one phase-dependency diagram in `PHASES.md`.
 
    - **Default:** ON when the draft has **>3 phases**; OFF otherwise.
    - **Recommendation in prompt:** "Include when phases > 3 and dependencies are non-trivial."

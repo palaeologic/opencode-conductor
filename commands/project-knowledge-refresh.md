@@ -26,7 +26,7 @@ Run before any work in the Workflow section. Goal: detect when the current branc
    - `TIP_AGENTS_FILES = git ls-tree -r --name-only origin/<base> -- '*AGENTS.md'`
    - `MERGE_POINT_AGENTS_FILES = git ls-tree -r --name-only $MERGE_POINT -- '*AGENTS.md'`
    - For every file in either set, compare `git rev-parse origin/<base>:<path>` to `git rev-parse $MERGE_POINT:<path>`; differing or one-sided entries form the **drift set**.
-4. **Skip the preflight entirely** when storage mode is project-local (per [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) § Knowledge across branches). The drift preflight only meaningfully applies to committed-in-repo storage.
+4. **Skip the preflight entirely** when storage mode is project-local (per [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) § Knowledge across branches). The drift preflight only meaningfully applies to committed-in-repo storage.
 5. **Emit a single `F-xx` finding** (severity `Medium`) of the form:
 
    ```
@@ -47,13 +47,13 @@ The drift preflight does not write or modify files; it only reads and reports. I
 2. Resolve **knowledge files to consider for promotion** by combining:
    - Each path from `reread_files`.
    - Each entry of `trackedKnowledgeTargets.sharedPackageKnowledge` (overrides) whose package maps to a `changed_areas` entry.
-   - **Convention-path** leaf `AGENTS.md` files derived from `pseudoPackageDetection` rules: for every detected leaf in a `changed_areas` area, the convention path is `<opencodeProjectRootPath>/<rel>/AGENTS.md` (see [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md), Stem derivation contract). Include each existing convention-path file alongside any matching override.
+   - **Convention-path** leaf `AGENTS.md` files derived from `pseudoPackageDetection` rules: for every detected leaf in a `changed_areas` area, the convention path is `<opencodeProjectRootPath>/<rel>/AGENTS.md` (see [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md), Stem derivation contract). Include each existing convention-path file alongside any matching override.
 3. Apply normalization to `pseudoPackageDetection`: legacy object form -> single-element array; reject rules missing `area`; skip rules without `{packageName}` for leaf discovery.
 4. Summarize **durable findings** that belong in shared `AGENTS.md` / leaf knowledge (not one-off branch noise). Apply the **Knowledge promotion rubric** below.
 5. For each changed area-level `AGENTS.md`, inspect script-manifest changes in that area (`package.json`, `pyproject.toml`, `requirements.txt`, `poetry.lock`, `Pipfile`, `Makefile`, `Justfile`). If script/target changes are detected, include a proposal to refresh the area's `## Verification scripts` table so it stays aligned with runnable commands.
 6. Output a **proposal only**: file path, suggested new text or diff summary, rationale, risk.
 7. Apply edits to shared knowledge files **only if** the user explicitly approves each file in the same session.
-8. Before each approved write, run the pre-write secret scan policy from [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) § Security rules (AKIA, JWT shape, PEM markers, token-like strings near secret labels). Refuse writes on match and surface a redacted locator.
+8. Before each approved write, run the pre-write secret scan policy from [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) § Security rules (AKIA, JWT shape, PEM markers, token-like strings near secret labels). Refuse writes on match and surface a redacted locator.
 
 ## Knowledge promotion rubric
 

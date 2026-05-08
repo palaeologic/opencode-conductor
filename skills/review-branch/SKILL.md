@@ -152,6 +152,6 @@ Respect the existing 25-row cap in `commands/project-review.md`; the senior lens
 
 ## Related docs
 
-- Scenarios: `WORKFLOW.md` (repo root)
-- Commands: `COMMAND_WORKFLOW.md` (repo root)
+- Scenarios: `documentation/WORKFLOW.md` (repo root)
+- Commands: `documentation/COMMAND_WORKFLOW.md` (repo root)
 - Baseline persona: `rules/SENIOR_ENGINEERING.md`

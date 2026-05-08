@@ -144,11 +144,11 @@ If any line is unsafe (dirty / detached / unresolved base), the banner ends with
 - **Auto-stashing on dirty.** The user owns the working tree; the kit only ever surfaces options.
 - **Loading other skills from this skill.** See [Anti-pattern](#anti-pattern). Skill recursion breaks the audit graph.
 - **Skipping the reminder hook.** A stash without a reminder is a lost-work footgun.
-- **Interpolating user input into shell commands.** All git invocations from this skill use fixed argument lists; never construct command lines from `$ARGUMENTS`, `$1`, or any user-provided string. See `docs/PATH_CONTRACT.md` security rules.
+- **Interpolating user input into shell commands.** All git invocations from this skill use fixed argument lists; never construct command lines from `$ARGUMENTS`, `$1`, or any user-provided string. See `documentation/PATH_CONTRACT.md` security rules.
 - **Forcing destructive ops.** `--force`, `reset --hard`, `clean -fd` are always per-step confirmed; never aggregate-confirmed.
 
 ## Related
 
 - Baseline persona: `rules/SENIOR_ENGINEERING.md` (cautious, reversible, surface-risk).
 - Loaded by: `skills/branch-kickoff/SKILL.md` and any future command that touches git state (e.g. `commands/project-branch-explore.md`, `commands/project-state.md` from later plans).
-- Contract: `docs/PATH_CONTRACT.md` § Security rules and § Kit-stash convention.
+- Contract: `documentation/PATH_CONTRACT.md` § Security rules and § Kit-stash convention.

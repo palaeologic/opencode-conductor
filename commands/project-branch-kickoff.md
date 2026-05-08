@@ -61,7 +61,7 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
    - **Recommendation in prompt:** Dry-run first, then promote to Discovery — preserves auditability.
    - Pass `no-source-guard` through to `/scaffold-knowledge` if the kickoff received it; otherwise the source-path guard runs by default.
 
-6. **Mermaid policy hand-off.** The chained commands (`/project-phases`, `/project-knowledge-refresh`) apply their own mermaid policies as documented in `docs/PATH_CONTRACT.md` § Mermaid policy. This kickoff command never injects mermaid into artifacts itself; it only orchestrates.
+6. **Mermaid policy hand-off.** The chained commands (`/project-phases`, `/project-knowledge-refresh`) apply their own mermaid policies as documented in `documentation/PATH_CONTRACT.md` § Mermaid policy. This kickoff command never injects mermaid into artifacts itself; it only orchestrates.
 
 7. **Audit trail.** Per `skills/branch-kickoff` § Audit trail, append:
    - `LOG.md` block:

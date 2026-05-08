@@ -37,7 +37,7 @@ Ask the user in **plain language** first; you may show the letter as a shorthand
    - Resolve base: `git symbolic-ref refs/remotes/origin/HEAD` → `main` → `master`. Strip the `refs/remotes/origin/` prefix.
    - `git fetch origin <base>` read-only; cache the fetch for **5 minutes per session, fixed** (in-memory timestamp; skip if within window).
    - Compute the drift set: let `MERGE_POINT = git merge-base HEAD origin/<base>`; for every `AGENTS.md` reachable from either `MERGE_POINT` or `origin/<base>`, compare blob ids and collect the differing paths.
-   - Skip this sub-step entirely when storage mode is project-local (per [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) § Knowledge across branches).
+   - Skip this sub-step entirely when storage mode is project-local (per [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) § Knowledge across branches).
    - When drift is non-empty, emit one `F-xx` finding (severity `Medium`) "Knowledge drift vs base: <count> file(s)" with Suggested action `Rebase onto origin/<base> or `git checkout origin/<base> -- <path>`; then re-run /project-review`. List each drifted path as bullet evidence on the finding.
    - The drift sub-step is **silent on no drift**.
    - `no-preflight` in `$ARGUMENTS` skips the entire knowledge preflight, including this sub-step.
@@ -50,7 +50,7 @@ Ask the user in **plain language** first; you may show the letter as a shorthand
    3. Apply detection rules to map each changed file to a `(area, packageName)` pair. **Disambiguation:** longest matching stem wins; ties broken by descriptor array order. Files that don't map are ignored.
    4. For each unique detected leaf, resolve the expected `AGENTS.md`:
       - If `trackedKnowledgeTargets.sharedPackageKnowledge[packageName]` is defined, use that override path.
-      - Otherwise use the convention path `<opencodeProjectRootPath>/<rel>/AGENTS.md`, where `<rel>` mirrors the leaf's path under `projectRootPath` per the **stem derivation contract** in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md).
+      - Otherwise use the convention path `<opencodeProjectRootPath>/<rel>/AGENTS.md`, where `<rel>` mirrors the leaf's path under `projectRootPath` per the **stem derivation contract** in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md).
    5. Apply safety guardrails for any candidate write:
       - Reject leaf names not matching `^[A-Za-z0-9_][A-Za-z0-9_-]*$` (`invalid_package_name`).
       - Verify root containment under `opencodeProjectRootPath` (`path_outside_root`).
@@ -98,7 +98,7 @@ Ask the user in **plain language** first; you may show the letter as a shorthand
 4. Ask whether to include **`## Appendix: change statistics`** (approximate file/churn breakdown and high / medium / low focus tiers). **yes** or **no**.
 5. Ask whether to add **additional reviewer context now** (free-text notes from the user, e.g. rollout cautions, known flaky tests, data assumptions, environment caveats). If yes, collect the text and include it in `REVIEW.md` under `## Additional reviewer context`.
 
-5.5. **Mermaid prompt (opt-in).** Per the kit-wide mermaid policy in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) § Mermaid policy, ask whether to include a single mermaid diagram under an optional `## Architecture` section.
+5.5. **Mermaid prompt (opt-in).** Per the kit-wide mermaid policy in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) § Mermaid policy, ask whether to include a single mermaid diagram under an optional `## Architecture` section.
 
    - **Default:** OFF, unless **structural change** is detected — i.e. any of: new convention-path leaf scaffolded in step 1.5, multi-area diff (≥3 areas in `changed_areas`), schema/route changes (`*.graphql`, `migrations/`, `routes.*`, `schema.*`, `urls.py` in `changed_files`).
    - **Recommendation in prompt:** "Include when structural; skip for typo/test-only changes."
@@ -109,7 +109,7 @@ Ask the user in **plain language** first; you may show the letter as a shorthand
 6. Generate the chosen artifact based on actual branch state (not generic templates), merging any user-provided additional context and honoring findings merge mode when `REVIEW.md` existed. If the user opted into mermaid in step 5.5, insert one `## Architecture` section between `## Risks and cross-area concerns` and `## Focus for review`, containing one diagram (component / data-flow / sequence appropriate to the change).
 7. Write it to the branch context folder as `REVIEW.md` under **`branchHandoff.contextDirTemplate`** (expand `{projectKey}` and `{branchName}`; default global example: `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/REVIEW.md`).
 8. Suggest verification commands the user may want to run (do NOT execute them), using deterministic synthesis:
-   - For each changed area, read the area-level `AGENTS.md` and look for `## Verification scripts` table rows matching the schema in [`docs/PATH_CONTRACT.md`](../docs/PATH_CONTRACT.md) (`Trigger | Command | When`).
+   - For each changed area, read the area-level `AGENTS.md` and look for `## Verification scripts` table rows matching the schema in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) (`Trigger | Command | When`).
    - Match each row's `Trigger` against `git diff --name-only` in the review window.
    - Support the qualifier `(added or modified)` on triggers exactly as documented in the schema.
    - Dedupe commands preserving first-seen order.

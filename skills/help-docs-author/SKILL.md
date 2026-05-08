@@ -78,4 +78,4 @@ Optional:
 ## Related
 
 - Loaded by: `/project-help-docs`
-- Security and containment policy: `docs/PATH_CONTRACT.md`
+- Security and containment policy: `documentation/PATH_CONTRACT.md`

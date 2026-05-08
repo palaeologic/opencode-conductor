@@ -22,4 +22,4 @@ Use this as a **yes/no** gate before pushing branch handoff or project-local Con
 - [ ] **Source of truth:** If your team uses multiple systems (issue tracker, GitLab/GitHub MR, Conductor files), agree which layer is canonical for compliance-facing text; do not let Conductor scratch files silently replace it.
 - [ ] **Kit source of truth:** Pull and run `bash bin/install-opencode-conductor.sh` from the **same** git clone your team treats as the install source so command text matches expectations.
 
-For path behavior (where `descriptor.json` lives vs where branch data may point), see [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md).
+For path behavior (where `descriptor.json` lives vs where branch data may point), see [`documentation/PATH_CONTRACT.md`](documentation/PATH_CONTRACT.md).

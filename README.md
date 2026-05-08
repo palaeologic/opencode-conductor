@@ -16,22 +16,46 @@ Branch-local context (default **under `~/.config`**, or **beside the clone** whe
 
 ## Docs map
 
+The kit ships two parallel documentation surfaces:
+
+- **`/documentation/`** — terse, normative, contract-style. Read by the agent and by operators who want the source of truth.
+- **`/docusaurus/`** — verbose, tutorial-style, diagram-rich. Read by humans onboarding to the kit or learning a new flow.
+
+When the two diverge, `/documentation/` wins.
+
+### Repo-root entries
+
 - [`README.md`](README.md) — canonical guide (architecture, workflows, commands, rules, skills, cost analysis)
-- [`docs/intro.md`](docs/intro.md) — Docusaurus entry point for this kit
-- [`docs/docusaurus/`](docs/docusaurus/) — canonical Docusaurus publishing entry and descriptor reference
-- [`docs/architecture/`](docs/architecture/) — 10-page architecture deep dive with mermaid diagrams
-- [`docs/help-docs-authoring/`](docs/help-docs-authoring/) — code-to-help-doc workflow and publishing guardrails
-- [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review** with preflight, skills, Mermaid diagrams, **knowledge across branches**, **worked examples**); start here for ordered procedures
-- [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — quick command decision matrix
-- [`TEST_PLAN.md`](TEST_PLAN.md) — smoke test checklist
 - [`CHANGELOG.md`](CHANGELOG.md) — notable kit changes (read after every `git pull`)
-- [`opencode.json.example`](opencode.json.example) — vendor-neutral `permission.skill` defaults; copy/merge into your real `~/.config/opencode/opencode.json`
-- [`docs/UPGRADING.md`](docs/UPGRADING.md) — stale clone catch-up, global vs project-local migration
 - [`SECURITY.md`](SECURITY.md) — vulnerability reporting + operator checklist
-- [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) — how tools resolve `descriptor.json` vs branch paths; structured-knowledge schema, frontmatter conventions, security rules, mermaid policy, audit trail contract, kit-stash convention, knowledge-across-branches modes
-- [`docs/ROADMAP.md`](docs/ROADMAP.md) — deferred ideas (kitVersion, descriptor-from-repo, governance)
-- [`CHANGELOG-v2.md`](CHANGELOG-v2.md) — v1 to Conductor evolution notes
-- [`docs/presentations/`](docs/presentations/) — teammate-facing deck assets
+- [`opencode.json.example`](opencode.json.example) — vendor-neutral `permission.skill` defaults
+
+### Contract docs (`/documentation/`)
+
+- [`documentation/WORKFLOW.md`](documentation/WORKFLOW.md) — **canonical** step-by-step scenarios; start here for ordered procedures
+- [`documentation/COMMAND_WORKFLOW.md`](documentation/COMMAND_WORKFLOW.md) — quick command decision matrix
+- [`documentation/PATH_CONTRACT.md`](documentation/PATH_CONTRACT.md) — path resolution, structured-knowledge schema, frontmatter conventions, security rules, mermaid policy, audit trail contract, kit-stash convention, knowledge-across-branches modes
+- [`documentation/TEST_PLAN.md`](documentation/TEST_PLAN.md) — smoke test checklist
+- [`documentation/TESTING_THE_KIT.md`](documentation/TESTING_THE_KIT.md) — terse, scenario-by-scenario kit verification
+- [`documentation/EXTENDING.md`](documentation/EXTENDING.md) — adding/upgrading commands, skills, rules, descriptor rules, structured-knowledge tables
+- [`documentation/FAQ.md`](documentation/FAQ.md) — terse FAQ index mirroring the docusaurus FAQ
+- [`documentation/UPGRADING.md`](documentation/UPGRADING.md) — stale clone catch-up, global vs project-local migration
+- [`documentation/ROADMAP.md`](documentation/ROADMAP.md) — deferred ideas (kitVersion, descriptor-from-repo, governance)
+- [`documentation/CHANGELOG-v2.md`](documentation/CHANGELOG-v2.md) — v1 to Conductor evolution notes
+
+### User manual (`/docusaurus/`)
+
+- [`docusaurus/intro.md`](docusaurus/intro.md) — kit overview, mental model, end-to-end worked example
+- [`docusaurus/index.md`](docusaurus/index.md) — index of the publishable site
+- [`docusaurus/architecture/`](docusaurus/architecture/) — 10-page architecture deep dive with mermaid diagrams
+- [`docusaurus/commands/`](docusaurus/commands/) — full command catalog (per-family pages)
+- [`docusaurus/skills/`](docusaurus/skills/) — full skill catalog (per-skill pages)
+- [`docusaurus/knowledge/`](docusaurus/knowledge/) — AGENTS.md hierarchy, source-tree-mirror convention, structured-knowledge tables, drift preflight
+- [`docusaurus/workflows/`](docusaurus/workflows/) — tutorial walkthroughs of the canonical scenarios
+- [`docusaurus/contributing/`](docusaurus/contributing/) — testing the kit, extending the kit, using TEST_PLAN.md
+- [`docusaurus/help-docs-authoring/`](docusaurus/help-docs-authoring/) — five-phase end-user docs generation
+- [`docusaurus/descriptors/descriptor-json.md`](docusaurus/descriptors/descriptor-json.md) — `descriptor.json` schema reference
+- [`docusaurus/faq/`](docusaurus/faq/) — session-distilled FAQ (10 categories)
 
 ## Quick start
 
@@ -45,7 +69,7 @@ bash bin/install-opencode-conductor.sh --dry-run
 
 Re-run `bash bin/install-opencode-conductor.sh` after each `git pull` so `~/.config/opencode/` stays in sync with kit updates.
 
-**Updating the kit:** `cd` into the clone you use as install source, `git pull`, run `bash bin/install-opencode-conductor.sh`, restart OpenCode if slash-commands look stale. If `CHANGELOG.md` marks **BREAKING**, read [`docs/UPGRADING.md`](docs/UPGRADING.md) before merging descriptor or `opencode.json` changes.
+**Updating the kit:** `cd` into the clone you use as install source, `git pull`, run `bash bin/install-opencode-conductor.sh`, restart OpenCode if slash-commands look stale. If `CHANGELOG.md` marks **BREAKING**, read [`documentation/UPGRADING.md`](documentation/UPGRADING.md) before merging descriptor or `opencode.json` changes.
 
 Teams that maintain a **private downstream fork** should `git pull` and install from **that fork** so org-tuned commands stay consistent (upstream README stays vendor-neutral).
 
@@ -73,7 +97,7 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 
 - **Rules**: only `HANDOFF.md` (or one monolithic handoff file) — add [`rules/HANDOFF_GENERIC.md`](rules/HANDOFF_GENERIC.md) and keep `HANDOFF.md` as a **thin project overlay** (tool names, package detection, org conventions).
 - **Commands**: only refresh/bootstrap/phases/manual — replace the whole `commands/` folder from this repo so new lifecycle, verification, review, init, and scaffold commands exist.
-- **Stale paths under `~/.config/opencode/`** (safe to remove once you use kit commands + README): redundant top-level runbooks such as `COMMAND_WORKFLOW.md`, `OPENCODE_HANDOFF_GENERIC.md`, `OPENCODE_HANDOFF_<PROJECT>.md` if you still have copies there.
+- **Stale paths under `~/.config/opencode/`** (safe to remove once you use kit commands + README): redundant top-level runbooks such as `documentation/COMMAND_WORKFLOW.md`, `OPENCODE_HANDOFF_GENERIC.md`, `OPENCODE_HANDOFF_<PROJECT>.md` if you still have copies there.
 - **Wrong skills location**: delete `~/.config/opencode/projects/<projectKey>/skills/` — procedural guides belong in OpenCode’s global [`skills/`](skills/) (or this kit’s `skills/`), not under a project folder.
 - **Descriptor drift**: ensure `handoffModeDefault` is set; use `mrFilenames` (array) instead of legacy `mrFilename` (string); add `subtaskModels` (can start as `{}`); add optional `MR.md` to `mrFilenames` only if you copy [`templates/mr/MR.md`](templates/mr/MR.md) into `_templates/mr/`.
 - **Tools**: if you keep plugins disabled, a `tools-off/` folder is fine — move wrappers back to `tools/` when provider/tool-calling is stable (see [Manual mode (tools disabled)](#manual-mode-tools-disabled) below).
@@ -93,13 +117,12 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 | Tool wrappers       | `[tools/opencode_*.ts](tools/)`                                                                                | OpenCode plugin interface                                   |
 | Commands            | `[commands/](commands/)`                                                                                       | Slash-command markdown templates                            |
 | Branch templates    | `[templates/mr/*](templates/mr/)`                                                                              | `MERGE_REQUEST.md`, `LOG.md`, optional `PHASES.md`, `MR.md` |
-| Workflow scenarios  | [`WORKFLOW.md`](WORKFLOW.md)                                                                                    | Step-by-step review / MR / handoff flows |
+| Workflow scenarios  | [`documentation/WORKFLOW.md`](documentation/WORKFLOW.md)                                                                                    | Step-by-step review / MR / handoff flows |
 | Rule baseline       | `[rules/HANDOFF_GENERIC.md](rules/HANDOFF_GENERIC.md)`                                                         | MUST/SHOULD behavioral contract                             |
 | Code quality rule   | `[rules/CODE_QUALITY.md](rules/CODE_QUALITY.md)`                                                               | Universal quality standards                                 |
 | Frontend rule       | `[rules/FRONTEND.md](rules/FRONTEND.md)`                                                                       | Base frontend conventions                                   |
 | Senior baseline rule | `[rules/SENIOR_ENGINEERING.md](rules/SENIOR_ENGINEERING.md)`                                                  | Three-lens persona (Developer + Engineer + Architect)       |
 | Skills              | `[skills/](skills/)`                                                                                           | On-demand workflow guides (OpenCode native)                 |
-| Presentations       | `[docs/presentations/](docs/presentations/)`                                                                   | Teammate deck                                               |
 
 
 ### Where does handoff state live?
@@ -107,7 +130,7 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 | Layout | `descriptor.json` on disk | Branch folders + `AGENTS.md` trees | Typical `.gitignore` |
 | ------ | ------------------------- | ----------------------------------- | --------------------- |
 | **Global (default)** | `~/.config/opencode/projects/<projectKey>/descriptor.json` | Same tree under that directory | N/A (outside repo) |
-| **Project-local** | Still **`~/.config/.../descriptor.json`** (kit tool contract) | Paths inside **`<git-root>/.opencode-conductor/`** (or `.opencode/`) per [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md) | **Default:** ignore `<dir>/` so internal narrative is not committed |
+| **Project-local** | Still **`~/.config/.../descriptor.json`** (kit tool contract) | Paths inside **`<git-root>/.opencode-conductor/`** (or `.opencode/`) per [`documentation/PATH_CONTRACT.md`](documentation/PATH_CONTRACT.md) | **Default:** ignore `<dir>/` so internal narrative is not committed |
 
 **Who sees handoff after `git clone`?**
 
@@ -115,7 +138,7 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 - **Project-local + gitignored:** same as global for clones — empty `<dir>/` until bootstrap; CI does not see handoff files.
 - **Project-local + committed:** everyone with repo access sees files; mind **classification**, **secrets**, and **merge conflicts** on `LOG.md` / `REVIEW.md`.
 
-Use **`/project-init`** to pick global vs project-local and the `.gitignore` tri-state. Long risk explanations stay in this README and [`WORKFLOW.md`](WORKFLOW.md), not in the init wall-of-text.
+Use **`/project-init`** to pick global vs project-local and the `.gitignore` tri-state. Long risk explanations stay in this README and [`documentation/WORKFLOW.md`](documentation/WORKFLOW.md), not in the init wall-of-text.
 
 ### Disk layout (per project)
 
@@ -152,14 +175,14 @@ Use **`/project-init`** to pick global vs project-local and the `.gitignore` tri
 
 ### Descriptor responsibilities
 
-- `descriptorSchemaVersion`: integer, current is **`2`** (introduces the rules-array form of `pseudoPackageDetection`). Omitted or absent ≡ **v1** (legacy object form). v1 is **deprecated** and accepted for one minor release; see [`docs/UPGRADING.md`](docs/UPGRADING.md).
+- `descriptorSchemaVersion`: integer, current is **`2`** (introduces the rules-array form of `pseudoPackageDetection`). Omitted or absent ≡ **v1** (legacy object form). v1 is **deprecated** and accepted for one minor release; see [`documentation/UPGRADING.md`](documentation/UPGRADING.md).
 - `projectRootPath`, `opencodeProjectRootPath`, `baselineBranchForMaterialChanges`
 - `handoffModeDefault`: `tracked` | `lite`
 - `areas` and optional `trackedKnowledgeTargets`
 - `branchHandoff`: templates, filenames, optional `**mrFilenames**` (ordered; first existing MR wins for primary read), `checkpointField`
 - `refreshToolHeuristics` for `mr_update_recommended`
 - `subtaskModels`: optional map of role → `provider/model` string
-- `pseudoPackageDetection`: **array of rules** (v2). Each rule declares an `area` and a `kind` (`pathAndAlias` or `pathPrefix`) plus a `pathPattern` whose `{packageName}` slot drives leaf detection and the source-tree-mirror knowledge convention path (see [`docs/PATH_CONTRACT.md`](docs/PATH_CONTRACT.md)).
+- `pseudoPackageDetection`: **array of rules** (v2). Each rule declares an `area` and a `kind` (`pathAndAlias` or `pathPrefix`) plus a `pathPattern` whose `{packageName}` slot drives leaf detection and the source-tree-mirror knowledge convention path (see [`documentation/PATH_CONTRACT.md`](documentation/PATH_CONTRACT.md)).
 
 #### `pseudoPackageDetection` rule shape (v2)
 
@@ -306,11 +329,11 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 
 ### Use cases → what to run
 
-**Full catalog** (init, phases, tracked loop, lite mode, review, skills, diagrams): **[`WORKFLOW.md`](WORKFLOW.md)** — that file is the single source of truth for ordered procedures; this table is only **quick picks**.
+**Full catalog** (init, phases, tracked loop, lite mode, review, skills, diagrams): **[`documentation/WORKFLOW.md`](documentation/WORKFLOW.md)** — that file is the single source of truth for ordered procedures; this table is only **quick picks**.
 
 | I want to… | Run or read |
 | ----------- | ----------- |
-| **Everything else** (“how do I…?”) | Open **[`WORKFLOW.md`](WORKFLOW.md)** TOC |
+| **Everything else** (“how do I…?”) | Open **[`documentation/WORKFLOW.md`](documentation/WORKFLOW.md)** TOC |
 | Start a new session on an existing branch | `/manual-refresh` or `/project-refresh` |
 | First-time project on this kit | `/project-init` → `/scaffold-knowledge` (see **WORKFLOW §2**) |
 | Long-lived branch / checkpoints / MR sync | **WORKFLOW §3**; `/project-checkpoint`, `/project-update-mr` |
@@ -353,7 +376,7 @@ Not every session requires a full refresh. Use these shortcuts for quick interac
 - Before a code review
 - When `LOG.md` is more than a day old
 
-For **command model binding**, see `[COMMAND_WORKFLOW.md](COMMAND_WORKFLOW.md)`.
+For **command model binding**, see `[documentation/COMMAND_WORKFLOW.md](documentation/COMMAND_WORKFLOW.md)`.
 
 ## Rules
 
