@@ -97,12 +97,12 @@ The current Plan 1 (Branch Kickoff Automation) lands the kit-wide foundation (Ph
 - **Scope decision:** Root `README.md` and `CHANGELOG.md` remain canonical for GitHub-first workflows; docs pages provide structured entry points for static-site hosting.
 - **Out of scope remains:** `docusaurus.config.js` and hosted demo-site wiring (consumer-owned integration surface).
 
-### Help-docs authoring skill (Plan 5)
+### Help-docs authoring skill (Plan 5) — shipped
 
-- **Goal:** New `skills/help-docs-author/SKILL.md` and `commands/project-help-docs.md` that automate generating end-user help-center documentation from frontend + backend code, following a five-phase Discovery → Code-reading → Plan → Generation → Audit workflow.
-- **Scope:** Skill + command (parameterized upstream; preloaded with domain defaults in fork mirror); output-folder containment with in-repo refusal by default; vocabulary ban-list grep verification; brand replacement; required Docusaurus frontmatter; opt-out flags (`--no-frontmatter`, `--no-mermaid`, `--no-vocab-grep`, `--allow-in-repo`).
-- **Vendor-neutrality reinforcement:** upstream `SKILL.md` and command markdown contain zero domain vocabulary; pre-push grep blocks any leaks.
-- **Opens after:** Phase C3 completes. Can ship in parallel with Plan 2.
+- **Status:** Implemented and graduated into `[Unreleased]` in `CHANGELOG.md`.
+- **What shipped:** `skills/help-docs-author/SKILL.md` and `commands/project-help-docs.md` with a five-phase code-to-doc workflow and structured result output.
+- **Safety defaults shipped:** output containment, in-repo refusal by default (`--allow-in-repo` override), frontmatter on by default (`--no-frontmatter` override), mermaid/vocabulary toggles (`--no-mermaid`, `--no-vocab-grep`), and pre-write secret scan enforcement.
+- **Docs shipped:** workflow, command matrix, test-plan coverage, and Docusaurus section at `docs/help-docs-authoring/`.
 
 ---
 

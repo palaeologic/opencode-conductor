@@ -21,6 +21,7 @@ Quick reference for **which command** to run and **when**. For numbered scenario
 | `/project-update-mr <projectKey>` | yes | default |
 | `/project-cleanup-candidates <projectKey>` | yes | smaller |
 | `/project-knowledge-refresh <projectKey>` | yes | stronger |
+| `/project-help-docs [<output-root>]` | yes | stronger |
 | `/manual-refresh <projectKey>` | yes | default |
 | `/scaffold-knowledge <projectKey>` | yes | default |
 
@@ -51,6 +52,7 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | After substantial review/progress | `update-mr` | Refreshes `MERGE_REQUEST.md` `OpenCode:` blocks (+ optional legacy ops headings) while preserving narrative; opt-in mermaid prompt for architectural / migration MRs (`no-mermaid` to skip) |
 | Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |
 | Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file; runs silent **knowledge-drift preflight** vs `origin/HEAD` → `main` → `master` (5-min fixed session fetch cache); proposes `## Verification scripts` refresh when script manifests changed; pass `no-preflight` to skip |
+| Generate help-center docs from code | `project-help-docs` | Loads `help-docs-author`; runs Discovery → Code-reading → Plan → Generation → Audit; refuses output outside root; refuses in-repo writes unless `--allow-in-repo`; supports `--no-frontmatter`, `--no-mermaid`, `--no-vocab-grep` |
 | Tools unavailable | `manual-refresh` | Bootstraps if needed, then delta |
 
 ## Positional-argument shorthand
@@ -66,6 +68,7 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | `/project-phases` | additional tokens are flags | `/project-phases myapp no-mermaid` |
 | `/project-update-mr` | additional tokens are flags | `/project-update-mr myapp no-mermaid` |
 | `/project-state` | additional tokens are flags (`verbose`, `no-preflight`) | `/project-state verbose` |
+| `/project-help-docs` | `$1` = output root (optional; prompts if omitted); additional tokens are flags | `/project-help-docs ~/tmp/help --scope=frontend --no-mermaid` |
 
 ## Opt-out flags (cross-command)
 
@@ -116,6 +119,7 @@ Not all commands require the Bun tool engine. When tools are in `tools-off/` or 
 | `/project-branch-kickoff` | No | Works as-is (orchestrates other commands; safety preflight is shell-only) |
 | `/project-branch-explore` | No | Works as-is (git preflight + branch switch + guide generation) |
 | `/project-state` | No | Works as-is (pure read-only report) |
+| `/project-help-docs` | No | Works as-is (filesystem reads/writes + audit checks only) |
 | `/project-refresh` | **Yes** | Use `/manual-refresh` instead |
 | `/project-bootstrap` | **Yes** | Use `/manual-refresh` instead (auto-seeds missing files) |
 

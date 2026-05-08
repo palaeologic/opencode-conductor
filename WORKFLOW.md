@@ -20,7 +20,8 @@ Replace **`<projectKey>`** with your descriptor key. The descriptor file is alwa
 12. [Knowledge across branches](#12-knowledge-across-branches)
 13. [Big branch kickoff](#13-big-branch-kickoff)
 14. [Branch explore and project state](#14-branch-explore-and-project-state)
-15. [Worked examples](#15-worked-examples)
+15. [Help docs authoring](#15-help-docs-authoring)
+16. [Worked examples](#16-worked-examples)
 
 ---
 
@@ -709,7 +710,47 @@ Use `verbose` for expanded details.
 
 ---
 
-## 15. Worked examples
+## 15. Help docs authoring
+
+Use `/project-help-docs [<output-root>]` when users want end-user documentation generated from source code without crafting a long custom prompt.
+
+1. Run `/project-help-docs` with an output root (or accept prompt).
+2. Provide one or more scopes (`--scope=<path-or-area>`).
+3. Command loads `help-docs-author` and executes:
+   - Discovery
+   - Code-reading
+   - Plan
+   - Generation
+   - Audit
+4. By default, output includes frontmatter and user-flow mermaid where useful.
+5. Use flags as needed:
+   - `--no-frontmatter`
+   - `--no-mermaid`
+   - `--no-vocab-grep`
+   - `--allow-in-repo` (otherwise in-repo output is refused)
+
+```mermaid
+flowchart TD
+  invoke[/project-help-docs/]
+  parse[Parse output root and scopes]
+  contain{Output path allowed?}
+  refuse[Refuse and request safe path]
+  load[Load help-docs-author skill]
+  phases[Discovery -> Code-reading -> Plan -> Generation -> Audit]
+  vocab{Vocab grep enabled?}
+  secret[Secret scan before final write]
+  result[Structured generation summary]
+
+  invoke --> parse --> contain
+  contain -->|no| refuse
+  contain -->|yes| load --> phases --> vocab
+  vocab -->|yes| secret --> result
+  vocab -->|no| secret --> result
+```
+
+---
+
+## 16. Worked examples
 
 ### Example A — User asks about a function inside a tracked package
 

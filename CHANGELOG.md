@@ -4,6 +4,12 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ## [Unreleased]
 
+### Added — Help-docs authoring skill (Plan 5)
+
+- Added [`skills/help-docs-author/SKILL.md`](skills/help-docs-author/SKILL.md) with the five-phase authoring workflow (Discovery -> Code-reading -> Plan -> Generation -> Audit) for generating end-user help-center documentation from source code.
+- Added [`commands/project-help-docs.md`](commands/project-help-docs.md) with argumentized output root/scope handling, output containment checks, in-repo refusal by default, and opt-out flags (`--no-frontmatter`, `--no-mermaid`, `--no-vocab-grep`, `--allow-in-repo`).
+- Added Docusaurus docs section [`docs/help-docs-authoring/`](docs/help-docs-authoring/) and updated workflow/command/test docs for command discoverability and verification.
+
 ### Added — Kit Docusaurus restructure (Plan 4)
 
 - Added Docusaurus entry page [`docs/intro.md`](docs/intro.md) and categorized docs sections for workflows, commands, contributing, skills, and knowledge (`_category_.yml` + landing pages).

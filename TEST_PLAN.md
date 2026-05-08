@@ -723,6 +723,32 @@ Use a descriptor with `descriptorSchemaVersion: 2` and at least one `pseudoPacka
 
 ---
 
+## 14d) `/project-help-docs` — help-center docs generation
+
+> Test code-to-doc generation flow with containment and audit guards.
+
+### Steps
+
+1. Run `/project-help-docs ~/tmp/conductor-help --scope=commands --scope=skills`.
+2. Confirm command loads `help-docs-author`.
+3. Confirm generated docs include frontmatter by default.
+4. Re-run with `--no-frontmatter --no-mermaid` and verify behavior changes.
+5. Re-run with an in-repo output path and no `--allow-in-repo`.
+6. Re-run with `--allow-in-repo` and confirm command proceeds.
+7. Re-run with `--no-vocab-grep` and confirm vocabulary audit is skipped.
+
+### Expected
+
+- Structured result includes output root, files written, and audit flags.
+- In-repo output is refused by default.
+- `--allow-in-repo` overrides the default refusal.
+- Frontmatter and mermaid toggles are honored.
+- Vocabulary grep toggle is honored.
+
+**Pass**: command enforces containment and toggles while producing user-facing docs from source evidence.
+
+---
+
 ## 15) Pass/Fail checklist
 
 - [ ] Preflight: all files present, no stale artifacts
@@ -756,4 +782,5 @@ Use a descriptor with `descriptorSchemaVersion: 2` and at least one `pseudoPacka
 - [ ] `/project-branch-kickoff`: drift gate behavior correct; bootstrap-vs-refresh decision correct; phases mermaid prompt fires when > 3; scaffold dry-run before discovery; opt-out flags honored
 - [ ] `/project-branch-explore`: guide generated with four sections; no browser automation; branch switch confirms; dirty-tree refusal works
 - [ ] `/project-state`: read-only report contains expected sections; `verbose` and `no-preflight` flags honored
+- [ ] `/project-help-docs`: five-phase generation runs; output containment enforced; in-repo refusal default works; `--allow-in-repo`, `--no-frontmatter`, `--no-mermaid`, and `--no-vocab-grep` flags honored
 - [ ] Rule layering: both generic + overlay loaded correctly

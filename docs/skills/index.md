@@ -12,6 +12,7 @@ Core skills:
 - `branch-explore`
 - `discover-knowledge`
 - `plan-phases`
+- `help-docs-author`
 - `review-branch`
 
 See `README.md` for the full catalog and permission recommendations.

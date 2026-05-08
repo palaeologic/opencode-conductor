@@ -11,3 +11,4 @@ High-value command groups:
 - Branch kickoff and exploration: `/project-branch-new`, `/project-branch-kickoff`, `/project-branch-explore`, `/project-state`
 - Review and MR: `/project-review`, `/project-review-sync`, `/project-update-mr`
 - Knowledge maintenance: `/scaffold-knowledge`, `/project-knowledge-refresh`
+- Help docs generation: `/project-help-docs`

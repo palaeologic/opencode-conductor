@@ -19,6 +19,7 @@ Branch-local context (default **under `~/.config`**, or **beside the clone** whe
 - [`README.md`](README.md) — canonical guide (architecture, workflows, commands, rules, skills, cost analysis)
 - [`docs/intro.md`](docs/intro.md) — Docusaurus entry point for this kit
 - [`docs/architecture/`](docs/architecture/) — 10-page architecture deep dive with mermaid diagrams
+- [`docs/help-docs-authoring/`](docs/help-docs-authoring/) — code-to-help-doc workflow and publishing guardrails
 - [`WORKFLOW.md`](WORKFLOW.md) — **canonical** step-by-step scenarios (init, tracked vs lite, sessions, verification, knowledge, **review** with preflight, skills, Mermaid diagrams, **knowledge across branches**, **worked examples**); start here for ordered procedures
 - [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — quick command decision matrix
 - [`TEST_PLAN.md`](TEST_PLAN.md) — smoke test checklist
@@ -288,6 +289,7 @@ flowchart TD
 | `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
 | `/scaffold-knowledge <projectKey>`         | **Once after init:** scaffold shared `AGENTS.md` (not per-branch), including starter `## Verification scripts` tables in area files. Optional re-run when areas/packages/stack change |
+| `/project-help-docs [<output-root>]`       | Generate help-center docs from code with `help-docs-author` (Discovery -> Code-reading -> Plan -> Generation -> Audit), output containment, and vocabulary/secret guardrails |
 | `/manual-refresh <projectKey>`             | No tool-calling; merges bootstrap+refresh behavior when needed                                        |
 
 ### Verification
@@ -315,6 +317,7 @@ Examples: `/project-init myapp`, `/project-refresh myapp`, `/check-types front-e
 | **Big-project kickoff** — scaffold a fresh / empty branch | `/project-branch-kickoff [<projectKey>]` (drafts `PHASES.md`, runs knowledge discovery, writes audit trail) |
 | **Explore a feature branch manually** | `/project-branch-explore [<branch>]` (generates `EXPLORE_GUIDE.md` with setup + URL paths + click-through actions) |
 | **Inspect current kit/git state (read-only)** | `/project-state` |
+| **Generate end-user help docs from source code** | `/project-help-docs [<output-root>]` (writes docs with frontmatter/mermaid/vocabulary controls) |
 | Review before merge | `/manual-refresh` → `/project-review` (**WORKFLOW §9**, with auto knowledge preflight per **§11**); optional `review-branch` skill |
 | Add a new package / module to tracked knowledge | `/scaffold-knowledge <projectKey>` (discovery); `/scaffold-knowledge <projectKey> list` to audit |
 | Author or refine `PHASES.md` for a long-lived branch | `/project-phases <projectKey>` (loads `plan-phases` skill) |
@@ -399,6 +402,7 @@ Skills are NOT loaded unless relevant — unlike rules which are always present.
 | `branch-explore` | User wants a manual branch exploration guide (no browser automation) | Produces `EXPLORE_GUIDE.md` from MR narrative + commits + code comments + dependency diffs. |
 | `discover-knowledge` | Authoring or refreshing `AGENTS.md`; running `/scaffold-knowledge`, `/project-knowledge-refresh`, or the `/project-review` preflight | Senior Architect lens; promotion rubric; source-path existence guard for leaf scaffolds. |
 | `plan-phases` | Drafting or refining `PHASES.md` for a long-lived branch | Senior Architect / PM lens; phase template, sizing heuristics, anti-patterns. |
+| `help-docs-author` | User wants help-center / user-facing docs generated from code | Runs the five-phase authoring workflow with output containment, vocabulary audit, and frontmatter defaults. |
 | `review-branch` | User asks to review a branch, or says "check before merge" | Orchestrates: `/manual-refresh` → `/project-review` with deterministic verification-scripts synthesis (falls back to generic checks when missing) → optional `/project-update-mr` or `/project-review-sync` |
 | `session-lifecycle` | User starts/ends a session, or asks "how should I checkpoint?" | Guides the refresh → work → checkpoint → close flow with decision points |
 | `onboard-area` | User asks about unfamiliar code, or agent needs to understand a new area before making changes | Reads AGENTS.md hierarchy, scans key files, builds a mental model |
