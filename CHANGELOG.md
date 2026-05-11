@@ -6,7 +6,7 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ### Fixed — OpenCode tools (Node ESM)
 
-- **`tools/opencode_refresh_context.ts`**, **`tools/opencode_bootstrap_branch.ts`** — relative import now **`./_opencode_engine.ts`** (explicit extension). Node’s ESM resolver does not infer **`.ts`** from **`./_opencode_engine`**, which caused **`ERR_MODULE_NOT_FOUND`** when OpenCode ran tools from **`~/.config/opencode/tools/`**.
+- **`tools-off/opencode_refresh_context.ts`**, **`tools-off/opencode_bootstrap_branch.ts`** — relative import now **`./_opencode_engine.ts`** (explicit extension). Node’s ESM resolver does not infer **`.ts`** from **`./_opencode_engine`**, which caused **`ERR_MODULE_NOT_FOUND`** when OpenCode ran tools from **`~/.config/opencode/tools/`**.
 
 ### Changed — Installer
 
@@ -14,7 +14,7 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ### Changed — Bootstrap / phases / refresh handoff
 
-- **`KNOWLEDGE.md`** is the canonical **leaf** durable knowledge filename (source-tree mirror); project **`AGENTS.md`** under `opencodeProjectRootPath` stays **rules-only**. **`/project-init`** drafts **`areas.*.areaAgentsPath`** → per-area **`AGENTS.md`** (not `areaKnowledgePath` by default). Engine refresh: optional project **`KNOWLEDGE.md`**, then **`areaKnowledgePath`** / sibling area **`KNOWLEDGE.md`** / **`areaAgentsPath`** (`tools/_opencode_engine.ts`).
+- **`KNOWLEDGE.md`** is the canonical **leaf** durable knowledge filename (source-tree mirror); project **`AGENTS.md`** under `opencodeProjectRootPath` stays **rules-only**. **`/project-init`** drafts **`areas.*.areaAgentsPath`** → per-area **`AGENTS.md`** (not `areaKnowledgePath` by default). Engine refresh: optional project **`KNOWLEDGE.md`**, then **`areaKnowledgePath`** / sibling area **`KNOWLEDGE.md`** / **`areaAgentsPath`** (`tools-off/_opencode_engine.ts`).
 - **Docs + commands:** PATH_CONTRACT, README, workflow maps, knowledge manual, `project-init`, `scaffold-knowledge`, `manual-refresh`, descriptor reference, and examples aligned on **area `AGENTS.md` + leaf `KNOWLEDGE.md`** tiering.
 - **`/project-bootstrap`**: optional inline phases drafting after MR paste-ingest; chains to **`/project-phases`** / `plan-phases` without conflicting duplicate narratives (`commands/project-bootstrap.md`).
 - **`/project-phases`**: conditional mode when MR narrative is already substantive; diff-first evidence order (`commands/project-phases.md`, `skills/plan-phases/SKILL.md`).

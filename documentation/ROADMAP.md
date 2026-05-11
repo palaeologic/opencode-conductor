@@ -17,7 +17,7 @@ This file is intentionally lightweight. Add, remove, and reorder entries freely.
 
 ### Engine: load `descriptor.json` from repo
 
-- **Idea:** Allow [`tools/_opencode_engine.ts`](../tools/_opencode_engine.ts) to discover `descriptor.json` inside the repo (e.g. `<git-root>/.opencode-conductor/descriptor.json`) instead of always reading from `~/.config/opencode/projects/<projectKey>/descriptor.json`.
+- **Idea:** Allow [`tools-off/_opencode_engine.ts`](../tools-off/_opencode_engine.ts) to discover `descriptor.json` inside the repo (e.g. `<git-root>/.opencode-conductor/descriptor.json`) instead of always reading from `~/.config/opencode/projects/<projectKey>/descriptor.json`.
 - **Why:** Closes the loop on **project-local mode**. Today durable data can live beside the repo, but the descriptor file itself still lives in OpenCode config — see [`PATH_CONTRACT.md`](PATH_CONTRACT.md).
 - **Open questions:** Precedence rules (repo wins? config wins? per-project override?). How do existing tooling commands (`opencode_bootstrap_branch`, `opencode_refresh_context`) discover the descriptor without a `projectKey` argument? Does this require a new `/project-discover` command?
 - **Trade-offs:** Engine work and a `PATH_CONTRACT.md v2` section vs symmetry between control-plane and data-plane in project-local mode.

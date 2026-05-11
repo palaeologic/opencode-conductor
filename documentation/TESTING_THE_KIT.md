@@ -8,7 +8,7 @@ Use this page when you want a fast checklist; use `documentation/TEST_PLAN.md` w
 
 - OpenCode is installed and running.
 - The kit is installed via `bin/install-opencode-conductor.sh` (copies `commands/`, `skills/`, and `tools/` into `~/.config/opencode/`).
-- **Bun engine sanity (optional):** `bun build tools/_opencode_engine.ts --target=bun --outfile=/tmp/opencode-engine-check.js` — use **`--target=bun`**; a bare `bun build` may pick a browser target and fail on Node built-ins.
+- **Bun engine sanity (optional):** `bun build tools-off/_opencode_engine.ts --target=bun --outfile=/tmp/opencode-engine-check.js` — use **`--target=bun`**; a bare `bun build` may pick a browser target and fail on Node built-ins.
 - A test project exists with `descriptor.json` either created via `/project-init` or already present.
 - Working tree is clean.
 

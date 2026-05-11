@@ -1,6 +1,6 @@
 # Path contract (kit tools vs descriptor)
 
-This document records **Phase 0** behavior for Conductor Bun tools in [`tools/_opencode_engine.ts`](../tools/_opencode_engine.ts). It matters for **global vs project-local durable state**: only fields that the engine reads from `descriptor.json` can move into the repo; the descriptor file location has a separate contract.
+This document records **Phase 0** behavior for Conductor Bun tools in [`tools-off/_opencode_engine.ts`](../tools-off/_opencode_engine.ts) (loaded by `tools-off/opencode_*.ts`). The installer places these under **`~/.config/opencode/tools-off/`** so they are not mixed into **`tools/`**, where OpenCode may auto-register every module as a provider tool (problematic for Bedrock **`toolSpec.description`** validation). It matters for **global vs project-local durable state**: only fields that the engine reads from `descriptor.json` can move into the repo; the descriptor file location has a separate contract.
 
 ## What the engine honors from `descriptor.json`
 

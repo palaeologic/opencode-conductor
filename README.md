@@ -69,11 +69,11 @@ bash bin/install-opencode-conductor.sh
 bash bin/install-opencode-conductor.sh --dry-run
 ```
 
-Re-run `bash bin/install-opencode-conductor.sh` after each `git pull` so `~/.config/opencode/` stays in sync with kit updates. The installer copies **`commands/`**, **`skills/`**, and **`tools/`** (Bun `opencode_*` sources) into `~/.config/opencode/`.
+Re-run `bash bin/install-opencode-conductor.sh` after each `git pull` so `~/.config/opencode/` stays in sync with kit updates. The installer copies **`commands/`**, **`skills/`**, and **`tools-off/`** (Bun `opencode_*` sources, parked outside `tools/` to avoid Bedrock `toolSpec.description` validation errors) into `~/.config/opencode/`.
 
 **Updating the kit:** `cd` into the clone you use as install source, `git pull`, run `bash bin/install-opencode-conductor.sh`, restart OpenCode if slash-commands look stale. If `CHANGELOG.md` marks **BREAKING**, read [`documentation/UPGRADING.md`](documentation/UPGRADING.md) before merging descriptor or `opencode.json` changes.
 
-**Typecheck the Bun engine (optional):** `bun build tools/_opencode_engine.ts --target=bun --outfile=/tmp/opencode-engine-check.js` — plain `bun build` without `--target=bun` may fail on Node built-ins because the bundler defaults to a browser target.
+**Typecheck the Bun engine (optional):** `bun build tools-off/_opencode_engine.ts --target=bun --outfile=/tmp/opencode-engine-check.js` — plain `bun build` without `--target=bun` may fail on Node built-ins because the bundler defaults to a browser target.
 
 Teams that maintain a **private downstream fork** should `git pull` and install from **that fork** so org-tuned commands stay consistent (upstream README stays vendor-neutral).
 
@@ -81,7 +81,7 @@ Teams that maintain a **private downstream fork** should `git pull` and install 
   - `rules/*` → `~/.config/opencode/rules/` (manual or your fork installer — upstream **`bin/install-opencode-conductor.sh`** does not ship `rules/`)
   - `commands/*` → `~/.config/opencode/commands/` (**included** in `bin/install-opencode-conductor.sh`)
   - `skills/*` → `~/.config/opencode/skills/` (**included**)
-  - `tools/*` → `~/.config/opencode/tools/` (**included** — Bun `opencode_*` entrypoints; still register tools in `opencode.json` when your provider supports it)
+  - `tools-off/*` → `~/.config/opencode/tools-off/` (**included** — Bun `opencode_*` sources; NOT copied to `tools/` — Bedrock rejects files there without valid `toolSpec.description`)
 2. Create `**descriptor.json`** (choose one):
   - **Guided**: run `/project-init <projectKey>` — scans repo, drafts descriptor, you approve
   - **Manual**: copy `[descriptors/descriptor.template.json](descriptors/descriptor.template.json)` to `~/.config/opencode/projects/<projectKey>/descriptor.json` and fill in
@@ -104,7 +104,7 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 - **Stale paths under `~/.config/opencode/`** (safe to remove once you use kit commands + README): redundant top-level runbooks such as `documentation/COMMAND_WORKFLOW.md`, `OPENCODE_HANDOFF_GENERIC.md`, `OPENCODE_HANDOFF_<PROJECT>.md` if you still have copies there.
 - **Wrong skills location**: delete `~/.config/opencode/projects/<projectKey>/skills/` — procedural guides belong in OpenCode’s global [`skills/`](skills/) (or this kit’s `skills/`), not under a project folder.
 - **Descriptor drift**: ensure `handoffModeDefault` is set; use `mrFilenames` (array) instead of legacy `mrFilename` (string); add `subtaskModels` (can start as `{}`); add optional `MR.md` to `mrFilenames` only if you copy [`templates/mr/MR.md`](templates/mr/MR.md) into `_templates/mr/`.
-- **Tools**: if you keep plugins disabled, a `tools-off/` folder is fine — move wrappers back to `tools/` when provider/tool-calling is stable (see [Manual mode (tools disabled)](#manual-mode-tools-disabled) below).
+- **Tools**: keep sources in `tools-off/` — do **not** copy to `tools/`. Bedrock and some providers reject tool registrations when any file lacks a valid `toolSpec.description` (which `_opencode_engine.ts` does not have). Use `/manual-refresh` for all sessions.
 
 **Suggested order:** copy `commands/` → layer `HANDOFF_GENERIC.md` + trim overlay → delete stale files above → upgrade descriptor fields → register commands/models in `opencode.json`.
 
@@ -117,8 +117,8 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 | ------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
 | Descriptor template | `[descriptors/descriptor.template.json](descriptors/descriptor.template.json)`                                 | Schema baseline                                             |
 | Example descriptor  | `[descriptors/examples/example-project.descriptor.json](descriptors/examples/example-project.descriptor.json)` | Filled-in reference                                         |
-| Engine              | `[tools/_opencode_engine.ts](tools/_opencode_engine.ts)`                                                       | Bootstrap + refresh logic                                   |
-| Tool wrappers       | `[tools/opencode_*.ts](tools/)`                                                                                | OpenCode plugin interface                                   |
+| Engine              | `[tools-off/_opencode_engine.ts](tools-off/_opencode_engine.ts)`                                                       | Bootstrap + refresh logic                                   |
+| Tool wrappers       | `[tools-off/opencode_*.ts](tools-off/)`                                                                                | OpenCode plugin interface (parked outside `tools/`)         |
 | Commands            | `[commands/](commands/)`                                                                                       | Slash-command markdown templates                            |
 | Branch templates    | `[templates/mr/*](templates/mr/)`                                                                              | `MERGE_REQUEST.md`, `LOG.md`, optional `PHASES.md`, `MR.md` |
 | Workflow scenarios  | [`documentation/WORKFLOW.md`](documentation/WORKFLOW.md)                                                                                    | Step-by-step review / MR / handoff flows |

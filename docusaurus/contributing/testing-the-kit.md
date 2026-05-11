@@ -9,7 +9,7 @@ This page walks you through testing every command and skill in the kit using Ope
 
 The terse contract version of this workflow lives at `documentation/TESTING_THE_KIT.md`. The complete smoke-test script with setup details lives at `documentation/TEST_PLAN.md`.
 
-**Bun engine sanity (optional):** `bun build tools/_opencode_engine.ts --target=bun --outfile=/tmp/opencode-engine-check.js` — the bundler defaults to a browser target without **`--target=bun`**, which can fail on Node built-ins.
+**Bun engine sanity (optional):** `bun build tools-off/_opencode_engine.ts --target=bun --outfile=/tmp/opencode-engine-check.js` — the bundler defaults to a browser target without **`--target=bun`**, which can fail on Node built-ins.
 
 ## Why a tutorial page
 
