@@ -1,5 +1,5 @@
 import { tool } from "@opencode-ai/plugin";
-import { refreshContextEngine } from "./_opencode_engine";
+import { refreshContextEngine } from "./_opencode_engine.ts";
 
 export default tool({
   description: "Generic: summarize git delta and recommend re-read files.",

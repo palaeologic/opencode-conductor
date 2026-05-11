@@ -4,6 +4,10 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ## [Unreleased]
 
+### Fixed — OpenCode tools (Node ESM)
+
+- **`tools/opencode_refresh_context.ts`**, **`tools/opencode_bootstrap_branch.ts`** — relative import now **`./_opencode_engine.ts`** (explicit extension). Node’s ESM resolver does not infer **`.ts`** from **`./_opencode_engine`**, which caused **`ERR_MODULE_NOT_FOUND`** when OpenCode ran tools from **`~/.config/opencode/tools/`**.
+
 ### Changed — Installer
 
 - **`bin/install-opencode-conductor.sh`** — now copies **`tools/`** (Bun `opencode_*` sources) into `~/.config/opencode/tools/` alongside commands and skills; **`copy_tree`** uses **`$src_root/$rel_path`** so **`skills/`** and **`tools/`** actually install when the script cwd is the repo root (previous relative paths skipped those trees). Usage reminds that tool-less runtimes should still use **`/manual-refresh`** per [`commands/manual-refresh.md`](commands/manual-refresh.md). README documents **`bun build … --target=bun`** for engine typechecks.

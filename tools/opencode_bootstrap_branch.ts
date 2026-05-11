@@ -1,5 +1,5 @@
 import { tool } from "@opencode-ai/plugin";
-import { bootstrapBranchEngine } from "./_opencode_engine";
+import { bootstrapBranchEngine } from "./_opencode_engine.ts";
 
 export default tool({
   description: "Generic: create per-branch handoff context if missing.",
