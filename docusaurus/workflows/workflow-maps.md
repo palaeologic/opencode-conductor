@@ -7,7 +7,7 @@ sidebar_position: 3
 
 Tutorial copy of the **normative** mermaid reference at [`documentation/WORKFLOW_MAPS.md`](../../documentation/WORKFLOW_MAPS.md). When Bedrock or policy disables Bun tools, substitute **`/manual-refresh`** for **`/project-refresh`** and the same **`## Handoff refresh result`** shape ([`commands/manual-refresh.md`](../../commands/manual-refresh.md)).
 
-**Legend:** **Rules** = project `AGENTS.md` + HANDOFF docs. **Branch files** = `MERGE_REQUEST.md`, `LOG.md`, `PHASES.md`, optional `REVIEW.md`. **Repo knowledge** = per-area **`AGENTS.md`** (default anchor) + leaf **`KNOWLEDGE.md`**; optional project-wide **`KNOWLEDGE.md`**; optional **`areaKnowledgePath`** or sibling area **`KNOWLEDGE.md`** when teams split area facts from area rules.
+**Legend:** **Rules** = project `AGENTS.md` + HANDOFF docs. **Branch files** = `MERGE_REQUEST.md`, `LOG.md`, `PHASES.md`, optional `REVIEW.md`. **Repo knowledge** = in-repo **`AGENTS.md`** per area (recommended; auto-discovered by OpenCode via directory traversal, pointed to by `areaAgentsPath`) + leaf **`KNOWLEDGE.md`**; optional project-wide **`KNOWLEDGE.md`**; optional **`areaKnowledgePath`** for teams that split area facts from area rules.
 
 ## A — Session entry (tool lane)
 

@@ -91,6 +91,22 @@ This command generates **`KNOWLEDGE.md`** files for detected project areas and *
 
    Wait for user confirmation. Skip this step on subsequent re-runs once area files exist.
 
+8.5. **Placement prompt**: For each area (and for leaf scaffolds), ask the user where to place the generated file:
+
+   > "Where should the AGENTS.md for `<area>` be placed?"
+   > - **(A) In the project repo** at `<projectRootPath>/<pathPrefix>/AGENTS.md` (recommended — visible to teammates, auto-discovered by OpenCode)
+   > - **(B) In the conductor config** at `<opencodeProjectRootPath>/<area>/AGENTS.md` (private, not committed to project repo)
+
+   Default to **(A)** (in-repo). If the target path already has an `AGENTS.md`:
+   > "An AGENTS.md already exists at `<path>`. What would you like to do?"
+   > - **(A) Merge** — prepend/append generated sections into the existing file, preserving all existing content
+   > - **(B) Skip** — leave the existing file untouched
+   > - **(C) Place in conductor config instead** — write to `<opencodeProjectRootPath>/<area>/AGENTS.md`
+
+   Never replace an existing in-repo AGENTS.md without explicit user consent.
+
+   When the user chooses in-repo placement, update the descriptor's `areaAgentsPath` to point at the in-repo path (e.g., `<projectRootPath>/<pathPrefix>/AGENTS.md`). This ensures the refresh engine reads the correct file.
+
 9. **Scan each selected area** — for each area, inspect the actual directory at `<projectRootPath>/<area.pathPrefix>`:
    - Look for `package.json` → extract `dependencies`, `devDependencies`, `scripts`
    - Look for `tsconfig.json` → note TypeScript
@@ -100,9 +116,11 @@ This command generates **`KNOWLEDGE.md`** files for detected project areas and *
    - Look for `Makefile` / `Justfile` → extract targets as commands
    - List top-level subdirectories for folder structure hints
 
-10. **Generate area-level orientation** — for each area, resolve the write path:
+10. **Generate area-level orientation** — for each area, resolve the write path based on step 8.5 placement choice:
+    - If user chose in-repo **(A)**: write to `<projectRootPath>/<pathPrefix>/AGENTS.md`.
+    - If user chose conductor config **(B)**: write to `<opencodeProjectRootPath>/<area>/AGENTS.md`.
     - If **`areas[area].areaKnowledgePath`** is set, merge into that path (teams using a dedicated area **`KNOWLEDGE.md`**).
-    - Else resolve **`areas[area].areaAgentsPath`** (typically `.../<area>/AGENTS.md`) and merge into that **`AGENTS.md`** file. **Do not** create a sibling **`KNOWLEDGE.md`** at the area root by default — `/project-init` uses **area `AGENTS.md` only** unless the user later adds **`areaKnowledgePath`** or an optional sibling file.
+    - Else resolve **`areas[area].areaAgentsPath`** and merge into that file.
     - If neither field is present (degenerate descriptor), default to `<opencodeProjectRootPath>/<areaKey>/AGENTS.md` using the `areas` object key as `<areaKey>`.
 
     ```markdown
