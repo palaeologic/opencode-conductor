@@ -4,6 +4,22 @@ All notable changes to this kit are documented here. This project follows a ligh
 
 ## [Unreleased]
 
+### Changed — Installer
+
+- **`bin/install-opencode-conductor.sh`** — now copies **`tools/`** (Bun `opencode_*` sources) into `~/.config/opencode/tools/` alongside commands and skills; **`copy_tree`** uses **`$src_root/$rel_path`** so **`skills/`** and **`tools/`** actually install when the script cwd is the repo root (previous relative paths skipped those trees). Usage reminds that tool-less runtimes should still use **`/manual-refresh`** per [`commands/manual-refresh.md`](commands/manual-refresh.md). README documents **`bun build … --target=bun`** for engine typechecks.
+
+### Changed — Bootstrap / phases / refresh handoff
+
+- **`KNOWLEDGE.md`** is the canonical **leaf** durable knowledge filename (source-tree mirror); project **`AGENTS.md`** under `opencodeProjectRootPath` stays **rules-only**. **`/project-init`** drafts **`areas.*.areaAgentsPath`** → per-area **`AGENTS.md`** (not `areaKnowledgePath` by default). Engine refresh: optional project **`KNOWLEDGE.md`**, then **`areaKnowledgePath`** / sibling area **`KNOWLEDGE.md`** / **`areaAgentsPath`** (`tools/_opencode_engine.ts`).
+- **Docs + commands:** PATH_CONTRACT, README, workflow maps, knowledge manual, `project-init`, `scaffold-knowledge`, `manual-refresh`, descriptor reference, and examples aligned on **area `AGENTS.md` + leaf `KNOWLEDGE.md`** tiering.
+- **`/project-bootstrap`**: optional inline phases drafting after MR paste-ingest; chains to **`/project-phases`** / `plan-phases` without conflicting duplicate narratives (`commands/project-bootstrap.md`).
+- **`/project-phases`**: conditional mode when MR narrative is already substantive; diff-first evidence order (`commands/project-phases.md`, `skills/plan-phases/SKILL.md`).
+- **`/project-update-mr`**: default **A** when MR narrative is already filled (`commands/project-update-mr.md`).
+- **`/project-refresh`** / **`/manual-refresh`**: `missing_branch_context`, `branch_context_status`, mandatory **`next_steps`** when context is missing, staleness hints, session de-duplication guidance; manual path stays at parity with tool JSON (`commands/project-refresh.md`, `commands/manual-refresh.md`, `skills/session-lifecycle/SKILL.md`).
+- **`/project-branch-kickoff`**: retro / **retroactive** copy and readiness gate clarifications (`commands/project-branch-kickoff.md`).
+- **`/project-checkpoint`** / **`/project-close`**: use resolved **`<projectKey>`** (not raw `$ARGUMENTS`) in `opencode_refresh_context`, bootstrap hints, and manual descriptor paths (`commands/project-checkpoint.md`, `commands/project-close.md`).
+- **Docs:** [`documentation/PATH_CONTRACT.md`](documentation/PATH_CONTRACT.md) (refresh handoff §, descriptor pairs), [`documentation/WORKFLOW_MAPS.md`](documentation/WORKFLOW_MAPS.md), [`docusaurus/workflows/workflow-maps.md`](docusaurus/workflows/workflow-maps.md), [`documentation/EXTENDING.md`](documentation/EXTENDING.md) (paired keys), README / COMMAND_WORKFLOW / TESTING_THE_KIT updates for KNOWLEDGE + manual parity.
+
 ### Changed - Docs split (docusaurus + documentation)
 
 - Replaced ambiguous `docs/` tree with two top-level namespaces: [`/documentation/`](documentation/) for terse contract MDs and [`/docusaurus/`](docusaurus/) for the substantive, diagram-rich user manual.

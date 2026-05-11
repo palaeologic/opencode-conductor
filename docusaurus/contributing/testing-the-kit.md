@@ -9,6 +9,8 @@ This page walks you through testing every command and skill in the kit using Ope
 
 The terse contract version of this workflow lives at `documentation/TESTING_THE_KIT.md`. The complete smoke-test script with setup details lives at `documentation/TEST_PLAN.md`.
 
+**Bun engine sanity (optional):** `bun build tools/_opencode_engine.ts --target=bun --outfile=/tmp/opencode-engine-check.js` — the bundler defaults to a browser target without **`--target=bun`**, which can fail on Node built-ins.
+
 ## Why a tutorial page
 
 You are reading this if you want to:
@@ -57,7 +59,7 @@ Expected highlights:
 
 - Repo scan output
 - Draft `descriptor.json` shown for approval
-- After approval, `_templates/mr/`, `AGENTS.md`, and descriptor written
+- After approval, `_templates/mr/`, project **rules** `AGENTS.md`, **`areas.*.areaAgentsPath`** entries (per-area **`AGENTS.md`**), and descriptor written
 
 ## 2. Scaffold shared knowledge
 
@@ -72,7 +74,9 @@ Verify safety: introduce a directory with a name violating the regex; verify dry
 
 ## 3. Refresh and bootstrap
 
-Run `/project-refresh <projectKey>`. On a new branch, expect `missing_branch_context`. Run `/project-bootstrap <projectKey>`. Run `/project-refresh <projectKey>` again and confirm the structured `## Handoff refresh result` block.
+Run `/project-refresh <projectKey>`. On a new branch, expect `missing_branch_context`. Run `/project-bootstrap <projectKey>`. Run `/project-refresh <projectKey>` again and confirm the structured `## Handoff refresh result` block (`branch_context_status`, `next_steps`, `reread_files` order: rules `AGENTS.md` → optional project `KNOWLEDGE.md` → active area doc → branch files).
+
+**Manual-path smoke:** repeat the same sequence using **`/manual-refresh`** only (no `opencode_*` tools) and confirm the **same** handoff keys and ordering.
 
 ## 4. Branch lifecycle
 
@@ -140,7 +144,7 @@ If a command leaves you in a partially-changed state:
 
 - Run `/project-state` to inspect git state and kit-stash entries.
 - Drop kit-stashes you do not want with `git stash drop <ref>`.
-- Remove sparse `AGENTS.md` files you no longer want; convention-path writes are non-destructive.
+- Remove sparse **`KNOWLEDGE.md`** (or legacy leaf `AGENTS.md`) files you no longer want; convention-path writes are non-destructive.
 
 ## Troubleshooting
 

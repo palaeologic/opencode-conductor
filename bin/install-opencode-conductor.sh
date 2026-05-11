@@ -15,6 +15,9 @@ Usage: bash bin/install-opencode-conductor.sh [options]
 
 Sync OpenCode kit files from this repository into ~/.config/opencode.
 
+Copies commands/, skills/, and tools/ (Bun entrypoints: opencode_* tools). When
+opencode_* tools are unavailable in your runtime, use /manual-refresh (see commands/manual-refresh.md).
+
 Options:
   -n, --dry-run        Show planned copy operations without writing
   --with-templates     Seed templates even when target files are missing
@@ -70,14 +73,13 @@ copy_glob() {
 copy_tree() {
   local src_root="$1"
   local dst_root="$2"
-  local src_file
   local rel_path
 
   [ -d "$src_root" ] || return 0
 
-  while IFS= read -r src_file; do
-    rel_path="${src_file#"$src_root"/}"
-    copy_file_if_exists "$src_file" "$dst_root/$rel_path"
+  while IFS= read -r rel_path; do
+    [ -n "$rel_path" ] || continue
+    copy_file_if_exists "$src_root/$rel_path" "$dst_root/$rel_path"
   done < <(cd "$src_root" && find . -type f -print | sed 's|^\./||')
 }
 
@@ -106,6 +108,7 @@ warn_if_non_default_target
 
 copy_glob "$REPO_ROOT/commands" "*.md" "$TARGET_ROOT/commands"
 copy_tree "$REPO_ROOT/skills" "$TARGET_ROOT/skills"
+copy_tree "$REPO_ROOT/tools" "$TARGET_ROOT/tools"
 
 template_src="$REPO_ROOT/templates/mr/MERGE_REQUEST.md"
 template_dst="$TARGET_ROOT/templates/mr/MERGE_REQUEST.md"
@@ -114,3 +117,4 @@ if [ "$WITH_TEMPLATES" -eq 1 ] || [ -f "$template_dst" ]; then
 fi
 
 echo "Synced $SYNCED_COUNT files from $REPO_ROOT to $TARGET_ROOT"
+echo "Note: Register Bun tools in opencode.json if needed. No-tool sessions: /manual-refresh per commands/manual-refresh.md."

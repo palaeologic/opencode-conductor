@@ -33,6 +33,7 @@ When the two diverge, `/documentation/` wins.
 ### Contract docs (`/documentation/`)
 
 - [`documentation/WORKFLOW.md`](documentation/WORKFLOW.md) — **canonical** step-by-step scenarios; start here for ordered procedures
+- [`documentation/WORKFLOW_MAPS.md`](documentation/WORKFLOW_MAPS.md) — mermaid maps for refresh / bootstrap / phases / kickoff (tool lane vs `/manual-refresh`)
 - [`documentation/COMMAND_WORKFLOW.md`](documentation/COMMAND_WORKFLOW.md) — quick command decision matrix
 - [`documentation/PATH_CONTRACT.md`](documentation/PATH_CONTRACT.md) — path resolution, structured-knowledge schema, frontmatter conventions, security rules, mermaid policy, audit trail contract, kit-stash convention, knowledge-across-branches modes
 - [`documentation/TEST_PLAN.md`](documentation/TEST_PLAN.md) — smoke test checklist
@@ -50,8 +51,8 @@ When the two diverge, `/documentation/` wins.
 - [`docusaurus/architecture/`](docusaurus/architecture/) — 10-page architecture deep dive with mermaid diagrams
 - [`docusaurus/commands/`](docusaurus/commands/) — full command catalog (per-family pages)
 - [`docusaurus/skills/`](docusaurus/skills/) — full skill catalog (per-skill pages)
-- [`docusaurus/knowledge/`](docusaurus/knowledge/) — AGENTS.md hierarchy, source-tree-mirror convention, structured-knowledge tables, drift preflight
-- [`docusaurus/workflows/`](docusaurus/workflows/) — tutorial walkthroughs of the canonical scenarios
+- [`docusaurus/knowledge/`](docusaurus/knowledge/) — **area `AGENTS.md` + leaf `KNOWLEDGE.md`** model, source-tree-mirror convention, structured-knowledge tables, drift preflight
+- [`docusaurus/workflows/`](docusaurus/workflows/) — tutorial walkthroughs of the canonical scenarios; **[`workflow-maps.md`](docusaurus/workflows/workflow-maps.md)** mirrors the contract mermaid maps
 - [`docusaurus/workflows/mode-and-prompt-playbook.md`](docusaurus/workflows/mode-and-prompt-playbook.md) — one-page guide for Plan vs Build and combining prompts + commands + skills
 - [`docusaurus/contributing/`](docusaurus/contributing/) — testing the kit, extending the kit, using TEST_PLAN.md
 - [`docusaurus/help-docs-authoring/`](docusaurus/help-docs-authoring/) — five-phase end-user docs generation
@@ -68,17 +69,19 @@ bash bin/install-opencode-conductor.sh
 bash bin/install-opencode-conductor.sh --dry-run
 ```
 
-Re-run `bash bin/install-opencode-conductor.sh` after each `git pull` so `~/.config/opencode/` stays in sync with kit updates.
+Re-run `bash bin/install-opencode-conductor.sh` after each `git pull` so `~/.config/opencode/` stays in sync with kit updates. The installer copies **`commands/`**, **`skills/`**, and **`tools/`** (Bun `opencode_*` sources) into `~/.config/opencode/`.
 
 **Updating the kit:** `cd` into the clone you use as install source, `git pull`, run `bash bin/install-opencode-conductor.sh`, restart OpenCode if slash-commands look stale. If `CHANGELOG.md` marks **BREAKING**, read [`documentation/UPGRADING.md`](documentation/UPGRADING.md) before merging descriptor or `opencode.json` changes.
+
+**Typecheck the Bun engine (optional):** `bun build tools/_opencode_engine.ts --target=bun --outfile=/tmp/opencode-engine-check.js` — plain `bun build` without `--target=bun` may fail on Node built-ins because the bundler defaults to a browser target.
 
 Teams that maintain a **private downstream fork** should `git pull` and install from **that fork** so org-tuned commands stay consistent (upstream README stays vendor-neutral).
 
 1. **Pull latest** from GitHub, then copy kit assets into your OpenCode home:
-  - `rules/*` → `~/.config/opencode/rules/`
-  - `commands/*` → `~/.config/opencode/commands/`
-  - `skills/*` → `~/.config/opencode/skills/`
-  - `tools/*` → `~/.config/opencode/tools/` (when tool-calling is stable)
+  - `rules/*` → `~/.config/opencode/rules/` (manual or your fork installer — upstream **`bin/install-opencode-conductor.sh`** does not ship `rules/`)
+  - `commands/*` → `~/.config/opencode/commands/` (**included** in `bin/install-opencode-conductor.sh`)
+  - `skills/*` → `~/.config/opencode/skills/` (**included**)
+  - `tools/*` → `~/.config/opencode/tools/` (**included** — Bun `opencode_*` entrypoints; still register tools in `opencode.json` when your provider supports it)
 2. Create `**descriptor.json`** (choose one):
   - **Guided**: run `/project-init <projectKey>` — scans repo, drafts descriptor, you approve
   - **Manual**: copy `[descriptors/descriptor.template.json](descriptors/descriptor.template.json)` to `~/.config/opencode/projects/<projectKey>/descriptor.json` and fill in
@@ -128,7 +131,7 @@ When aligning an existing `~/.config/opencode/` with this kit, prefer **review +
 
 ### Where does handoff state live?
 
-| Layout | `descriptor.json` on disk | Branch folders + `AGENTS.md` trees | Typical `.gitignore` |
+| Layout | `descriptor.json` on disk | Branch folders + **per-area `AGENTS.md`** + **leaf `KNOWLEDGE.md`** (optional project `KNOWLEDGE.md`; rules-only **`AGENTS.md`** at `opencodeProjectRootPath`) | Typical `.gitignore` |
 | ------ | ------------------------- | ----------------------------------- | --------------------- |
 | **Global (default)** | `~/.config/opencode/projects/<projectKey>/descriptor.json` | Same tree under that directory | N/A (outside repo) |
 | **Project-local** | Still **`~/.config/.../descriptor.json`** (kit tool contract) | Paths inside **`<git-root>/.opencode-conductor/`** (or `.opencode/`) per [`documentation/PATH_CONTRACT.md`](documentation/PATH_CONTRACT.md) | **Default:** ignore `<dir>/` so internal narrative is not committed |
@@ -148,9 +151,10 @@ Use **`/project-init`** to pick global vs project-local and the `.gitignore` tri
 ```
 ~/.config/opencode/projects/<projectKey>/
   descriptor.json
-  AGENTS.md                        ← project-level shared knowledge (same for all branches)
-  <area>/AGENTS.md                 ← area-level shared knowledge
-  packages/<pkg>/AGENTS.md         ← optional package knowledge
+  AGENTS.md                        ← project-level **rules** (same for all branches)
+  KNOWLEDGE.md                     ← optional project-wide durable facts (refresh includes when present)
+  <area>/AGENTS.md                 ← area-level routing / stack / conventions (default from `/project-init`)
+  <area>/<leaf>/KNOWLEDGE.md       ← leaf pseudo-package knowledge (from `/scaffold-knowledge`; legacy leaf `AGENTS.md` still read)
   branches/<branch-name>/          ← per-branch: created on bootstrap; one folder per Git branch
     MERGE_REQUEST.md
     MR.md                          ← optional
@@ -219,7 +223,7 @@ Normalization rules (commands MUST apply on read):
 
 `pathPattern` semantics:
 
-- The prefix up to and including the first `{packageName}` is the **knowledge stem** used by commands to derive the convention path (`<opencodeProjectRootPath>/<rel>/AGENTS.md`).
+- The prefix up to and including the first `{packageName}` is the **knowledge stem** used by commands to derive the convention path (`<opencodeProjectRootPath>/<rel>/KNOWLEDGE.md`; legacy `<rel>/AGENTS.md` still read when `KNOWLEDGE.md` is absent).
 - `**` matches any depth, `*` matches a single segment — both are descriptive only; the kit does **not** enforce depth or extension.
 
 **UI base URLs** for reviewers belong in **`MERGE_REQUEST.md`** (`## Verification target`) and/or repo `README` — [`/project-review`](commands/project-review.md) folds a single optional **`Base URL (manual):`** line into `## How to verify` (see command). No descriptor fields are required for URLs.
@@ -250,7 +254,7 @@ flowchart TD
   Scan --> DraftDescriptor["Generate draft descriptor.json"]
   DraftDescriptor --> PresentDraft["Show JSON to user for review"]
   PresentDraft --> UserApproves{"Approved?"}
-  UserApproves -- yes --> WriteDescriptor["Write descriptor + templates + AGENTS.md"]
+  UserApproves -- yes --> WriteDescriptor["Write descriptor + templates + rules AGENTS.md"]
   UserApproves -- edits --> PresentDraft
   WriteDescriptor --> Ready["Ready: /project-refresh projectKey"]
 ```
@@ -313,9 +317,9 @@ flowchart TD
 | `/project-update-mr <projectKey>`          | Update `MERGE_REQUEST.md` from git facts + branch context; refreshes canonical **`## OpenCode:`** machine blocks (in-place merge / append / regenerate) and supports paste-ingest of semi-structured MR/issue/testing text via option **D** |
 | `/project-cleanup-candidates <projectKey>` | Stale `branches/`* report (read-only)                                                                 |
 | `/project-knowledge-refresh <projectKey>`  | Propose durable knowledge updates (user approves)                                                     |
-| `/scaffold-knowledge <projectKey>`         | **Once after init:** scaffold shared `AGENTS.md` (not per-branch), including starter `## Verification scripts` tables in area files. Optional re-run when areas/packages/stack change |
+| `/scaffold-knowledge <projectKey>`         | **Once after init:** scaffold **leaf** **`KNOWLEDGE.md`** files and **area `AGENTS.md`** orientation (rules stay in project-root `AGENTS.md`; not per-branch). Optional re-run when areas/packages/stack change |
 | `/project-help-docs [<output-root>]`       | Generate help-center docs from code with `help-docs-author` (Discovery -> Code-reading -> Plan -> Generation -> Audit), output containment, and vocabulary/secret guardrails |
-| `/manual-refresh <projectKey>`             | No tool-calling; merges bootstrap+refresh behavior when needed                                        |
+| `/manual-refresh <projectKey>`             | No `opencode_*` tools; **parity** with `/project-refresh` handoff (`missing_branch_context`, `branch_context_status`, `next_steps`, staleness, `reread_files` order matches engine: rules → optional project `KNOWLEDGE.md` → active area doc → branch files). See [`commands/manual-refresh.md`](commands/manual-refresh.md) |
 
 ### Verification
 
@@ -425,12 +429,12 @@ Skills are NOT loaded unless relevant — unlike rules which are always present.
 | `git-safety` | A command intends to mutate git state (fetch, checkout, pull, branch ops, stash) | Refuse-on-dirty preflight, attached-HEAD check, base-branch resolution (`origin/HEAD` → `main` → `master`), kit-stash convention with reminder hook and cross-check warning. Never auto-stashes; never loads other skills. Recommended permission: `ask`. |
 | `branch-kickoff` | A kickoff command runs (commands ship in C1) | Loads `git-safety`; runs drift gate, big-project criteria, model selection, mermaid policy, audit trail. Recommended permission: `ask`. |
 | `branch-explore` | User wants a manual branch exploration guide (no browser automation) | Produces `EXPLORE_GUIDE.md` from MR narrative + commits + code comments + dependency diffs. |
-| `discover-knowledge` | Authoring or refreshing `AGENTS.md`; running `/scaffold-knowledge`, `/project-knowledge-refresh`, or the `/project-review` preflight | Senior Architect lens; promotion rubric; source-path existence guard for leaf scaffolds. |
+| `discover-knowledge` | Authoring or refreshing **leaf `KNOWLEDGE.md`** (optional leaf `AGENTS.md`); area **`AGENTS.md`**; running `/scaffold-knowledge`, `/project-knowledge-refresh`, or the `/project-review` preflight | Senior Architect lens; promotion rubric; source-path existence guard for leaf scaffolds. |
 | `plan-phases` | Drafting or refining `PHASES.md` for a long-lived branch | Senior Architect / PM lens; phase template, sizing heuristics, anti-patterns. |
 | `help-docs-author` | User wants help-center / user-facing docs generated from code | Runs the five-phase authoring workflow with output containment, vocabulary audit, and frontmatter defaults. |
 | `review-branch` | User asks to review a branch, or says "check before merge" | Orchestrates: `/manual-refresh` → `/project-review` with deterministic verification-scripts synthesis (falls back to generic checks when missing) → optional `/project-update-mr` or `/project-review-sync` |
 | `session-lifecycle` | User starts/ends a session, or asks "how should I checkpoint?" | Guides the refresh → work → checkpoint → close flow with decision points |
-| `onboard-area` | User asks about unfamiliar code, or agent needs to understand a new area before making changes | Reads AGENTS.md hierarchy, scans key files, builds a mental model |
+| `onboard-area` | User asks about unfamiliar code, or agent needs to understand a new area before making changes | Reads **area `AGENTS.md`**, **leaf `KNOWLEDGE.md`**, and rules hierarchy; scans key files; builds a mental model |
 | `verify-changes` | User says "check if everything works" or "verify my changes" | Decision tree: detect areas → type-check → test → lint, reports combined result |
 | `systematic-debugging` | A bug is reported or a test fails unexpectedly | Guides binary search isolation, minimal reproduction, root cause analysis |
 | `refactor-safely` | User asks to refactor, restructure, or move code | Step-by-step safe refactoring with verification at each step |
@@ -483,6 +487,7 @@ Plan-mode agents may relax `git-safety` to `allow` because plan mode is read-mos
 Successful refresh JSON includes:
 
 - `handoff_mode`, `branch`, `area`, `checkpoint_commit`, `head_commit`, `checkpoint_source`
+- `missing_branch_context` (boolean, when emitted), `branch_context_readable` (tool JSON) / `branch_context_status` (markdown handoff) — see [`documentation/PATH_CONTRACT.md`](documentation/PATH_CONTRACT.md) § Refresh handoff block
 - `changed_areas`, `changed_files_preview`, `reread_files`
 - `mr_context_path`, `mr_context_paths`, `log_context_path`, `phases_context_path`
 - `last_log_age_minutes`, `needs_checkpoint`, `context_staleness`
@@ -582,7 +587,7 @@ The kit is designed to minimize token usage while maximizing agent productivity.
 | Mechanism | How it saves |
 |-----------|-------------|
 | **Convention path eliminates JSON edits** | Re-running `/scaffold-knowledge` discovers new leaves automatically — no descriptor diffs, no review back-and-forth |
-| **Knowledge preflight loads correct context** | Review reads the right leaf `AGENTS.md` immediately; saves ~3-10 exploratory tool calls per missing leaf (~3K-10K tokens) |
+| **Knowledge preflight loads correct context** | Review reads the right leaf **`KNOWLEDGE.md`** (legacy `AGENTS.md`) immediately; saves ~3-10 exploratory tool calls per missing leaf (~3K-10K tokens) |
 | **Auto-scaffold prevents review starting blind** | A scaffolded leaf with even 6 lines of context anchors the review and prevents broad code grepping |
 | **Skills on-demand** | Senior lenses cost zero unless the task matches the skill description |
 | **Senior baseline rule small** | ~600 tokens always-on buys consistent senior persona; prevents low-quality first drafts that would cost more in correction |
