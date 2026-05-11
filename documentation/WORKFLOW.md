@@ -29,7 +29,7 @@ Replace **`<projectKey>`** with your descriptor key. The descriptor file is alwa
 
 ### State vs commands (control plane)
 
-- **Artifacts (durable state)** live under the folder from **`branchHandoff.contextDirTemplate`** (see `descriptor.json`) and shared knowledge under **`opencodeProjectRootPath`** / **`areas.*.areaAgentsPath`**. Default global example: `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/` with `MERGE_REQUEST.md`, `LOG.md`, optional `REVIEW.md`, optional `PHASES.md`, optional `MR.md`, plus `AGENTS.md` trees. Treat these as the **operational** record from Conductor; your org may still keep a canonical human MR narrative elsewhere.
+- **Artifacts (durable state)** live under the folder from **`branchHandoff.contextDirTemplate`** (see `descriptor.json`) and shared knowledge under **`opencodeProjectRootPath`**: project rules **`AGENTS.md`**, optional project **`KNOWLEDGE.md`**, per-area **`AGENTS.md`** (via **`areas.*.areaAgentsPath`**), and leaf **`KNOWLEDGE.md`** from `/scaffold-knowledge`. Default global example: `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/` with `MERGE_REQUEST.md`, `LOG.md`, optional `REVIEW.md`, optional `PHASES.md`, optional `MR.md`. Treat these as the **operational** record from Conductor; your org may still keep a canonical human MR narrative elsewhere.
 - **Slash commands** are **operations** on that state: refresh context, append checkpoints, regenerate review artifacts, update MR machine blocks, etc. They do not replace reading the files when you need nuance.
 
 ### Handoff modes
@@ -49,7 +49,7 @@ See `handoffModeDefault` in [`README.md`](README.md) (Descriptor responsibilitie
 ## 2. Initiating a project (first time)
 
 1. **`/project-init <projectKey>`** — scans the repo, drafts `descriptor.json`, you approve before it is written under `~/.config/opencode/projects/<projectKey>/` (always). Init also asks **global vs project-local** durable paths and optional `.gitignore` for repo-local dirs; see [`README.md`](README.md) and [`documentation/PATH_CONTRACT.md`](documentation/PATH_CONTRACT.md).
-2. **`/scaffold-knowledge <projectKey>`** — once (or again when areas/stack change): shared `AGENTS.md` orientation, not per-branch.
+2. **`/scaffold-knowledge <projectKey>`** — once (or again when areas/stack change): **area `AGENTS.md`** orientation + **leaf `KNOWLEDGE.md`** scaffolds, not per-branch.
 3. **`/manual-refresh <projectKey>`** or **`/project-refresh <projectKey>`** — confirm project resolves; for **tracked**, expect branch context paths from refresh output.
 4. **First visit to a Git branch (tracked):** if refresh reports missing branch context, **`/project-bootstrap <projectKey>`** (optionally seed `PHASES.md` and optionally paste MR/issue/testing context so narrative sections auto-fill). If you skip the paste at bootstrap, you can re-ingest later with **`/project-update-mr <projectKey>`** scope D or **`/project-review-sync <projectKey>`** scope D.
 5. **Implement** in the repo; use **`/project-checkpoint`** when you pause.

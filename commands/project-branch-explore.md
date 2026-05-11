@@ -36,7 +36,7 @@ Unknown tokens should trigger a clarification prompt.
    - `merge-base(origin/HEAD, HEAD)..HEAD` commits
    - `git diff --name-only` for dependency/setup hints
    - branch context files (`MERGE_REQUEST.md`, `LOG.md`) when present
-   - area `AGENTS.md` files for run-local notes
+   - area **`KNOWLEDGE.md`** files (legacy area `AGENTS.md`) for run-local notes
 5. Load `branch-explore` skill and draft `EXPLORE_GUIDE.md` with sections:
    - `## Setup`
    - `## What's new`

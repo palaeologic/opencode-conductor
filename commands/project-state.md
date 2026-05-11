@@ -1,6 +1,5 @@
 ---
 description: Read-only kit state summary (working tree, HEAD/base, divergence, drift, kit stashes, recent kickoff audit)
-agent: plan
 subtask: true
 ---
 
@@ -37,7 +36,7 @@ Never interpolate `$ARGUMENTS` into shell-injection blocks.
 2. Derive current branch, base, and ahead/behind counts.
 3. If `no-preflight` is not present, run the same read-only drift check used by `/project-review`:
    - resolve base via `origin/HEAD` -> `main` -> `master`
-   - compute `AGENTS.md` drift set between `merge-base(HEAD, origin/<base>)` and `origin/<base>`
+   - compute drift for paths ending in **`KNOWLEDGE.md`** or legacy package **`AGENTS.md`** between `merge-base(HEAD, origin/<base>)` and `origin/<base>` (same path set as `/project-review` drift preflight; project rules `AGENTS.md` at `opencodeProjectRootPath` is out of scope for this count)
    - do not write findings; summarize as state.
 4. List kit-managed stashes (`opencode-kit:` prefix) for current branch, with age hints.
 5. Read the latest 5 kickoff-related entries from branch `LOG.md` when available (`Kickoff` / `Stash` headers).

@@ -1,6 +1,5 @@
 ---
 description: Generate end-user help-center docs from code with safety guards and vocabulary audit
-agent: plan
 subtask: true
 ---
 

@@ -32,9 +32,9 @@ Run the safety preflight (clean tree, attached HEAD, base resolution) and the st
 When invoked from `/project-branch-kickoff` (i.e. on an existing branch), run the knowledge-drift preflight against the resolved base from step 1. The check uses the same logic as `/project-knowledge-refresh` and `/project-review` so behavior is consistent across the kit:
 
 - Resolve base via `git symbolic-ref refs/remotes/origin/HEAD` → `main` → `master` (already done in step 1; reuse the cached value).
-- `git fetch origin <base>` (read-only). Reuse the **5-minute fixed session cache** to avoid repeated fetches when chained with refresh/review in the same session.
-- Compute the AGENTS.md drift set: let `MERGE_POINT = git merge-base HEAD origin/<base>`; for every `AGENTS.md` reachable from either `MERGE_POINT` or `origin/<base>`, compare blob ids and collect the differing paths.
-- Skip when storage mode is project-local (per `docs/PATH_CONTRACT.md` § Knowledge across branches) — drift cannot be computed against branch state when knowledge is not branch-scoped.
+- `git fetch origin <base>` (read-only).
+- Compute the package-knowledge drift set: let `MERGE_POINT = git merge-base HEAD origin/<base>`; for every path ending in **`KNOWLEDGE.md`** or legacy **`AGENTS.md`** (package / area knowledge, not project rules) reachable from either `MERGE_POINT` or `origin/<base>`, compare blob ids and collect the differing paths.
+- Skip when storage mode is project-local (per `documentation/PATH_CONTRACT.md` § Knowledge across branches) — drift cannot be computed against branch state when knowledge is not branch-scoped.
 - **Behavior on drift**:
   - 0 drifted files → silent; proceed.
   - 1–5 drifted files → emit a `F-xx` finding "Knowledge drift vs base: <count> file(s)" inline in the kickoff banner; recommend rebase but do **not** block; user confirms whether to proceed.
@@ -68,7 +68,7 @@ Each handoff is one user confirmation; do not bundle.
 
 ### 6. Mermaid policy
 
-Apply the kit-wide mermaid policy (see `docs/PATH_CONTRACT.md` § Mermaid policy):
+Apply the kit-wide mermaid policy (see `documentation/PATH_CONTRACT.md` § Mermaid policy):
 
 - `PHASES.md`: prompt with default ON when phases > 3.
 - `MERGE_REQUEST.md`: prompt opt-in for migrations / multi-service refactors / schema changes.
@@ -97,36 +97,29 @@ Append, in order:
 
 Both writes happen atomically at the end of the flow; do not split metadata across separate writes.
 
-### 8. Mode-switch suggestion (explicit)
+### 8. Next-step recommendation
 
-At the end of kickoff, emit a short suggestion:
+At the end of kickoff, emit a short suggestion for what the user should do next:
 
-- Recommend `build` when kickoff completed (gates passed, phases drafted, discovery done) and the active phase is implementation-ready.
-- Recommend `plan` when drift or unresolved scope/risk remains.
-- Never auto-switch modes; require explicit user confirmation.
+- Recommend proceeding with implementation when kickoff completed (gates passed, phases drafted, discovery done) and the active phase is implementation-ready.
+- Recommend further planning when drift or unresolved scope/risk remains.
+- Never auto-execute follow-up commands; wait for the user to decide.
 
 ## Confirmation discipline
 
 - Every git or file mutation gets a one-line preview followed by an explicit confirm.
 - Aggregate confirms are allowed only for read-only sequences (`status`, `fetch --dry-run`, `log`).
-- Provider-switch confirmations include a short note about potential context loss / billing / latency. Recommend staying on the session provider unless explicitly needed.
 
 ## Model policy
 
 Default model resolution:
 
-- **Upstream default:** unset. The command frontmatter leaves `model` empty; the active session model is used. The prompt mentions "kickoffs benefit from a high-reasoning model; pick your provider's top-tier reasoning model".
-- **Fork default:** `claude-opus-4-7-thinking-xhigh` (set in fork-side command frontmatter; mirror layer rewrites).
+- **Default:** unset. The command frontmatter leaves `model` empty; the active session model is used. The prompt mentions "kickoffs benefit from a high-reasoning model; pick your provider's top-tier reasoning model".
 - **Override prompt** (preselect default):
   - "Use default (recommended for kickoffs)"
   - "Pick another model" — opens free-form picker
   - "Keep current session model" — no subtask spawn
 - **Fallback behavior:** if the chosen model is unavailable, emit a structured warning, document the fallback chain in the command response, and log the fallback in the `LOG.md` audit block.
-- **Provider switch warning:** if the user picks a model from a different provider than the session, surface the warning explicitly. Recommendation = stay on the session provider unless explicitly needed.
-
-## Permission default
-
-The recommended `opencode.json` permission policy lists `branch-kickoff: ask`. Users see an explicit consent prompt the first time the skill is loaded in a session.
 
 ## Output format
 
@@ -148,7 +141,7 @@ If any step refuses or is declined, the banner ends with a `STATUS: aborted | de
 - **Auto-spawning subtasks without consent.** Frontmatter sets defaults; runtime overrides require an explicit prompt.
 - **Bundling confirmations.** Each mutation gets its own one-line preview; long aggregate confirms hide intent.
 - **Writing audit metadata at multiple times.** Audit writes are atomic at the end so a half-finished run is observable as "no audit entry yet".
-- **Embedding raw user prompts in audit metadata.** Audit fields are structured (command name, base, branch, model, choices) and never include free-text user messages. See `docs/PATH_CONTRACT.md` § Security rules.
+- **Embedding raw user prompts in audit metadata.** Audit fields are structured (command name, base, branch, model, choices) and never include free-text user messages. See `documentation/PATH_CONTRACT.md` § Security rules.
 
 ## Related
 
@@ -156,4 +149,4 @@ If any step refuses or is declined, the banner ends with a `STATUS: aborted | de
 - Senior reviewer / architect lens for adjacent flows: `skills/discover-knowledge`, `skills/plan-phases`, `skills/review-branch`.
 - Baseline persona: `rules/SENIOR_ENGINEERING.md`.
 - Commands wired in this plan: `commands/project-branch-new.md`, `commands/project-branch-kickoff.md`.
-- Contract: `docs/PATH_CONTRACT.md` § Audit trail, § Mermaid policy, § Frontmatter conventions, § Security rules.
+- Contract: `documentation/PATH_CONTRACT.md` § Audit trail, § Mermaid policy, § Frontmatter conventions, § Security rules.

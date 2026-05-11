@@ -56,6 +56,7 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
 4. Compute a concise git summary since checkpoint/merge-base:
    - changed files count and primary areas
    - notable adds/deletes/renames
+4.5. **Default mode hint (after reading MR).** If `## Goal`, `## In scope`, and `## Acceptance criteria` already contain **substantive, non-placeholder** narrative (typical after `/project-bootstrap` paste-ingest or manual authoring), **tell the user before the menu**: `Narrative sections look filled — recommend **A** to refresh ## OpenCode: blocks from git only; use **D** only if you need to ingest or replace pasted MR/issue/testing text.` Still print the full four-option menu below verbatim (do not remove **D**).
 5. Ask user whether to:
    - Print the menu **exactly** as the fenced block below, preserving all four lettered options. Do not paraphrase, renumber, omit option **D**, or collapse the choices into prose.
 

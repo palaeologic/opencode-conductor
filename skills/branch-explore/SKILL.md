@@ -22,7 +22,7 @@ Use these sources in order:
 2. Commits from `merge-base(origin/HEAD, HEAD)..HEAD`.
 3. Branch `LOG.md`.
 4. Code comments / docstrings / JSDoc on changed symbols.
-5. Area-level `AGENTS.md` (especially `## Run locally` if present).
+5. Area-level **`KNOWLEDGE.md`** (legacy area `AGENTS.md`), especially `## Run locally` if present.
 6. Dependency and lockfile diffs (`package.json`, lockfiles, `pyproject.toml`, `requirements.txt`, etc.).
 
 ## Output shape

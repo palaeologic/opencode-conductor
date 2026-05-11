@@ -22,7 +22,7 @@ Workflow:
      - `@org/` style imports in source files
    - **Baseline branch**: `git remote show origin | grep 'HEAD branch'` or fallback to `main`.
    - **Refresh heuristics**: detect which config files exist (package.json, tsconfig.json, eslint.config.*, pyproject.toml, go.mod, Cargo.toml) and use them as `highSignalChangedSubstrings`.
-4. **State location** (after scan, before draft): ask where **durable Conductor data** (branch folders, templates, `AGENTS.md` trees) should live:
+4. **State location** (after scan, before draft): ask where **durable Conductor data** (branch folders, templates, **per-area `AGENTS.md`** for routing/setup, **leaf `KNOWLEDGE.md`** from later `/scaffold-knowledge`, **rules `AGENTS.md`** at project root) should live:
    - **Global (default):** under `~/.config/opencode/projects/<projectKey>/` — same layout as today; good for solo work and no repo noise.
    - **Project-local:** beside the clone under **`<git-root>/.opencode-conductor/`** (recommended) **or** `<git-root>/.opencode/`** (shorter; warn in one line that `.opencode/` may collide with other tooling).
 
@@ -44,7 +44,7 @@ Workflow:
      - `opencodeProjectRootPath`: `<R>`
      - `branchHandoff.contextDirTemplate`: `<R>/branches/{branchName}`
      - `branchHandoff.templatesDir`: `<R>/_templates/mr`
-     - `areas.*.areaAgentsPath`: `<R>/<areaName>/AGENTS.md` (same area names as scan)
+     - `areas.*.areaAgentsPath`: `<R>/<areaName>/AGENTS.md` (same area names as scan; **optional** `areaKnowledgePath` later if a team wants a separate area-level knowledge file — not emitted by default)
      - Rewrite any other path fields that pointed at `~/.config/opencode/projects/...` in the template to use `<R>` instead.
    - `baselineBranchForMaterialChanges`: detected baseline branch
    - `handoffModeDefault`: `"tracked"`
@@ -62,7 +62,7 @@ Workflow:
 
 Output:
 Return a summary of created paths and suggest next steps:
-- “Run `/scaffold-knowledge $ARGUMENTS` to populate area knowledge files with stack and architecture info.”
+- “Run `/scaffold-knowledge $ARGUMENTS` to populate **leaf** `KNOWLEDGE.md` files (pseudo-packages / leaves) with stack and architecture info.”
 - “Run `/project-refresh $ARGUMENTS` to start your first session.”
 
 Constraints:

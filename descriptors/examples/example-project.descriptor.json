@@ -33,9 +33,9 @@
   ],
   "trackedKnowledgeTargets": {
     "sharedPackageKnowledge": {
-      "forms": "~/.config/opencode/projects/example-project/frontend/packages/forms/AGENTS.md",
-      "reports": "~/.config/opencode/projects/example-project/frontend/packages/reports/AGENTS.md",
-      "table": "~/.config/opencode/projects/example-project/frontend/packages/table/AGENTS.md"
+      "forms": "~/.config/opencode/projects/example-project/frontend/packages/forms/KNOWLEDGE.md",
+      "reports": "~/.config/opencode/projects/example-project/frontend/packages/reports/KNOWLEDGE.md",
+      "table": "~/.config/opencode/projects/example-project/frontend/packages/table/KNOWLEDGE.md"
     },
     "trackedAreas": ["frontend", "backend", "cli"]
   },

@@ -17,18 +17,18 @@ sequenceDiagram
   User->>Cmd: /project-init my-app
   Cmd->>User: Proposal block (descriptor.json + templates)
   User->>Cmd: approve
-  Cmd->>User: descriptor written, AGENTS.md seeded
+  Cmd->>User: descriptor written, rules AGENTS.md + per-area AGENTS paths seeded
   User->>Cmd: /scaffold-knowledge my-app dry-run
   Cmd->>User: dry-run preview
   User->>Cmd: /scaffold-knowledge my-app
-  Cmd->>User: leaves created
+  Cmd->>User: KNOWLEDGE.md leaves created (legacy AGENTS.md honored)
 ```
 
 What you'll see at the end:
 
 ```markdown
 ## Scaffold result
-- created: <n> AGENTS.md
+- created: <n> leaf KNOWLEDGE.md (+ area AGENTS.md merges)
 - skipped: 1 (source_missing: legacy/x)
 - next_step: customize each leaf as needed
 ```
@@ -92,7 +92,7 @@ flowchart LR
 Your branch is behind `main`. The kit:
 
 - Surfaces a knowledge-drift finding via the preflight.
-- Suggests a single-file pull-up for stale `AGENTS.md` files.
+- Suggests a single-file pull-up for stale durable knowledge files (leaf `KNOWLEDGE.md` / legacy `AGENTS.md`, and area docs per descriptor).
 - Does not auto-rebase; you control the merge strategy.
 
 ## Scenario I — Combining prompts with commands and skills

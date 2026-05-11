@@ -1,5 +1,5 @@
 ---
-description: Scaffold AGENTS.md knowledge files for project areas, leaves, and packages
+description: Scaffold KNOWLEDGE.md package knowledge files for project areas, leaves, and packages
 subtask: true
 ---
 
@@ -7,7 +7,7 @@ Loads skill: `discover-knowledge` (when available) for the Senior Architect lens
 
 Scaffold knowledge files for project key `$ARGUMENTS`.
 
-This command generates `AGENTS.md` files for detected project areas and **leaves** (packages, modules, or other meaningful sub-trees) so that future sessions can orient immediately without exploratory subtasks. Re-running it is the standard way to **add** newly-detected leaves into knowledge — no JSON edits needed.
+This command generates **`KNOWLEDGE.md`** files for detected project areas and **leaves** (packages, modules, or other meaningful sub-trees) so that future sessions can orient immediately without exploratory subtasks. Re-running it is the standard way to **add** newly-detected leaves into knowledge — no JSON edits needed. **Rules** for the OpenCode project stay in **`opencodeProjectRootPath`/AGENTS.md** (not created by leaf/area discovery steps below).
 
 ## Modes
 
@@ -23,7 +23,7 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
 
 ## When to run
 
-- **Typical:** once after `/project-init`, then **re-run any time** you add a new module / package / source folder you want recorded. Shared knowledge under `AGENTS.md` is **not branch-specific** — switching Git branches does **not** require re-running this command.
+- **Typical:** once after `/project-init`, then **re-run any time** you add a new module / package / source folder you want recorded. Shared knowledge under **`KNOWLEDGE.md`** is **not branch-specific** — switching Git branches does **not** require re-running this command.
 - **List mode** is useful for ops/audit (what's currently tracked?).
 - **Dry-run** is useful before bulk scaffolds.
 
@@ -46,13 +46,13 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
    - For `pathAndAlias` rules: enumerate directories matching `pathPattern`'s `{packageName}` slot.
    - For `pathPrefix` rules: filter by basename (`namePrefixes` OR `namedExtras`).
    - Reject any leaf name that does not match `^[A-Za-z0-9_][A-Za-z0-9_-]*$` — emit `invalid_package_name` with the offending name; continue with remaining leaves.
-   - For each surviving leaf, derive the convention path per the **stem derivation contract** in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md): `<opencodeProjectRootPath>/<rel>/AGENTS.md`.
-   - Resolve overrides: if `sharedPackageKnowledge[packageName]` is set, that path wins.
+   - For each surviving leaf, derive the convention path per the **stem derivation contract** in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md): `<opencodeProjectRootPath>/<rel>/KNOWLEDGE.md`.
+   - Resolve overrides: if `sharedPackageKnowledge[packageName]` is set, that path wins (may still be `.md` knowledge file).
    - Apply safety guardrails: verify root containment under `opencodeProjectRootPath`; refuse symlinks (`lstat` -> if symlink at target, mark `symlink_refused`).
-   - **Source-path existence guard (default on):** for every candidate leaf, resolve the leaf's expected source directory under `projectRootPath` (the path the leaf's stem mirrors) and verify it exists in the **current working tree** (`git ls-tree --name-only HEAD <leaf-source-rel>` non-empty, or `test -d <abs-leaf-source>`). If missing, classify the leaf as `skipped` with reason `source_missing` and **do not write** an `AGENTS.md` for it. Prevents "ghost knowledge" — durable files about packages absent on the current branch (matters in project-local storage where knowledge is shared across branches). Pass `no-source-guard` (in `$ARGUMENTS`, e.g. `/scaffold-knowledge <projectKey> discovery no-source-guard`) to bypass; useful when intentionally staging knowledge ahead of the source landing.
+   - **Source-path existence guard (default on):** for every candidate leaf, resolve the leaf's expected source directory under `projectRootPath` (the path the leaf's stem mirrors) and verify it exists in the **current working tree** (`git ls-tree --name-only HEAD <leaf-source-rel>` non-empty, or `test -d <abs-leaf-source>`). If missing, classify the leaf as `skipped` with reason `source_missing` and **do not write** a knowledge file for it. Prevents "ghost knowledge" — durable files about packages absent on the current branch (matters in project-local storage where knowledge is shared across branches). Pass `no-source-guard` (in `$ARGUMENTS`, e.g. `/scaffold-knowledge <projectKey> discovery no-source-guard`) to bypass; useful when intentionally staging knowledge ahead of the source landing.
 
 5. **Classify each leaf**:
-   - `existing` — `AGENTS.md` already present at the resolved path.
+   - `existing` — **`KNOWLEDGE.md`** (or legacy sibling **`AGENTS.md`** at the same stem) already present at the resolved path.
    - `override` — `sharedPackageKnowledge` declares the path; respect it (still classified `existing`/`untracked` based on file presence).
    - `untracked` — neither convention path nor override has the file.
    - `skipped` — guardrail tripped (e.g. `symlink_refused`, `path_outside_root`, `invalid_package_name`, or `source_missing` from the source-path guard). Records the reason but performs no write.
@@ -78,12 +78,12 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
      > - [ ] `<area>/<leaf>` -> `<convention-path>`
      > - ...
 
-     Wait for confirmation. For each chosen leaf, write the package-level `AGENTS.md` template (see step 8 below) at the resolved path. **Non-destructive**: skip silently if the file appeared between detection and write (concurrent session). Do **not** mutate `descriptor.json` for convention-path leaves.
+     Wait for confirmation. For each chosen leaf, write the package-level **`KNOWLEDGE.md`** template (see step 11 below) at the resolved path. **Non-destructive**: skip silently if the file appeared between detection and write (concurrent session). Do **not** mutate `descriptor.json` for convention-path leaves.
 
 7. **Idempotency**: re-running discovery with no new leaves produces zero writes and prints "no new leaves to track".
 
 8. **Present areas (initial scaffolding only — typically the first run)**: list all areas from the descriptor. Ask the user:
-   > "Which areas should have AGENTS.md knowledge files? (Select all that apply)"
+   > "Which areas should receive **area `AGENTS.md`** orientation scaffolding (stack, layout, starter `## Verification scripts`)? (Select all that apply)"
    >
    > - [ ] <area1>
    > - [ ] <area2>
@@ -100,12 +100,15 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
    - Look for `Makefile` / `Justfile` → extract targets as commands
    - List top-level subdirectories for folder structure hints
 
-10. **Generate area-level AGENTS.md** — for each area, write to that area's **`areaAgentsPath`** from the descriptor (default global example: `~/.config/opencode/projects/<projectKey>/<areaName>/AGENTS.md`; project-local example: `<git-root>/.opencode-conductor/<areaName>/AGENTS.md`):
+10. **Generate area-level orientation** — for each area, resolve the write path:
+    - If **`areas[area].areaKnowledgePath`** is set, merge into that path (teams using a dedicated area **`KNOWLEDGE.md`**).
+    - Else resolve **`areas[area].areaAgentsPath`** (typically `.../<area>/AGENTS.md`) and merge into that **`AGENTS.md`** file. **Do not** create a sibling **`KNOWLEDGE.md`** at the area root by default — `/project-init` uses **area `AGENTS.md` only** unless the user later adds **`areaKnowledgePath`** or an optional sibling file.
+    - If neither field is present (degenerate descriptor), default to `<opencodeProjectRootPath>/<areaKey>/AGENTS.md` using the `areas` object key as `<areaKey>`.
 
     ```markdown
-    # <ProjectKey> <AreaName> Instructions
+    # <ProjectKey> <AreaName> — area orientation
 
-    These instructions apply to work in `<projectRootPath>/<pathPrefix>`.
+    These notes apply to work in `<projectRootPath>/<pathPrefix>`.
 
     ## Stack
     - Language: <detected>
@@ -128,7 +131,7 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
     <ordered list based on detected tooling: lint → typecheck → test → build>
 
     ## Verification scripts
-    <!-- Structured-knowledge-table schema: Trigger | Command | When -->
+    <!-- Structured-knowledge-table schema: Trigger | Command | When — copy commands from MR/CI/README; do not invent app labels -->
     | Trigger | Command | When |
     | --- | --- | --- |
     | `<area-path>/**` | `<primary verify command>` | baseline check for this area |
@@ -139,7 +142,7 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
 
     If the file already exists, **merge**: prepend the Stack/Folder/Commands sections above the existing content, preserving all existing rules.
 
-11. **Leaf-level AGENTS.md template** — used by step 6 (discovery mode) when writing scaffolds. The convention path is `<opencodeProjectRootPath>/<rel>/AGENTS.md` (source-tree-mirror; see [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md)). For overrides, use the path from `sharedPackageKnowledge`.
+11. **Leaf-level `KNOWLEDGE.md` template** — used by step 6 (discovery mode) when writing scaffolds. The convention path is `<opencodeProjectRootPath>/<rel>/KNOWLEDGE.md` (source-tree-mirror; see [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md)). For overrides, use the path from `sharedPackageKnowledge`.
 
     ```markdown
     ---
@@ -191,14 +194,14 @@ This command generates `AGENTS.md` files for detected project areas and **leaves
     Do not update for branch-specific progress or temporary debugging.
     ```
 
-12. **Enrich project-root AGENTS.md** — ensure the file at **`opencodeProjectRootPath`/AGENTS.md** (from the descriptor) contains a project routing section listing all areas with their paths.
+12. **Enrich project-root `AGENTS.md` (rules only)** — ensure the file at **`opencodeProjectRootPath`/AGENTS.md** (from the descriptor) contains a project routing section listing all areas with their paths. **Do not** move rules content into **`KNOWLEDGE.md`**.
 
 13. **Report**: list all files created or updated, and (in `list` / `dry-run` modes) what was inspected without writing.
 
 ## Constraints
 
 - Never overwrite existing content without merging — always preserve existing operational rules.
-- **Non-destructive writes** in discovery mode: if an `AGENTS.md` already exists at the target path, skip it (treat as `existing`). Concurrent sessions are safe (first-writer-wins).
+- **Non-destructive writes** in discovery mode: if **`KNOWLEDGE.md`** already exists at the target path, skip it (treat as `existing`). Concurrent sessions are safe (first-writer-wins).
 - Keep area-level files under ~80 lines. Do not enumerate entire directory trees.
 - Leaf-level templates are intentionally sparse — they get filled during real work sessions.
 - Do not include secrets or environment-specific paths.

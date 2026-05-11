@@ -11,33 +11,36 @@ Knowledge in this kit is dual-audience (agents and humans) and layered. This pag
 
 ```mermaid
 flowchart TB
-  Project[Project AGENTS.md]
-  Area1[Area AGENTS.md - frontend]
-  Area2[Area AGENTS.md - api]
-  Leaf1[Leaf AGENTS.md - frontend cards]
-  Leaf2[Leaf AGENTS.md - frontend reports]
-  Leaf3[Leaf AGENTS.md - api handlers]
+  ProjectRules[ProjectRoot_AGENTS_rules]
+  ProjectFacts[ProjectRoot_KNOWLEDGE_optional]
+  Area1[Area_frontend_AGENTS]
+  Area2[Area_api_AGENTS]
+  Leaf1[Leaf_frontend_cards_KNOWLEDGE]
+  Leaf2[Leaf_frontend_reports_KNOWLEDGE]
+  Leaf3[Leaf_api_handlers_KNOWLEDGE]
 
-  Project --> Area1
-  Project --> Area2
+  ProjectRules --> Area1
+  ProjectRules --> Area2
+  ProjectFacts -. optional .-> ProjectRules
   Area1 --> Leaf1
   Area1 --> Leaf2
   Area2 --> Leaf3
 ```
 
-- **Project AGENTS.md** — top-level invariants: tech stack, ownership, vendor neutrality, glossary.
-- **Area AGENTS.md** — area-level architecture, conventions, structured-knowledge tables (Verification scripts, Run locally).
-- **Leaf AGENTS.md** — package or feature-level details (responsibilities, dependencies, public surface, gotchas).
+- **Project `AGENTS.md`** — top-level **rules**: session lifecycle, kit behavior, ownership pointers.
+- **Project `KNOWLEDGE.md`** *(optional)* — durable **facts** kept separate from rules (long glossary, integration notes). When present, refresh includes it after rules `AGENTS.md`.
+- **Area `AGENTS.md`** — default per-area anchor from `/project-init` (`areaAgentsPath`): stack, folder layout, conventions, structured-knowledge tables (`## Verification scripts`, future `## Run locally`).
+- **Leaf `KNOWLEDGE.md`** — pseudo-package / module knowledge at the [source-tree-mirror convention](../../documentation/PATH_CONTRACT.md) path. Optional **leaf `AGENTS.md`** is an escape hatch for hard behavioral contracts beside the same stem; prefer `KNOWLEDGE.md` for descriptive architecture.
 
-## Source-tree-mirror convention
+## Source-tree-mirror convention (leaves)
 
-The default convention is that the *path* to a leaf `AGENTS.md` mirrors the source tree:
+The default convention is that the *path* to a leaf **`KNOWLEDGE.md`** mirrors the source tree:
 
 ```
-opencodeProjectRootPath/<area>/<knowledge-stem>/<packageName>/AGENTS.md
+opencodeProjectRootPath/<rel>/KNOWLEDGE.md
 ```
 
-The `<knowledge-stem>` is computed from `pseudoPackageDetection.pathPattern`: it is the prefix up to and *including* the first `{packageName}` token, with the placeholder removed.
+where `<rel>` is derived from `pseudoPackageDetection.pathPattern`: prefix up to and *including* the first `{packageName}` token, with the placeholder replaced by the package directory name (see [`documentation/PATH_CONTRACT.md`](../../documentation/PATH_CONTRACT.md) § Stem derivation contract).
 
 ### Worked example 1 — frontend with `src` layout
 
@@ -45,9 +48,9 @@ Source: `frontend/src/cards/CardList.tsx`
 
 Rule: `area: frontend, kind: pathAndAlias, pathPattern: "frontend/src/{packageName}/**/*"`
 
-Stem: `frontend/src/`
+Stem: `frontend/src/cards`
 
-Knowledge: `<opencodeProjectRootPath>/frontend/cards/AGENTS.md`
+Knowledge: `<opencodeProjectRootPath>/frontend/src/cards/KNOWLEDGE.md`
 
 ### Worked example 2 — api with explicit prefix
 
@@ -55,9 +58,9 @@ Source: `api/sp_specimens/gql/handlers.py`
 
 Rule: `area: api, kind: pathPrefix, pathPattern: "api/{packageName}/**/*", namePrefixes: ["sp_", "dc_"]`
 
-Stem: `api/`
+Stem: `api/sp_specimens`
 
-Knowledge: `<opencodeProjectRootPath>/api/sp_specimens/AGENTS.md`
+Knowledge: `<opencodeProjectRootPath>/api/sp_specimens/KNOWLEDGE.md`
 
 ### Worked example 3 — flat repo
 
@@ -65,18 +68,18 @@ Source: `cli/main.py`
 
 Rule: `area: cli, kind: pathPrefix, pathPattern: "cli/{packageName}/**/*"` with `aliases: ["@cli/{packageName}"]`
 
-Stem: `cli/`
+Stem: `cli/main`
 
-Knowledge: `<opencodeProjectRootPath>/cli/main/AGENTS.md`
+Knowledge: `<opencodeProjectRootPath>/cli/main/KNOWLEDGE.md`
 
 ## Dual-audience contract
 
-Every leaf `AGENTS.md` should answer:
+Every leaf **`KNOWLEDGE.md`** should answer:
 
 - **For humans**: What does this package do? Who owns it? What conventions apply?
 - **For agents**: What's the public surface? What invariants must I preserve? What verification commands apply?
 
-A typical leaf has these sections:
+A typical leaf **`KNOWLEDGE.md`** has these sections:
 
 ```markdown
 # <packageName>
@@ -115,12 +118,12 @@ The trigger is a glob (matched against `git diff --name-only`). The optional `(a
 
 ## Drift preflight
 
-Whenever a knowledge-aware command runs, it diffs `AGENTS.md` files against the integration base branch.
+Whenever a knowledge-aware command runs, it may diff durable knowledge files (`**/*KNOWLEDGE.md`, legacy `**/AGENTS.md` beside leaves) against the integration base branch per command contracts.
 
 ```mermaid
 flowchart LR
   Run[Knowledge-aware command] --> Drift[Drift preflight]
-  Drift --> Diff[git diff base..HEAD AGENTS.md]
+  Drift --> Diff[git diff base..HEAD knowledge paths]
   Diff --> Stale{Stale on this branch?}
   Stale -- yes --> Find[Emit F-xx finding]
   Stale -- no --> Ok[Continue]

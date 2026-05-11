@@ -72,6 +72,15 @@ Each phase gets a section like this in `PHASES.md`:
 - Phases that bundle migration + feature + docs without naming a rollback.
 - "Phase N+1: cleanup" — fold cleanup into the phase that produced the mess.
 
+## Evidence order (retro branches, AI draft, squash-heavy history)
+
+When inferring phases from git (especially **after squash**, few commits vs large diff, or **`wip` / generic** subjects), **do not** treat `git log --oneline` as the primary source. Use this order:
+
+1. **`git diff` / `git diff --stat` (or `--name-status`) vs the descriptor baseline** (`baselineBranchForMaterialChanges`, usually `main`).
+2. **`MERGE_REQUEST.md`** narrative + **`LOG.md`**.
+3. **Changed paths / areas** from a prior `/project-refresh` or `/manual-refresh` handoff in the same session, if present.
+4. **`git log` only as a tie-breaker** when messages are clearly granular and descriptive.
+
 ## Authoring flow
 
 1. **State the end state** in one sentence (the "north star" outcome). Confirm with user.
@@ -79,10 +88,10 @@ Each phase gets a section like this in `PHASES.md`:
 3. **Draft 3–6 phases** using the template. Resist 8+ phases on a single branch — that signals scope creep or a missed split into multiple branches.
 4. **Cross-link**: `MERGE_REQUEST.md` references phase ids; checkpoints in `LOG.md` mention the active phase.
 5. **Iterate**: present the draft, ask which phases are too big / too coupled, refine.
-6. **Mode-switch suggestion (explicit).** After presenting the refined phases, add a short recommendation:
-   - Recommend `build` when the active phase has clear deliverables + exit criteria.
-   - Recommend `plan` when dependencies or risk gates are still unresolved.
-   - Never auto-switch; ask the user to confirm mode change explicitly.
+6. **Next-step recommendation.** After presenting the refined phases, add a short recommendation:
+   - Recommend proceeding with implementation when the active phase has clear deliverables + exit criteria.
+   - Recommend further planning when dependencies or risk gates are still unresolved.
+   - Never auto-execute follow-up commands; wait for the user to decide.
 
 ## Output
 

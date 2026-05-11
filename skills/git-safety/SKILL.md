@@ -121,10 +121,6 @@ This skill exposes:
 - `name: git-safety`
 - `description` tuned so the agent reaches for it whenever a command intends to mutate git state.
 
-## Permission default
-
-The recommended `opencode.json` permission policy lists `git-safety: ask`. Users see an explicit consent prompt the first time the skill is loaded in a session, then it is allowed for the remainder of the session.
-
 ## Output format
 
 When invoked from a command, emit a single banner block before the command's main flow:

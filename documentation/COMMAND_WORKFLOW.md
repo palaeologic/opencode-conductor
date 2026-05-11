@@ -1,6 +1,6 @@
 # OpenCode Conductor — Command Decision Matrix
 
-Quick reference for **which command** to run and **when**. For numbered scenarios (“I want to …”), see [`documentation/WORKFLOW.md`](documentation/WORKFLOW.md). For diagrams and full docs, see [`README.md`](README.md).
+Quick reference for **which command** to run and **when**. For numbered scenarios (“I want to …”), see [`documentation/WORKFLOW.md`](documentation/WORKFLOW.md). For **mermaid** branch-context maps (tool lane vs `/manual-refresh`), see [`documentation/WORKFLOW_MAPS.md`](documentation/WORKFLOW_MAPS.md). For diagrams and full docs, see [`README.md`](README.md).
 
 ## Command roster
 
@@ -36,7 +36,7 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Scaffold a big project on a fresh / empty feature branch | `project-branch-kickoff` | Loads `branch-kickoff`, runs drift gate, big-project criteria, then `bootstrap` or `knowledge-refresh` → `plan-phases` → `scaffold-knowledge` (dry-run then discovery). Audits to `LOG.md` + MR `OpenCode` block |
 | Explore a target branch and get manual try steps | `project-branch-explore` | Loads `git-safety`, confirms branch switch, then emits `EXPLORE_GUIDE.md` (Setup / What's new / How to try it / Caveats). No browser automation, no auto-run setup |
 | Inspect current kit/git state without mutations | `project-state` | Read-only report: working tree, HEAD/base divergence, knowledge drift summary, kit stashes, recent kickoff audit entries |
-| First-time knowledge scaffolding | `scaffold-knowledge` | Run once after `init`; creates shared `AGENTS.md` orientation files plus starter `## Verification scripts` table in area files |
+| First-time knowledge scaffolding | `scaffold-knowledge` | Run once after `init`; creates **leaf** **`KNOWLEDGE.md`** files and **area `AGENTS.md`** orientation (project **rules** stay in root `AGENTS.md` at `opencodeProjectRootPath`) plus starter `## Verification scripts` in those area files |
 | Add new package / module to tracked knowledge | `scaffold-knowledge` | Default discovery mode auto-detects untracked leaves (no JSON edits); skips leaves whose source is missing on the current branch (`no-source-guard` to bypass) |
 | Audit currently tracked leaves | `scaffold-knowledge <key> list` | Read-only table grouped by area |
 | Preview a bulk scaffold | `scaffold-knowledge <key> dry-run` | No writes; shows what discovery would create |
@@ -47,13 +47,13 @@ Bind models in `opencode.json` `command.*.model` (and/or document IDs under `des
 | Large branch | `phases` | Milestones in `PHASES.md`; mermaid prompt with default ON when phases > 3 (`no-mermaid` to skip) |
 | Pausing mid-task (tracked) | `checkpoint` | Structured `LOG.md` entry |
 | Ending session (tracked) | `close` | Summary + next step |
-| Before code review | `review` | Generates `REVIEW.md` (checklist / diff-first / checklist + diff); findings table with `F-xx`; preserve/replace triage; **runs silent knowledge preflight** (auto-scaffolds missing leaf `AGENTS.md`, flags stale ones, drift-vs-base finding); derives suggested verifications from `## Verification scripts` tables by diff-trigger match; emits `F-xx` note when a changed area lacks the block; optional opt-in `## Architecture` mermaid section. Pass `no-preflight` to skip preflight; `no-mermaid` to skip diagram prompt |
+| Before code review | `review` | Generates `REVIEW.md` (checklist / diff-first / checklist + diff); findings table with `F-xx`; preserve/replace triage; **runs silent knowledge preflight** (auto-scaffolds missing leaf **`KNOWLEDGE.md`**, flags stale ones, drift-vs-base finding); derives suggested verifications from `## Verification scripts` tables by diff-trigger match; emits `F-xx` note when a changed area lacks the block; optional opt-in `## Architecture` mermaid section. Pass `no-preflight` to skip preflight; `no-mermaid` to skip diagram prompt |
 | After MR edits + commits (light sync) | `review-sync` | Merges MR checklist into `REVIEW.md`, optional append-only `F-xx`, refreshes MR `OpenCode:` blocks — not a full regenerate |
 | After substantial review/progress | `update-mr` | Refreshes `MERGE_REQUEST.md` `OpenCode:` blocks (+ optional legacy ops headings) while preserving narrative; opt-in mermaid prompt for architectural / migration MRs (`no-mermaid` to skip) |
 | Stale branch folders | `cleanup-candidates` | Read-only table; user confirms deletes |
 | Promoting durable knowledge | `knowledge-refresh` | Proposal-first; user approves each file; runs silent **knowledge-drift preflight** vs `origin/HEAD` → `main` → `master` (5-min fixed session fetch cache); proposes `## Verification scripts` refresh when script manifests changed; pass `no-preflight` to skip |
 | Generate help-center docs from code | `project-help-docs` | Loads `help-docs-author`; runs Discovery → Code-reading → Plan → Generation → Audit; refuses output outside root; refuses in-repo writes unless `--allow-in-repo`; supports `--no-frontmatter`, `--no-mermaid`, `--no-vocab-grep` |
-| Tools unavailable | `manual-refresh` | Bootstraps if needed, then delta |
+| Tools unavailable | `manual-refresh` | Same **handoff contract** as `project-refresh` without `opencode_*` tools: optional template seeding, git delta, `missing_branch_context` / `branch_context_status`, `next_steps`, staleness hints, `reread_files` matching engine order — see [`commands/manual-refresh.md`](../commands/manual-refresh.md) |
 
 ## Positional-argument shorthand
 

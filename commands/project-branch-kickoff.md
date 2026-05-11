@@ -1,11 +1,16 @@
 ---
-description: Scaffold a big project on an already-checked-out empty / new feature branch — phases, knowledge discovery, audit trail
+description: Scaffold a big project on an already-checked-out branch — phases, knowledge discovery, audit trail. Use for fresh branches (0 commits ahead) or retroactive context on long-lived branches (N commits ahead).
 subtask: false
 ---
 
-Loads skills (when available): `branch-kickoff` (kickoff orchestration; loads `git-safety`), `plan-phases` (Senior Architect / PM lens for `PHASES.md`), `discover-knowledge` (Senior Architect lens for `AGENTS.md`).
+## Use cases (read first)
 
-Use when you are already on a fresh feature branch (zero commits ahead of base, or only kit-bookkeeping commits) and want the full kickoff scaffold: bootstrap / refresh, `PHASES.md` draft, knowledge discovery, audit trail. For creating a new branch from base, use `/project-branch-new` first; for plain feature work, use `/project-bootstrap` directly.
+- **Fresh branch** — zero commits ahead of base (or only kit bookkeeping): full forward-looking scaffold; readiness gate passes quietly.
+- **Existing / retro branch** — many commits ahead with real work: same command scaffolds **branch context** (`MERGE_REQUEST.md`, `LOG.md`, `PHASES.md`) and knowledge proposals; phases should follow **diff vs baseline + MR**, not commit subjects alone (see `/project-phases`). **Lighter alternative:** `/project-refresh` → `/project-bootstrap` → individual commands if you want less ceremony.
+
+Loads skills (when available): `branch-kickoff` (kickoff orchestration; loads `git-safety`), `plan-phases` (Senior Architect / PM lens for `PHASES.md`), `discover-knowledge` (Senior Architect lens for package **`KNOWLEDGE.md`** / legacy `AGENTS.md`).
+
+For creating a new branch from base, use `/project-branch-new` first; for plain feature work without full kickoff, use `/project-bootstrap` directly.
 
 ## Argument parsing
 
@@ -17,6 +22,7 @@ Use when you are already on a fresh feature branch (zero commits ahead of base, 
 - `no-source-guard` — bypass source-path existence guard in `/scaffold-knowledge`.
 - `no-mermaid` — skip mermaid prompts on every artifact created during this run.
 - `mode-hint-only` — do not run kickoff actions; return only a structured mode recommendation for demos.
+- **`retroactive`** — skip the readiness **confirm** prompt when `N > 0` commits ahead (treat as approved “retro scaffold”); safety preflight still runs. Use for scripted or trusted retro kickoffs.
 
 Fail closed on any other token. **Security rule:** never interpolate `$ARGUMENTS` or `$1` into `!`...`` shell-injection blocks.
 
@@ -41,8 +47,11 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
 
 2. **Load `skills/branch-kickoff`.** The skill loads `skills/git-safety` and runs:
    - **Safety preflight** — clean tree, attached HEAD, base resolution, stash reminder hook. Refuses on dirty.
-   - **Branch readiness gate** — confirm we are not on `main` / `master` (refuse with hint if so) and that we have either zero commits ahead of base or only kit-bookkeeping commits. If non-empty branch, prompt confirm: "Branch is N commits ahead of base; proceed with kickoff?" — recommend Yes only when commits are clearly bookkeeping (LOG.md, MERGE_REQUEST.md, etc.).
-   - **Knowledge drift gate** — silent on 0 drifted AGENTS.md files; F-xx finding on 1–5; block-with-confirm on >5. Honors `no-preflight`. See `skills/branch-kickoff/SKILL.md` § Knowledge drift gate.
+   - **Branch readiness gate** — confirm we are not on `main` / `master` (refuse with hint if so). Then:
+     - If **N = 0** commits ahead of base **or** commits are **only** kit bookkeeping (e.g. `LOG.md`, `MERGE_REQUEST.md`, template churn) → proceed **without** extra prompts.
+     - If **N > 0** with **real** product commits → prompt: `Branch is N commits ahead of base with real commits. This looks like a retroactive kickoff — proceed to scaffold branch context for an existing branch? (yes/no)` — **recommend Yes** and note that **`/project-phases`** will use **git diff vs baseline** and **`MERGE_REQUEST.md`**, not commit subject lines alone (especially when history is squash-heavy or `wip`-heavy).
+     - If the **`retroactive`** token is present on the command line, **skip** this confirmation and proceed as if the user answered **yes** (still respect a refusal from safety preflight).
+   - **Knowledge drift gate** — silent on 0 drifted package knowledge files; F-xx finding on 1–5; block-with-confirm on >5. Honors `no-preflight`. Count **`KNOWLEDGE.md`** where present, else legacy **`AGENTS.md`** per `skills/branch-kickoff/SKILL.md` § Knowledge drift gate.
    - **Big-project criteria check** — if none match, recommend lighter `/project-bootstrap` + `/scaffold-knowledge` and stop.
    - **Model policy** — apply per `skills/branch-kickoff/SKILL.md` § Model policy.
 
@@ -59,6 +68,7 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
    - If the folder does not exist or `MERGE_REQUEST.md` / `LOG.md` are missing → run `/project-bootstrap <projectKey>`.
    - Otherwise → run `/project-knowledge-refresh <projectKey>` to surface durable-knowledge updates.
    - **Recommendation in prompt:** bootstrap when descriptor / state is missing; refresh otherwise.
+   - **Token discipline:** After `/project-refresh` or `/manual-refresh`, **paste or restate** the `## Handoff refresh result` block into the kickoff transcript before the next chained step so the agent does **not** re-run identical `git diff` / `git log` probes unless `HEAD` changed.
 
 4. **Plan phases.** Load `skills/plan-phases` and draft `PHASES.md` per its template.
    - **Recommendation in prompt:** 3–7 phases, each ≤ ~1 working week; carry one big risk per phase; vertical slices over horizontal layers.
@@ -68,7 +78,7 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
    - **Recommendation in prompt:** Dry-run first, then promote to Discovery — preserves auditability.
    - Pass `no-source-guard` through to `/scaffold-knowledge` if the kickoff received it; otherwise the source-path guard runs by default.
 
-6. **Mermaid policy hand-off.** The chained commands (`/project-phases`, `/project-knowledge-refresh`) apply their own mermaid policies as documented in `docs/PATH_CONTRACT.md` § Mermaid policy. This kickoff command never injects mermaid into artifacts itself; it only orchestrates.
+6. **Mermaid policy hand-off.** The chained commands (`/project-phases`, `/project-knowledge-refresh`) apply their own mermaid policies as documented in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) § Mermaid policy. This kickoff command never injects mermaid into artifacts itself; it only orchestrates.
 
 7. **Audit trail.** Per `skills/branch-kickoff` § Audit trail, append:
    - `LOG.md` block:

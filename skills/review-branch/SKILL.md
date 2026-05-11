@@ -45,7 +45,7 @@ Run `/project-checkpoint` with a short note (e.g. “review stopped at F-03”) 
 
 Prefer deterministic recommendations from structured area knowledge before offering generic checks.
 
-1. Parse each changed area's area-level `AGENTS.md` for a `## Verification scripts` block using the structured-knowledge-table schema (`Trigger | Command | When`).
+1. Parse each changed area's **active area document** (descriptor: **`areaKnowledgePath`**, else sibling **`KNOWLEDGE.md`** next to **`areaAgentsPath`**, else **`areaAgentsPath`**) for a `## Verification scripts` block using the structured-knowledge-table schema (`Trigger | Command | When`).
 2. Match each row's `Trigger` glob against `git diff --name-only` for the current review window.
 3. Treat `(added or modified)` as an extra qualifier: trigger only when at least one matching file is added or modified.
 4. Dedupe matched `Command` values, preserving first-seen order.
@@ -53,7 +53,7 @@ Prefer deterministic recommendations from structured area knowledge before offer
 
 Fallback behavior when the block is absent for a changed area:
 
-- Emit one finding: `F-xx`, severity `Note`, question "Missing verification scripts block in <area>/AGENTS.md".
+- Emit one finding: `F-xx`, severity `Note`, question "Missing verification scripts block in the active area document for `<area>` (see `areaKnowledgePath` / sibling KNOWLEDGE / `areaAgentsPath` in `descriptor.json`)."
 - Suggested action: "Add `## Verification scripts` table or run `/scaffold-knowledge <projectKey>` to seed one."
 - Offer generic checks as fallback only:
   - `/check-types` (per affected area or cwd)
@@ -76,11 +76,11 @@ Skip both if the team keeps MR updates fully manual.
 Present:
 
 - Open vs resolved `F-xx` items
-- Verification outcome (or “skipped by user”)
-- What changed in `MERGE_REQUEST.md` `OpenCode:` sections (or “not updated”)
-- Mode-switch suggestion (explicit, never automatic):
-  - Recommend `build` when findings are narrow and implementation-ready.
-  - Recommend `plan` when findings reveal unresolved design or cross-area decisions.
+- Verification outcome (or "skipped by user")
+- What changed in `MERGE_REQUEST.md` `OpenCode:` sections (or "not updated")
+- Next-step recommendation (never automatic):
+  - Recommend proceeding with implementation when findings are narrow and implementation-ready.
+  - Recommend further planning when findings reveal unresolved design or cross-area decisions.
 
 ## Decision points
 
@@ -155,6 +155,6 @@ Respect the existing 25-row cap in `commands/project-review.md`; the senior lens
 
 ## Related docs
 
-- Scenarios: `WORKFLOW.md` (repo root)
-- Commands: `COMMAND_WORKFLOW.md` (repo root)
+- Scenarios: `documentation/WORKFLOW.md`
+- Commands: `documentation/COMMAND_WORKFLOW.md`
 - Baseline persona: `rules/SENIOR_ENGINEERING.md`

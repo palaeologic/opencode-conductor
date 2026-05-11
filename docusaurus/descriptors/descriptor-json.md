@@ -9,7 +9,7 @@ sidebar_position: 1
 
 ## Where it lives
 
-`<projectRootPath>/descriptor.json` (default).
+**Kit contract:** `~/.config/opencode/projects/<projectKey>/descriptor.json` (always). **`projectRootPath`** in the JSON points at the application git root; durable handoff files may live under **`opencodeProjectRootPath`** (global or project-local per [`documentation/PATH_CONTRACT.md`](../../documentation/PATH_CONTRACT.md)).
 
 A v2 descriptor has shape:
 
@@ -38,16 +38,20 @@ A v2 descriptor has shape:
 
 ## `areas`
 
-Each area defines:
+`areas` is an object keyed by area name (for example `"frontend"`, `"api"`). Each value typically includes:
 
-- `name` — short identifier
-- `areaPath` (optional) — source scope
-- `areaAgentsPath` — durable knowledge file location
+- `pathPrefix` — source-tree scope under `projectRootPath` (used for diffs and commands).
+- `areaAgentsPath` — **default** durable document for that area (usually `.../<area>/AGENTS.md`): stack, conventions, routing, often **`## Verification scripts`**.
+- `areaKnowledgePath` *(optional)* — explicit path to a **separate** area-level knowledge file when you split durable facts from the area `AGENTS.md` anchor. Not emitted by `/project-init`; add only when needed.
+- `commandsRoot` — where slash-command overrides for that area live, if used.
 
 ```json
-{
-  "name": "frontend",
-  "areaAgentsPath": "~/.config/opencode/projects/my-app/frontend/AGENTS.md"
+"areas": {
+  "frontend": {
+    "pathPrefix": "frontend",
+    "areaAgentsPath": "~/.config/opencode/projects/my-app/frontend/AGENTS.md",
+    "commandsRoot": "frontend"
+  }
 }
 ```
 
@@ -78,7 +82,7 @@ An ordered array of rules. Each rule maps source-tree paths to convention-path k
 
 ### Fields
 
-- `area` — must match an `areas[].name`.
+- `area` — must match a key in the `areas` object.
 - `kind` — `pathAndAlias` or `pathPrefix`.
 - `pathPattern` — must contain `{packageName}` exactly once.
 - `aliases` (optional) — recognized import aliases.
@@ -87,13 +91,13 @@ An ordered array of rules. Each rule maps source-tree paths to convention-path k
 
 ### Stem derivation contract
 
-The knowledge stem is the prefix of `pathPattern` up to and including the first `{packageName}` token, with that token removed. This stem becomes part of the leaf `AGENTS.md` path.
+The knowledge stem is the prefix of `pathPattern` up to and including the first `{packageName}` token, with `{packageName}` replaced by the concrete package directory name. This stem becomes `<rel>` in `<opencodeProjectRootPath>/<rel>/KNOWLEDGE.md` (legacy leaf `AGENTS.md` still honored when `KNOWLEDGE.md` is absent).
 
 ```mermaid
 flowchart LR
-  Pat[pathPattern] --> Stem[Prefix up to first packageName]
-  Stem --> Mount[Mounted under opencodeProjectRootPath area]
-  Mount --> Leaf[Leaf AGENTS.md path]
+  Pat[pathPattern] --> Stem[Prefix with packageName resolved]
+  Stem --> Mount[Under opencodeProjectRootPath]
+  Mount --> Leaf[Leaf KNOWLEDGE.md path]
 ```
 
 ## Minimal v2 example
@@ -105,10 +109,18 @@ flowchart LR
   "opencodeProjectRootPath": "~/.config/opencode/projects/my-app",
   "baselineBranchForMaterialChanges": "main",
   "handoffModeDefault": "tracked",
-  "areas": [
-    { "name": "frontend", "areaAgentsPath": "~/.config/opencode/projects/my-app/frontend/AGENTS.md" },
-    { "name": "api",      "areaAgentsPath": "~/.config/opencode/projects/my-app/api/AGENTS.md" }
-  ],
+  "areas": {
+    "frontend": {
+      "pathPrefix": "frontend",
+      "areaAgentsPath": "~/.config/opencode/projects/my-app/frontend/AGENTS.md",
+      "commandsRoot": "frontend"
+    },
+    "api": {
+      "pathPrefix": "api",
+      "areaAgentsPath": "~/.config/opencode/projects/my-app/api/AGENTS.md",
+      "commandsRoot": "api"
+    }
+  },
   "branchHandoff": {
     "contextDirTemplate": "~/.config/opencode/projects/my-app/branches/{branchName}",
     "templatesDir": "~/.config/opencode/projects/my-app/_templates/mr",

@@ -8,7 +8,16 @@ Contract-level guide for adding/upgrading kit assets. The tutorial walkthrough w
 - **Skills**: `skills/<name>/SKILL.md`. Each skill exposes a single, focused capability with deterministic inputs/outputs. Skills do not load other skills (single exception: `git-safety` as foundational primitive).
 - **Rules**: `rules/<NAME>.md`. Always-on; keep small and opinion-light.
 - **Descriptor rules**: extend `pseudoPackageDetection` in your project's `descriptor.json` (schema v2 array form). Each rule must declare `area`, `kind`, `pathPattern`.
-- **Structured-knowledge tables**: add `## Verification scripts` (and forthcoming run-locally) tables to area-level `AGENTS.md`. Schema lives in `documentation/PATH_CONTRACT.md`.
+- **Structured-knowledge tables**: add `## Verification scripts` (and forthcoming run-locally) tables to area-level **`KNOWLEDGE.md`** (legacy installs may still use area-level `AGENTS.md` until migrated). Schema lives in `documentation/PATH_CONTRACT.md`.
+
+## Descriptor authoring — paired keys and refresh heuristics
+
+Some configuration **pairs** the same logical name twice on purpose — not duplicate JSON keys, but **runtime vs template** or **areas vs refresh mapping**:
+
+- **Branch files vs `_templates/mr/`:** `mrFilenames` (and `logFilename`, `phasesFilename` where used) name files under the expanded branch context directory. They pair with `mrTemplateFilename`, `logTemplateFilename`, `phasesTemplateFilename` under `_templates/mr/`. Values are often identical (e.g. `"MERGE_REQUEST.md"`); bootstrap copies from the template when the runtime file is missing.
+- **Areas vs `refreshToolHeuristics`:** `areas.*.path` / `pathPrefix` (and related keys) scope source and knowledge convention paths. `refreshToolHeuristics.changedFilesAreaPrefixes` (or equivalent) may repeat the same directory prefixes so refresh can map `git diff` output to areas. When you add an area, update **both** the `areas` entry and any matching refresh prefix list so they do not drift.
+
+Optional future hardening: the engine could default `*TemplateFilename` to match the runtime basename when omitted — until then, keep explicit template filenames in `descriptor.json` when they differ from defaults.
 
 ## Required for upstream contributions
 
@@ -50,11 +59,11 @@ Contract-level guide for adding/upgrading kit assets. The tutorial walkthrough w
 1. Add a rule to `pseudoPackageDetection` (array). Use `pathAndAlias` or `pathPrefix`.
 2. Verify the stem derivation contract: prefix up to and including the first `{packageName}` is the knowledge stem.
 3. Run `/scaffold-knowledge <key> dry-run` to preview convention paths before discovery.
-4. Document the rule purpose in your project's area `AGENTS.md`.
+4. Document the rule purpose in your project's area **`KNOWLEDGE.md`** (or legacy area `AGENTS.md`).
 
 ## Adding a structured-knowledge table
 
-1. Place the block in the relevant area-level `AGENTS.md` under a `##` heading (e.g., `## Verification scripts`).
+1. Place the block in the relevant area-level **`KNOWLEDGE.md`** (or legacy area `AGENTS.md`) under a `##` heading (e.g., `## Verification scripts`).
 2. Use the schema from `documentation/PATH_CONTRACT.md`: `Trigger | Command | When`.
 3. Use literal command strings (no `$ARGUMENTS`).
 4. Trigger globs follow `git diff --name-only` semantics; the optional `(added or modified)` qualifier filters change kind.

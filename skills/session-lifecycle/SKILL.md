@@ -21,9 +21,11 @@ Provide structure for a full coding session using the handoff kit's lifecycle co
 1. Run `/manual-refresh` or `/project-refresh` to load context
 2. Review the refresh output:
    - Check `handoff_mode` — if tracked, branch files should exist
-   - If `missing_branch_context` is true, run `/project-bootstrap`
-   - Check `agents_stale_vs_branch` — re-read AGENTS.md if true
+   - If `missing_branch_context` is **`true`**, run **`/project-bootstrap`** then **`/project-refresh`** or **`/manual-refresh`** again
+   - Read **`branch_context_status`** when present — partial trees (e.g. `PHASES.md` without readable MR/LOG) still need bootstrap to seed missing pieces
+   - Check `agents_stale_vs_branch` — re-read project **rules `AGENTS.md`** and active area **`KNOWLEDGE.md`** (or legacy area `AGENTS.md`) if true
 3. Review `next_steps` from refresh output for recommendations
+4. **Token discipline:** keep the latest **`## Handoff refresh result`** block in the session; until **`git rev-parse HEAD`** changes, **do not** re-run full `git log` / wide `git diff` for every follow-on command — cite the handoff block or confirm HEAD with a single shell check
 
 ### Phase 2: Active work
 

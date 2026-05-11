@@ -324,16 +324,30 @@ export async function refreshContextEngine(
 
   const hasTrackedContext = Boolean(mrText && logText);
 
+  let phasesPresent = false;
+  try {
+    await fs.access(phases);
+    phasesPresent = true;
+  } catch {
+    phasesPresent = false;
+  }
+
   if (!hasTrackedContext && mode === "tracked") {
     return {
       applicable: false,
       reason: "missing_branch_context",
+      missing_branch_context: true,
       recommended_next_step: "opencode_bootstrap_branch",
       handoff_mode: mode,
       mr_context_path: path.join(dir, getMrFilenames(handoff)[0]),
       mr_context_paths: mrPathsResolved,
       log_context_path: logPath,
       phases_context_path: phases,
+      branch_context_readable: {
+        merge_request_readable: Boolean(mrText),
+        log_readable: Boolean(logText),
+        phases_file_present: phasesPresent,
+      },
     };
   }
 
@@ -373,17 +387,43 @@ export async function refreshContextEngine(
   const opencodeRoot = descriptor.opencodeProjectRootPath as string;
   const activeArea = inferArea(descriptor, context.directory ?? repoRoot);
 
-  // Fix E: only include active area's AGENTS.md, not all areas
+  // Fix E: only include active area package knowledge (KNOWLEDGE.md preferred, AGENTS.md fallback), not all areas
   const reread: string[] = [path.join(opencodeRoot, "AGENTS.md")];
-  const activeAreaDef = descriptor.areas?.[activeArea];
-  if (activeAreaDef?.areaAgentsPath) {
-    const ap = homePath(activeAreaDef.areaAgentsPath);
-    try {
-      await fs.access(ap);
-      reread.push(ap);
-    } catch {
-      /* area agents file doesn't exist yet */
+  const rootKnowledge = path.join(opencodeRoot, "KNOWLEDGE.md");
+  try {
+    await fs.access(rootKnowledge);
+    reread.push(rootKnowledge);
+  } catch {
+    /* optional project-wide durable facts beside rules AGENTS.md */
+  }
+  const activeAreaDef = descriptor.areas?.[activeArea] as JsonObject | undefined;
+  if (activeAreaDef) {
+    let areaDoc: string | null = null;
+    if (activeAreaDef.areaKnowledgePath) {
+      const kp = homePath(String(activeAreaDef.areaKnowledgePath));
+      try {
+        await fs.access(kp);
+        areaDoc = kp;
+      } catch {
+        /* missing */
+      }
     }
+    if (!areaDoc && activeAreaDef.areaAgentsPath) {
+      const agents = homePath(String(activeAreaDef.areaAgentsPath));
+      const knowledge = path.join(path.dirname(agents), "KNOWLEDGE.md");
+      try {
+        await fs.access(knowledge);
+        areaDoc = knowledge;
+      } catch {
+        try {
+          await fs.access(agents);
+          areaDoc = agents;
+        } catch {
+          /* area knowledge file doesn't exist yet */
+        }
+      }
+    }
+    if (areaDoc) reread.push(areaDoc);
   }
 
   for (const mp of mrPathsResolved) {
@@ -431,6 +471,12 @@ export async function refreshContextEngine(
 
   return {
     applicable: true,
+    missing_branch_context: false,
+    branch_context_readable: {
+      merge_request_readable: true,
+      log_readable: true,
+      phases_file_present: phasesPresent,
+    },
     projectKey,
     branch,
     handoff_mode: mode,
