@@ -91,5 +91,5 @@ Add Git-style globs to `reviewIgnoredPathGlobs`. Ignored paths remain visible in
 - Schema v1/v2 behavior preserved when changing v3
 - Manual and tool refresh concepts remain aligned
 - Command and skill registry updated
-- Contract and tutorial documentation updated
+- Relevant contract and tutorial pages under `documentation/` updated
 - `python3 tests/contract_checks.py` passes

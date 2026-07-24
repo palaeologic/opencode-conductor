@@ -653,10 +653,11 @@ def check_command_and_skill_registry() -> None:
         assert any(line == f"name: {skill_name}" for line in lines[1:frontmatter_end])
         assert any(line.startswith("description:") for line in lines[1:frontmatter_end])
 
-    command_reference = (ROOT / "docusaurus" / "commands" / "reference.md").read_text(encoding="utf-8")
+    user_guide = (ROOT / "documentation" / "USER_GUIDE.md").read_text(encoding="utf-8")
+    command_reference = user_guide
     referenced_commands = set(re.findall(r"`/([a-z0-9-]+)", command_reference))
     assert referenced_commands == command_files, "command reference and command registry differ"
-    skill_reference = (ROOT / "docusaurus" / "skills" / "index.md").read_text(encoding="utf-8")
+    skill_reference = user_guide
     referenced_skills = set(re.findall(r"`([a-z0-9-]+)`", skill_reference))
     assert skill_files <= referenced_skills, "skill reference is missing registered skills"
 

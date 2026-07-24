@@ -51,7 +51,7 @@ Optional:
 ### 4) Generation
 
 - Write docs under the approved output root only.
-- Include Docusaurus frontmatter by default (unless disabled).
+- Include portable YAML frontmatter by default (unless disabled).
 - Include mermaid only when it clarifies user workflows.
 
 ### 5) Audit

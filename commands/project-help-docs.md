@@ -40,7 +40,7 @@ Unknown tokens should trigger clarification.
    - Generation
    - Audit
 5. Frontmatter policy:
-   - include Docusaurus frontmatter unless `--no-frontmatter`
+   - include portable YAML frontmatter unless `--no-frontmatter`
 6. Mermaid policy:
    - include only where it helps user workflows unless `--no-mermaid`
 7. Vocabulary audit:

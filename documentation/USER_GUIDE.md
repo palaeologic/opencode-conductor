@@ -156,11 +156,12 @@ opencode-conductor/
 │   └── examples/
 ├── documentation/
 │   ├── USER_GUIDE.md
+│   ├── ARCHITECTURE.md
+│   ├── DESCRIPTOR_REFERENCE.md
+│   ├── HELP_DOCS_AUTHORING.md
 │   ├── PATH_CONTRACT.md
 │   ├── WORKFLOW.md
 │   └── ...
-├── docusaurus/
-│   └── tutorial-oriented documentation
 ├── project-rules/
 │   ├── AGENTS.md
 │   └── README.md
@@ -186,11 +187,10 @@ opencode-conductor/
 └── opencode.json.template
 ```
 
-The distinction between `documentation/` and `docusaurus/` is intentional:
-
-- `documentation/` contains concise contracts and maintainer references.
-- `docusaurus/` contains tutorial-oriented pages.
-- this guide connects both views for a new developer.
+The `documentation/` directory is the single maintained documentation tree. It
+contains both concise contracts and longer tutorial material, so links remain
+useful when the repository is viewed directly and do not depend on a particular
+documentation-site generator.
 
 ## 5. Requirements
 
@@ -2206,6 +2206,9 @@ Inspect the temporary result before running the installer against your normal co
 ## Further reading
 
 - [`README.md`](../README.md) — concise project overview.
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — components, data flow, invariants, trade-offs, and failure modes.
+- [`DESCRIPTOR_REFERENCE.md`](DESCRIPTOR_REFERENCE.md) — field-by-field schema v3 reference and compatibility notes.
+- [`HELP_DOCS_AUTHORING.md`](HELP_DOCS_AUTHORING.md) — complete source-to-help-document workflow.
 - [`WORKFLOW.md`](WORKFLOW.md) — canonical workflow.
 - [`COMMAND_WORKFLOW.md`](COMMAND_WORKFLOW.md) — command decision matrix.
 - [`PATH_CONTRACT.md`](PATH_CONTRACT.md) — descriptor, path, helper, and output contracts.

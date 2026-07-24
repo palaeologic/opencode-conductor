@@ -91,3 +91,40 @@ No. They share the optional central runtime installed with `--with-runtime-deps`
 ### Are models pinned?
 
 No. Upstream commands use the active session model unless an installation explicitly configures an override.
+
+## Documentation
+
+### Where is the maintained documentation?
+
+All maintained guides and contracts live under `documentation/`. The repository
+uses one Markdown tree so direct repository links, contract checks, and
+site-rendered copies all refer to the same source.
+
+### Does `/project-help-docs` publish a documentation site?
+
+No. It generates and audits Markdown beneath an approved output root. Human
+review and publication remain separate steps.
+
+### Why are in-repository help-document writes refused by default?
+
+User-facing help often belongs in a separate repository or publishing
+pipeline. Refusing in-repository output prevents accidental source-tree writes.
+Use `--allow-in-repo` only when the chosen repository intentionally owns the
+generated pages.
+
+### What is the difference between terminology replacement and a prohibited term?
+
+`--brand=<from:to>` rewrites terminology. `--ban-term=<term>` verifies that a
+term no longer appears. Use both during a rename.
+
+### Can generated pages include site metadata?
+
+Yes. Portable YAML frontmatter is enabled by default and can be disabled with
+`--no-frontmatter`. Destination-specific metadata can be added in a local
+overlay or publishing step.
+
+### Does branch exploration install dependencies or open a browser?
+
+No. `/project-branch-explore` can describe setup and interaction steps in
+`EXPLORE_GUIDE.md`, but dependency installation and browser use remain
+explicit user actions.

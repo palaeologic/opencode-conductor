@@ -386,7 +386,7 @@ Diagrams add signal in some artifacts and noise in others. The kit uses these de
 | `LOG.md` | OFF | never | append-only audit log; diagrams add noise |
 | `MERGE_REQUEST.md` | OFF | yes (opt-in) | only on architectural / migration MRs; never inside `## OpenCode:` blocks |
 | `REVIEW.md` | OFF | yes (opt-in); ON when structural change detected | place under an optional `## Architecture` section, not inside findings |
-| `docusaurus/architecture/*.md` | ON | n/a | architecture pages always include at least one diagram |
+| `documentation/ARCHITECTURE.md` | ON | n/a | architecture sections use diagrams where relationships or sequences need them |
 
 All mermaid prompts:
 

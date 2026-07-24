@@ -131,7 +131,7 @@ Schema v3 replaces the fixed set of branch files with an extensible helper regis
 
 Each branch's `HELPERS.json` records which supported helpers that branch uses. Refresh reconciles descriptor support, manifest intent, and filesystem reality without silently recreating or deleting files. Invalid manifests are reported and preserved.
 
-See the full [descriptor reference](docusaurus/descriptors/descriptor-json.md) and [path contract](documentation/PATH_CONTRACT.md).
+See the full [descriptor reference](documentation/DESCRIPTOR_REFERENCE.md) and [path contract](documentation/PATH_CONTRACT.md).
 
 ## Core workflows
 
@@ -226,12 +226,15 @@ The suite exercises fresh and merge installs, schema compatibility, helper migra
 ## Documentation
 
 - [Canonical workflow](documentation/WORKFLOW.md)
+- [Architecture and design](documentation/ARCHITECTURE.md)
+- [Descriptor reference](documentation/DESCRIPTOR_REFERENCE.md)
 - [Command decision matrix](documentation/COMMAND_WORKFLOW.md)
 - [Path and behavior contract](documentation/PATH_CONTRACT.md)
 - [Upgrade guide](documentation/UPGRADING.md)
 - [Testing guide](documentation/TESTING_THE_KIT.md)
 - [Extension guide](documentation/EXTENDING.md)
+- [Help-document authoring](documentation/HELP_DOCS_AUTHORING.md)
 - [Roadmap](documentation/ROADMAP.md)
-- [Human-oriented manual](docusaurus/index.md)
+- [In-depth user and extension guide](documentation/USER_GUIDE.md)
 
-When tutorial documentation and contract documentation disagree, the files in [`documentation/`](documentation/) are authoritative.
+All maintained user, contributor, and contract documentation lives in [`documentation/`](documentation/).
