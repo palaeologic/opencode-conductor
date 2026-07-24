@@ -661,6 +661,38 @@ def check_command_and_skill_registry() -> None:
     referenced_skills = set(re.findall(r"`([a-z0-9-]+)`", skill_reference))
     assert skill_files <= referenced_skills, "skill reference is missing registered skills"
 
+    model_guide = (ROOT / "documentation" / "MODEL_ROUTING_AND_COST.md").read_text(
+        encoding="utf-8"
+    )
+    for command_name in command_files:
+        assert f"`{command_name}`" in model_guide, (
+            f"model routing guide is missing command: {command_name}"
+        )
+    for skill_name in skill_files:
+        assert f"`{skill_name}`" in model_guide, (
+            f"model routing guide is missing skill: {skill_name}"
+        )
+    for rule_path in (ROOT / "rules").glob("*.md"):
+        assert f"`{rule_path.stem}`" in model_guide, (
+            f"model routing guide is missing rule: {rule_path.stem}"
+        )
+
+    footprint = json.loads(
+        run(
+            [
+                "python3",
+                "bin/estimate-prompt-footprint.py",
+                "--format",
+                "json",
+            ]
+        ).stdout
+    )
+    assert footprint["commands"]["count"] == len(command_files)
+    assert footprint["skills"]["count"] == len(skill_files)
+    assert footprint["rules"]["count"] == len(list((ROOT / "rules").glob("*.md")))
+    assert footprint["default_enabled_rules"]["count"] == len(config["instructions"])
+    assert footprint["default_enabled_rules"]["proxy_tokens"] > 0
+
     manual = (ROOT / "commands" / "manual-refresh.md").read_text(encoding="utf-8")
     tool = (ROOT / "commands" / "project-refresh.md").read_text(encoding="utf-8")
     required_fields = [

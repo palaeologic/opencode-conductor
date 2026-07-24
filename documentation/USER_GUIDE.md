@@ -2215,4 +2215,5 @@ Inspect the temporary result before running the installer against your normal co
 - [`UPGRADING.md`](UPGRADING.md) — upgrade and migration instructions.
 - [`TEST_PLAN.md`](TEST_PLAN.md) — validation strategy.
 - [`EXTENDING.md`](EXTENDING.md) — concise extension contract.
+- [`MODEL_ROUTING_AND_COST.md`](MODEL_ROUTING_AND_COST.md) — provider-neutral model routing, caching, context, and cost guidance.
 - [`ROADMAP.md`](ROADMAP.md) — planned direction.

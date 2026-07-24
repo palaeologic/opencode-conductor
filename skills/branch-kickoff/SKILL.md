@@ -184,6 +184,7 @@ Minimal shape:
 Default model resolution:
 
 - **Default:** unset. The command frontmatter leaves `model` empty and uses the active session model.
+- **Cost-aware profile:** use a balanced route for normal kickoffs, an economy route only for bounded mechanical initialization, and a frontier route when the kickoff spans multiple systems, has unclear requirements, or carries high migration/security risk. The profiles and current examples are maintained in `documentation/MODEL_ROUTING_AND_COST.md`.
 - **Optional override prompt** (only when the user asks; preselect default):
   - "Use default (recommended for kickoffs)"
   - "Pick another model" — opens free-form picker

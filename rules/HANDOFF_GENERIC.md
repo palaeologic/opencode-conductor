@@ -33,7 +33,10 @@ Use with `$OPENCODE_HOME/projects/<projectKey>/descriptor.json` (`OPENCODE_HOME`
 
 - Use the active session model unless the local installation explicitly defines `descriptor.subtaskModels` or per-command routing.
 - Keep routing in deployment configuration, not shared upstream rules.
+- Route by workload profile: economy for bounded mechanical work, balanced for normal implementation and lifecycle work, and frontier for ambiguous, broad, or high-risk decisions.
+- Evaluate local quality and actual token telemetry before changing a default; public list prices alone do not measure retry cost or correctness.
 - Do not ask for a model on every subtask; ask only when the user must make a meaningful cost or capability choice.
+- See `documentation/MODEL_ROUTING_AND_COST.md` for provider-neutral profiles, current price examples, cache behavior, and escalation guidance.
 
 ## Merge closure (tracked)
 

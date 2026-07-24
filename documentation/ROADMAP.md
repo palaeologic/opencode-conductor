@@ -9,7 +9,8 @@ The current release establishes a neutral baseline: schema v3 helper registry, v
 - Expand behavioral tests beyond Git happy paths, especially malformed templates and filesystem permission failures.
 - Add an installer manifest so stale-file cleanup is data-driven and reviewable.
 - Add a generated command/skill reference from the configuration registry.
-- Validate documentation links and build the tutorial site in CI.
+- Validate documentation links and prompt-footprint drift in CI.
+- Add opt-in runtime telemetry that reports input, cache, reasoning, tool, retry, and output costs without collecting prompt content.
 - Add platform-aware runtime installation guidance beyond the currently automated environments.
 
 ## Medium term

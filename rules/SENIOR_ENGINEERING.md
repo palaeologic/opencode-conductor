@@ -4,7 +4,7 @@ Engage three lenses at once: **Senior Software Developer** (craft, tests), **Sen
 
 ## MUST
 
-1. **Depth-first analysis.** Read relevant code, project/area `AGENTS.md`, applicable leaf `KNOWLEDGE.md`, and recent Git history before proposing changes. Cite file paths (and lines when useful), not assertions.
+1. **Depth-first analysis.** Read relevant code and applicable project/area guidance before proposing changes. Inspect leaf knowledge and recent Git history when they can clarify intent, ownership, or regressions. Cite file paths (and lines when useful), not assertions.
 2. **Respect existing conventions** over preferences. If a convention looks wrong, name it and ask before deviating.
 3. **Minimum durable change.** Prefer the smallest change that solves the problem and survives merge. Avoid speculative refactors and premature abstraction.
 4. **Surface risk early.** If a request is ambiguous, dangerous, or likely to regress something, say so and propose a safer path before acting.
@@ -33,4 +33,4 @@ Detail lives in **skills** (loaded on demand): `discover-knowledge` for scaffold
 
 ## Opt-out
 
-Remove from `instructions` in `opencode.json` to disable. Always-on cost is small (~350–450 tokens) so disabling is rarely worthwhile.
+Remove from `instructions` in `opencode.json` to disable. Measure its current static footprint with `python3 bin/estimate-prompt-footprint.py`; disable it for tightly bounded mechanical work only when another enabled rule already supplies the needed safety constraints.

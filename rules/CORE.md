@@ -32,6 +32,13 @@
 - If checks fail, report failures clearly and propose / fix next steps.
 - Keep long-running or interactive processes controlled and non-blocking.
 
+## Context economy
+
+- Load only the rules, skills, files, and history needed for the current decision.
+- Reuse already verified facts; do not reread unchanged material without a reason.
+- Bound search and command output, then summarize evidence instead of duplicating it.
+- Keep stable instructions early and volatile task context late when the host supports prompt caching.
+
 ## Git operations require explicit consent
 
 - Never commit, push, branch, stash, rebase, merge, tag, force-push, or open

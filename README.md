@@ -196,6 +196,23 @@ The installer ships these optional rule modules:
 
 Enable only the rules appropriate for a project through the `instructions` array in `opencode.json`. The generic project seed at [`project-rules/AGENTS.md`](project-rules/AGENTS.md) is intentionally sparse; teams should populate it with their own commands, boundaries, invariants, and verification steps.
 
+## Model routing and cost
+
+The shared configuration does not pin a provider or model. Keep the active session model as the default, then define local workload profiles:
+
+- **Economy:** bounded mechanical work, such as GPT-5.6 Luna or Grok Build 0.1.
+- **Balanced:** normal implementation and lifecycle work, such as GPT-5.6 Terra, Claude Sonnet 4.6, or Grok 4.5.
+- **Frontier:** broad, ambiguous, or high-risk work, such as GPT-5.6 Sol or Claude Opus 4.8.
+- **Frontier-plus:** unusually demanding long-horizon work, such as Claude Fable 5.
+
+Sol, Terra, and Luna are GPT-5.6 variants; GPT-5.5 is a separate compatibility route. Claude Opus 4.7 remains useful for deployments already evaluated against it.
+
+Read the full [model routing, context, and cost guide](documentation/MODEL_ROUTING_AND_COST.md) for current API price examples, caching and context behavior, tool-call costs, every command/skill/rule recommendation, and an evaluation plan. Detect static prompt growth with:
+
+```bash
+python3 bin/estimate-prompt-footprint.py
+```
+
 ## Review and branch synchronization
 
 Refresh partitions changed files deterministically using `reviewIgnoredPathGlobs`, reports both reviewable and ignored counts, and keeps ignored paths visible in review scope. Review findings use separate current namespaces for implementation, review, and metadata/knowledge findings while preserving older finding identifiers already present in an existing artifact.
@@ -234,6 +251,7 @@ The suite exercises fresh and merge installs, schema compatibility, helper migra
 - [Testing guide](documentation/TESTING_THE_KIT.md)
 - [Extension guide](documentation/EXTENDING.md)
 - [Help-document authoring](documentation/HELP_DOCS_AUTHORING.md)
+- [Model routing, context, and cost guide](documentation/MODEL_ROUTING_AND_COST.md)
 - [Roadmap](documentation/ROADMAP.md)
 - [In-depth user and extension guide](documentation/USER_GUIDE.md)
 
