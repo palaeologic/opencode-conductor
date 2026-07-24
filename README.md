@@ -11,6 +11,8 @@ OpenCode Conductor is a descriptor-driven toolkit for durable coding-session con
 
 The project is intentionally project-, framework-, service-, and model-neutral. Project-specific conventions belong in the project's own rules and knowledge files.
 
+For a junior-friendly, in-depth explanation of installation, workflows, commands, skills, rules, extension through forks, and current limitations, read the [`OpenCode Conductor User Guide`](documentation/USER_GUIDE.md).
+
 ## Install
 
 ```bash
