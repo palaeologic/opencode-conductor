@@ -17,7 +17,7 @@ sequenceDiagram
   User->>Cmd: /project-init my-app
   Cmd->>User: Proposal block (descriptor.json + templates)
   User->>Cmd: approve
-  Cmd->>User: descriptor written, rules AGENTS.md + per-area AGENTS paths seeded
+  Cmd->>User: descriptor and branch-helper templates written
   User->>Cmd: /scaffold-knowledge my-app dry-run
   Cmd->>User: dry-run preview
   User->>Cmd: /scaffold-knowledge my-app
@@ -28,7 +28,7 @@ What you'll see at the end:
 
 ```markdown
 ## Scaffold result
-- created: <n> leaf KNOWLEDGE.md (+ area AGENTS.md merges)
+- created: <n> leaf KNOWLEDGE.md
 - skipped: 1 (source_missing: legacy/x)
 - next_step: customize each leaf as needed
 ```
@@ -155,7 +155,7 @@ Examples:
 ## Findings
 | id | severity | scope | summary |
 | --- | --- | --- | --- |
-| F-01 | info | api | unused import |
+| F001 | info | api | unused import |
 
 ## Suggested verifications
 - bun run typecheck

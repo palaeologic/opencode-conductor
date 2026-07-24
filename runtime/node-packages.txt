@@ -1,0 +1,8 @@
+pptxgenjs
+docx
+react
+react-dom
+react-icons
+sharp
+pdf-lib
+pdfjs-dist

@@ -8,7 +8,7 @@ sidebar_position: 1
 This page is the full catalog of slash commands shipped with the kit. For each command we list:
 
 - **Purpose** — one sentence
-- **Frontmatter defaults** — `agent`, `subtask`, `model`
+- **Runtime shape** — primary-session or subtask execution, with local routing left unpinned
 - **Arguments** — positional `$1`, `$2`, … and opt-out flags
 - **Output** — structured markdown block shape
 - **When to use** vs. **when not to use**
@@ -23,7 +23,9 @@ flowchart TD
   Init[/project-init/]
   Refresh[/project-refresh/]
   Manual[/manual-refresh/]
+  PullRefresh[/project-pull-refresh/]
   Bootstrap[/project-bootstrap/]
+  Helper[/project-helper/]
   Scaffold[/scaffold-knowledge/]
   Phases[/project-phases/]
   Checkpoint[/project-checkpoint/]
@@ -38,14 +40,18 @@ flowchart TD
   BExplore[/project-branch-explore/]
   State[/project-state/]
   HelpDocs[/project-help-docs/]
-  Verif[/check-types /run-tests /lint-fix /organize-imports/]
+  Verif[/verification helpers/]
+  Impl[/guided implementation helpers/]
 
-  Init --> Bootstrap --> Refresh
+  Init --> Bootstrap --> Refresh --> PullRefresh
+  Bootstrap --> Helper
   BNew --> BKickoff --> Phases --> Scaffold
   Refresh --> Review --> UpdateMR --> ReviewSync
   Scaffold --> KRefresh
   BExplore -. read-only .- State
   HelpDocs -. external .- State
+  Verif -. focused checks .- Review
+  Impl -. source changes .- Verif
 ```
 
 ## Command families
@@ -65,7 +71,7 @@ Use this as the navigation index — each family has its own sub-page below.
 ## Conventions across all commands
 
 - **Frontmatter** — see `documentation/PATH_CONTRACT.md` § Frontmatter conventions for the canonical table.
-- **Audit trail** — mutating commands append `### <Activity>` to `LOG.md` and refresh `## OpenCode:` in the MR.
+- **Mutation boundaries** — each mutating command names the files it may change and its audit behavior; refresh commands are always read-only.
 - **Pre-write secret scan** — durable knowledge writes run a regex pass for high-entropy or token-shaped strings.
 - **No raw user prompts in audit** — `LOG.md` and MR machine blocks are summary blocks, not transcript dumps.
 - **Opt-out flags** — knowledge-drift preflight, mermaid prompts, and source-path guards each have explicit opt-out flags so commands can run cleanly in batch / CI.

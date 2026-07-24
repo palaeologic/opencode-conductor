@@ -3,7 +3,7 @@ description: Create a new branch from the latest integration base, then optional
 subtask: false
 ---
 
-Loads skills (when available): `branch-kickoff` (kickoff orchestration), which itself loads `git-safety` (safety preflight, base resolution, kit-stash convention).
+Loads skills (when available): `branch-kickoff` (kickoff orchestration), which itself loads `git-safety` (safety preflight, base resolution, `opencode-kit` stash convention).
 
 Use when you are on any branch and want a brand-new branch off the latest integration base. For scaffolding an already-checked-out empty branch, use `/project-branch-kickoff` directly.
 
@@ -48,9 +48,7 @@ Bind these fixed shell injections into the prompt before the safety preflight; t
    3. `git pull --ff-only` — preview / confirm / run. On non-fast-forward, abort with a remediation hint ("base diverged locally; rebase or reset before continuing"). Do **not** force.
    4. `git checkout -b <new-branch>` — preview / confirm / run. If the branch already exists, abort with a remediation hint ("branch exists; pick a different name or check it out manually").
 
-5. **Apply the model policy** per `skills/branch-kickoff` § Model policy. Resolve the effective model from frontmatter default + user override; surface a fallback warning if the chosen model is unavailable; surface a provider-switch warning if relevant.
-   - **Recommendation in prompt for fork users:** "Use default (Opus 4.7 thinking, recommended for kickoffs)" — preselected.
-   - **Recommendation in prompt for upstream users:** "Use default (your provider's top-tier reasoning model is recommended for kickoffs)" — preselected; pick another model only when needed.
+5. **Apply the execution-profile policy** per `skills/branch-kickoff` § Model policy. Use the active session model by default. If the user explicitly requests an override, surface availability/fallback and trust-boundary warnings without recommending a named model or service.
 
 6. **Big-project criteria check.** Confirm the work qualifies as "big" by the criteria in `skills/branch-kickoff` § Big-project criteria. If not, recommend the lighter `/project-bootstrap` + `/scaffold-knowledge` pair instead and stop here without chaining.
 
@@ -58,13 +56,17 @@ Bind these fixed shell injections into the prompt before the safety preflight; t
    - **Default + recommendation:** chain when big-project criteria match.
    - If declined, stop after the audit step (step 9). User can run `/project-branch-kickoff` later.
 
-8. **Optional bootstrap / refresh decision** (only if chaining):
-   - If `.opencode-conductor/` (or `.opencode/`) state and a descriptor are missing → run `/project-bootstrap <projectKey>`.
-   - Otherwise → run `/project-knowledge-refresh <projectKey>`.
-   - **Recommendation in prompt:** bootstrap on first use of the kit in this repo; otherwise refresh.
+8. **Optional helper bootstrap / refresh decision** (only if chaining):
+   - Run `/project-refresh <projectKey>` first to inspect `existing_helpers`, `available_helpers`, and `helper_drift`.
+   - If helpers needed by the chained kickoff are missing, ask whether to create them through `/project-bootstrap <projectKey>` or `/project-helper <projectKey>`.
+   - Treat the answer as the branch's selected helpers for kickoff; do not infer a full helper set from the command name.
+   - Recommended helper set for a full kickoff: Phase plan (`PHASES.md`) for planning, Progress log (`LOG.md`) for audit checkpoints, and Merge request context (`MERGE_REQUEST.md`) only when the user wants local MR narrative / OpenCode blocks.
+   - If the user skips Progress log or Merge request context, proceed with the kickoff but mark the corresponding audit target as `skipped`.
+   - Otherwise → run `/project-knowledge-refresh <projectKey>` to surface durable-knowledge updates.
+   - **Recommendation in prompt:** create only the helpers the user wants for this branch; do not create audit helpers implicitly.
 
-9. **Audit trail.** Per `skills/branch-kickoff` § Audit trail, append:
-   - `LOG.md` block:
+9. **Audit trail.** Per `skills/branch-kickoff` § Audit trail, append only to helpers that exist or that the user explicitly chose to create:
+   - Progress log (`LOG.md`) block when the `log` helper exists:
      ```
      ### Kickoff <ISO timestamp>
      - command: /project-branch-new
@@ -74,7 +76,8 @@ Bind these fixed shell injections into the prompt before the safety preflight; t
      - mermaid: phases=<bool> review=<bool> mr=<bool>     # populated by chained command if applicable
      - confirmations: fetch, checkout-base, pull-ff, checkout-new
      ```
-   - `MERGE_REQUEST.md` `## OpenCode:` block with the same metadata. The block is created in the chained command if `MERGE_REQUEST.md` does not yet exist on the new branch.
+   - Merge request context (`MERGE_REQUEST.md`) `## OpenCode:` block with the same metadata when the `merge_request` helper exists.
+   - If either helper is absent, do not create it silently; record `audit_log_path: skipped` or `audit_mr_path: skipped`.
 
    **Security rule:** audit fields are structured only. Never include free-text user prompts, the branch description, or the ticket title verbatim. Branch name is allowed.
 
@@ -87,8 +90,8 @@ Bind these fixed shell injections into the prompt before the safety preflight; t
 - new_branch: <new-branch>
 - model: <selected> (fallback: <fallback or none>)
 - chained_kickoff: <yes|no>
-- audit_log_path: <path to LOG.md>
-- audit_mr_path: <path to MERGE_REQUEST.md or n/a>
+- audit_log_path: <path to LOG.md|skipped>
+- audit_mr_path: <path to MERGE_REQUEST.md|skipped|n/a>
 - next_step: </project-branch-kickoff <projectKey> | manual implementation>
 ```
 

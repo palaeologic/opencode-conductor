@@ -1,5 +1,7 @@
 # Changelog: v1 → v2
 
+Historical reference only. Schema v3 is current; fixed filename fields described below remain supported through the compatibility adapter.
+
 ## Overview
 
 Version 2 transforms the kit from a minimal bootstrap-and-refresh tool into a full **descriptor-driven session lifecycle system** with two operating modes, richer metadata, and explicit lifecycle commands designed for OpenCode's hook-free environment.

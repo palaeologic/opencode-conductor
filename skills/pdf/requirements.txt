@@ -1,0 +1,6 @@
+reportlab>=4.2.0
+pypdf>=5.0.0
+pdfplumber>=0.11.0
+pdf2image>=1.17.0
+Pillow>=10.0.0
+mistune>=3.0.0

@@ -9,7 +9,7 @@ sidebar_position: 6
 
 ## Quick reference
 
-- **Frontmatter defaults**: `agent: plan`, `subtask: true`.
+- **Frontmatter default**: `subtask: true`.
 - **Required positional**: `<output-root>` — the absolute path where docs are written.
 - **Refused by default**: writes inside the source repo. Pass `--allow-in-repo` to override.
 
@@ -18,8 +18,8 @@ sidebar_position: 6
 | Flag | Purpose |
 | --- | --- |
 | `--scope=<area>` | Repeatable. Restrict generation to a feature area. |
-| `--audience=<role>` | Repeatable. Tag pages with audience metadata. |
-| `--brand=<name>` | Override brand name in generated content. |
+| `--audience=<role>` | Tag pages with audience metadata. |
+| `--brand=<from:to>` | Repeatable vocabulary replacement map. |
 | `--ban-term=<term>` | Repeatable. Adds to vocabulary ban-list. |
 | `--no-frontmatter` | Skip page frontmatter generation. |
 | `--no-mermaid` | Skip mermaid diagrams. |
@@ -46,7 +46,7 @@ flowchart LR
 ## Worked example
 
 ```text
-/project-help-docs ~/tmp/help-docs --scope=onboarding --audience=admin --brand=ACME
+/project-help-docs ~/tmp/help-docs --scope=onboarding --audience=admin --brand=OldName:NewName
 
 ## Help docs generation result
 - output_root: ~/tmp/help-docs

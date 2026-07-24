@@ -1,7 +1,7 @@
 ---
-
-## description: Run relevant tests based on changed areas
-argument: [area] [--filter ] [--watch]
+description: Run relevant tests based on changed areas
+argument: [area] [--filter <pattern>] [--watch]
+---
 
 # /run-tests
 
@@ -15,14 +15,10 @@ If `area` is omitted, detect from cwd or changed files (via `git diff --name-onl
 
 1. Determine area from argument, cwd, or changed files.
 2. Identify the test runner for the area:
-  - Look for `package.json` scripts: `test`, `test:unit`, `test:e2e`
-  - Common patterns:
-    - Jest: `npx jest [--testPathPattern=<pattern>]`
-    - Vitest: `npx vitest run [<pattern>]`
-    - Bun: `bun test [--filter <pattern>]`
-    - pytest: `python -m pytest [<path> -k <pattern>]`
-    - Go: `go test ./... [-run <pattern>]`
-  - If a `Makefile` has a `test` target, consider it.
+   - Prefer matching commands from the area's `AGENTS.md` `## Verification scripts` table.
+   - Otherwise inspect project manifests, task files, CI, and contributor documentation for the canonical test command.
+   - Treat familiar runner names only as discovery hints, not authorization to invent a command.
+   - If multiple commands plausibly match, present them and ask; if none is project-backed, report that rather than guessing.
 3. If `--filter` provided, scope to matching test files/names.
 4. If `--watch` provided, add the watch flag.
 5. Execute and capture output.
@@ -49,4 +45,3 @@ If `area` is omitted, detect from cwd or changed files (via `git diff --name-onl
 - Do NOT modify code to fix failing tests — report only
 - If no test files match the filter, report "no tests found" and suggest broadening
 - Respect the area's package manager and test framework
-

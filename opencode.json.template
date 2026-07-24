@@ -1,0 +1,196 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "external_directory": {
+      "~/.config/opencode/projects/**": "allow"
+    },
+    "skill": {
+      "*": "ask",
+      "git-safety": "ask",
+      "branch-kickoff": "ask",
+      "branch-explore": "ask",
+      "discover-knowledge": "ask",
+      "plan-phases": "ask",
+      "review-branch": "ask",
+      "help-docs-author": "ask",
+      "session-lifecycle": "ask",
+      "write-tests": "ask",
+      "playwright-e2e": "ask",
+      "add-feature-module": "ask",
+      "pptx": "ask",
+      "docx": "ask",
+      "xlsx": "ask",
+      "pdf": "ask",
+      "convert-to-pdf": "ask",
+      "slack-gif-creator": "ask",
+      "canvas-design": "ask",
+      "onboard-area": "allow",
+      "refactor-safely": "allow",
+      "systematic-debugging": "allow",
+      "verify-changes": "allow",
+      "debug-gql-query": "allow"
+    }
+  },
+  "agent": {
+    "plan": {
+      "permission": {
+        "skill": {
+          "git-safety": "allow"
+        }
+      }
+    }
+  },
+  "instructions": [
+    "~/.config/opencode/rules/CORE.md",
+    "~/.config/opencode/rules/SENIOR_ENGINEERING.md",
+    "~/.config/opencode/rules/CODE_QUALITY.md",
+    "~/.config/opencode/rules/HANDOFF_GENERIC.md"
+  ],
+  "command": {
+    "project-refresh": {
+      "template": "~/.config/opencode/commands/project-refresh.md",
+      "description": "Refresh handoff context",
+      "subtask": true
+    },
+    "manual-refresh": {
+      "template": "~/.config/opencode/commands/manual-refresh.md",
+      "description": "Manual refresh (no tools)",
+      "subtask": true
+    },
+    "project-bootstrap": {
+      "template": "~/.config/opencode/commands/project-bootstrap.md",
+      "description": "Bootstrap branch context files",
+      "subtask": true
+    },
+    "project-helper": {
+      "template": "~/.config/opencode/commands/project-helper.md",
+      "description": "Manage branch helper files",
+      "subtask": true
+    },
+    "project-review": {
+      "template": "~/.config/opencode/commands/project-review.md",
+      "description": "Generate or preserve-update review artifact",
+      "subtask": true
+    },
+    "project-review-sync": {
+      "template": "~/.config/opencode/commands/project-review-sync.md",
+      "description": "Light MR and REVIEW.md sync without full regenerate",
+      "subtask": true
+    },
+    "project-update-mr": {
+      "template": "~/.config/opencode/commands/project-update-mr.md",
+      "description": "Update MERGE_REQUEST.md from git and branch context",
+      "subtask": true
+    },
+    "project-checkpoint": {
+      "template": "~/.config/opencode/commands/project-checkpoint.md",
+      "description": "Append checkpoint to LOG.md",
+      "subtask": true
+    },
+    "project-close": {
+      "template": "~/.config/opencode/commands/project-close.md",
+      "description": "Session close summary",
+      "subtask": true
+    },
+    "project-cleanup-candidates": {
+      "template": "~/.config/opencode/commands/project-cleanup-candidates.md",
+      "description": "Report stale branch folders",
+      "subtask": true
+    },
+    "project-init": {
+      "template": "~/.config/opencode/commands/project-init.md",
+      "description": "Initialize generic project descriptor",
+      "subtask": false
+    },
+    "project-phases": {
+      "template": "~/.config/opencode/commands/project-phases.md",
+      "description": "Create or refine PHASES.md",
+      "subtask": true
+    },
+    "project-knowledge-refresh": {
+      "template": "~/.config/opencode/commands/project-knowledge-refresh.md",
+      "description": "Propose durable knowledge updates",
+      "subtask": true
+    },
+    "add-gql-mutation": {
+      "template": "~/.config/opencode/commands/add-gql-mutation.md",
+      "description": "Scaffold form+mutation GQL pair",
+      "subtask": true
+    },
+    "add-table-column": {
+      "template": "~/.config/opencode/commands/add-table-column.md",
+      "description": "Add column to createColumns",
+      "subtask": true
+    },
+    "check-types": {
+      "template": "~/.config/opencode/commands/check-types.md",
+      "description": "Run type checking",
+      "subtask": true
+    },
+    "run-tests": {
+      "template": "~/.config/opencode/commands/run-tests.md",
+      "description": "Run relevant test suite",
+      "subtask": true
+    },
+    "run-playwright-tests": {
+      "template": "~/.config/opencode/commands/run-playwright-tests.md",
+      "description": "Run project Playwright end-to-end tests",
+      "subtask": true
+    },
+    "lint-fix": {
+      "template": "~/.config/opencode/commands/lint-fix.md",
+      "description": "Lint with auto-fix",
+      "subtask": true
+    },
+    "extract-component": {
+      "template": "~/.config/opencode/commands/extract-component.md",
+      "description": "Extract JSX into new component",
+      "subtask": true
+    },
+    "migrate-to-flex-wrapper": {
+      "template": "~/.config/opencode/commands/migrate-to-flex-wrapper.md",
+      "description": "Replace manual flex containers with project wrappers",
+      "subtask": true
+    },
+    "organize-imports": {
+      "template": "~/.config/opencode/commands/organize-imports.md",
+      "description": "Sort and clean imports",
+      "subtask": true
+    },
+    "scaffold-knowledge": {
+      "template": "~/.config/opencode/commands/scaffold-knowledge.md",
+      "description": "Scaffold KNOWLEDGE.md package knowledge (rules stay in AGENTS.md)",
+      "subtask": true
+    },
+    "project-help-docs": {
+      "template": "~/.config/opencode/commands/project-help-docs.md",
+      "description": "Generate end-user help-center docs from code",
+      "subtask": true
+    },
+    "project-branch-new": {
+      "template": "~/.config/opencode/commands/project-branch-new.md",
+      "description": "Create a new branch from latest base",
+      "subtask": false
+    },
+    "project-branch-kickoff": {
+      "template": "~/.config/opencode/commands/project-branch-kickoff.md",
+      "description": "Bootstrap or refresh big-project branch kickoff",
+      "subtask": false
+    },
+    "project-branch-explore": {
+      "template": "~/.config/opencode/commands/project-branch-explore.md",
+      "description": "Explore codebase areas for branch planning",
+      "subtask": false
+    },
+    "project-state": {
+      "template": "~/.config/opencode/commands/project-state.md",
+      "description": "Summarize project handoff state",
+      "subtask": true
+    },
+    "project-pull-refresh": {
+      "template": "~/.config/opencode/commands/project-pull-refresh.md",
+      "description": "Fetch/pull shared branch safely, then refresh handoff context",
+      "subtask": false
+    }
+  }
+}

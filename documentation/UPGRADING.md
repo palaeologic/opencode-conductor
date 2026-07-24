@@ -1,77 +1,130 @@
 # Upgrading
 
-Re-run `bash bin/install-opencode-conductor.sh` after each `git pull` from your **kit source-of-truth** clone. Read **`CHANGELOG.md`** for breaking or notable changes.
+After updating the kit source:
 
-## Stale clone (“last pulled before a large kit drop”)
+1. Read [`CHANGELOG.md`](../CHANGELOG.md).
+2. Preview the installation:
 
-1. `cd` to your `opencode-conductor` clone and `git pull` on the **default branch** (this repo uses **`main`**; your fork or org clone may use **`master`** — use whatever `origin/HEAD` points at).
-2. Read `CHANGELOG.md` from the date you last updated forward; anything **BREAKING** may need manual steps below.
-3. Run `bash bin/install-opencode-conductor.sh` (use `--dry-run` first if you prefer).
-4. If **`opencode.json`** or **descriptor** schema changed, merge new keys from [`descriptors/descriptor.template.json`](../descriptors/descriptor.template.json) (and your own `opencode.json` template if your fork ships one) into your live files — **never blind overwrite** (preserve API keys and custom paths).
+   ```bash
+   bash bin/install-opencode-conductor.sh --dry-run
+   ```
 
-Worked example (generic):
+3. Apply it:
 
-> You last synced months ago. Since then the kit added `SECURITY.md`, `CHANGELOG.md`, path-contract docs, and `/project-init` options for project-local state. Pull `main`, run the install script, skim `CHANGELOG.md`, then merge any new `opencode.json` keys you need from the template in **your** clone.
+   ```bash
+   bash bin/install-opencode-conductor.sh
+   ```
 
-## After rewritten git history
+The installer safely merges `opencode.json`, preserves local and provider configuration, synchronizes current assets, and removes only known obsolete Conductor files from legacy tool locations.
 
-If maintainers rewrite this kit’s history (for example to remove commit / PR attribution trailers or other unwanted metadata), existing clones must reset to the rewritten remote branch. First save or commit any local work elsewhere, then run:
+## Descriptor schema compatibility
+
+The current schema is v3. The engine also reads v1 and v2 descriptors through an internal compatibility adapter.
+
+| Descriptor | Package rules | Branch helper model | Support |
+| --- | --- | --- | --- |
+| v1 | One object or omitted | Fixed filename fields | Read-compatible |
+| v2 | Ordered rule array | Fixed filename fields | Read-compatible |
+| v3 | Ordered rule array | Extensible helper registry plus branch manifest | Current |
+
+Existing v1/v2 fields remain valid. There is no forced migration deadline in this release.
+
+## Migrating v1/v2 to v3
+
+The migration utility is dry-run by default:
 
 ```bash
-git fetch origin
-git reset --hard origin/<default-branch>
-git fetch origin --tags --force
+python3 bin/migrate-helper-registry.py --project-key <key>
 ```
 
-Use the repo’s actual default branch (`main`, `master`, or whatever `origin/HEAD` points at). This is only needed after an announced history rewrite; normal upgrades use `git pull`.
+Review the descriptor diff and every proposed branch manifest. Apply only after the preview is correct:
 
-## Global ↔ project-local durable state
+```bash
+python3 bin/migrate-helper-registry.py --project-key <key> --apply
+```
 
-**There is no automatic migrator.** `/project-init` targets **new** onboarding. To switch layouts on an existing project:
+Optional path overrides:
 
-1. **Back up** `~/.config/opencode/projects/<projectKey>/descriptor.json` and any existing branch folders / `AGENTS.md` trees.
-2. **Edit `descriptor.json`** so `opencodeProjectRootPath`, `branchHandoff.contextDirTemplate`, `branchHandoff.templatesDir`, and each `areas.*.areaAgentsPath` match the **locked scheme** in [`PATH_CONTRACT.md`](PATH_CONTRACT.md) (global vs `<git-root>/.opencode-conductor/...`).
-3. **`mv` or `rsync`** existing data from the old roots to the new roots (preserve `branches/<name>/` structure under the new `contextDirTemplate`).
-4. Update **`.gitignore`** if you intend repo-local data to stay private to each clone.
-5. Run `/project-refresh <projectKey>` and fix paths if refresh reports missing files.
+```bash
+python3 bin/migrate-helper-registry.py \
+  --project-key <key> \
+  --descriptor /path/to/descriptor.json \
+  --branches-dir /path/to/branches
+```
 
-Alternatively, for a clean cut: archive old state, re-run **`/project-init`** with the desired layout, then restore narrative MR text manually if needed.
+The utility:
 
-## Private downstream forks
+- converts fixed helper fields into schema v3 helper definitions;
+- preserves the old fields for rollback and interoperability;
+- discovers nested branch names such as `feature/topic`;
+- creates `HELPERS.json` atomically;
+- refuses symbolic-link helper and manifest paths;
+- preserves malformed manifests and reports them;
+- never deletes helper files.
 
-If your team standardizes on a **fork** of this kit, treat **that fork** as the clone you `git pull` and install from so org-specific commands stay aligned. Upstream `CHANGELOG.md` remains vendor-neutral; your fork may add release notes for fork-only changes.
+After applying, run:
 
-## Migrating to `descriptorSchemaVersion: 2`
+```bash
+python3 -m json.tool "$OPENCODE_HOME/projects/<key>/descriptor.json"
+```
 
-Schema v2 introduces a small, additive change: `pseudoPackageDetection` becomes an **array of rules** so a single project can declare distinct detection strategies per area (e.g., a `pathAndAlias` rule for a frontend monorepo plus a `pathPrefix` rule for a flat backend with naming conventions). The legacy object form is still accepted for one minor release and is treated as a single-element array.
+Then run `/project-refresh <key>` and resolve any reported `helper_drift`.
 
-Steps:
+## Package detection from v1
 
-1. Add `"descriptorSchemaVersion": 2` near the top of `descriptor.json`.
-2. Wrap the existing `pseudoPackageDetection` object in an array and add an `"area": "<existing-area>"` field. Example:
+If a v1 descriptor uses one `pseudoPackageDetection` object, v2 and v3 represent it as a one-element array whose rule includes an `area`:
 
-   ```json
-   "pseudoPackageDetection": [
-     {
-       "area": "frontend",
-       "kind": "pathAndAlias",
-       "pathPattern": "frontend/src/{packageName}/**/*",
-       "aliases": ["@org/{packageName}"]
-     }
-   ]
-   ```
-3. (Optional) Add a second rule for any other area with package-like leaves (backend monorepo packages, prefix-named modules, etc.).
-4. Drop redundant entries from `trackedKnowledgeTargets.sharedPackageKnowledge` for leaves whose knowledge already lives at the **convention path** (`<opencodeProjectRootPath>/<rel>/AGENTS.md` mirroring the leaf's path under `projectRootPath`). Keep `sharedPackageKnowledge` only for true overrides (legacy paths, generated knowledge, files shared across leaves).
-5. If you previously placed leaf knowledge at a non-canonical path (e.g., `<opencodeRoot>/<area>/packages/<pkg>/AGENTS.md` when no `packages/` segment exists in the source tree), keep the legacy file with a short redirect note pointing to the new convention path; remove it in the next release cycle.
+```json
+{
+  "pseudoPackageDetection": [
+    {
+      "area": "frontend",
+      "kind": "pathAndAlias",
+      "pathPattern": "frontend/src/{packageName}/**/*",
+      "aliases": ["@org/{packageName}"]
+    }
+  ]
+}
+```
 
-Validation:
+Leaf knowledge uses `<opencodeProjectRootPath>/<source-relative-stem>/KNOWLEDGE.md`. Keep `trackedKnowledgeTargets.sharedPackageKnowledge` only for genuine path overrides.
 
-- `python -m json.tool < descriptor.json` parses cleanly.
-- `/scaffold-knowledge <projectKey> list` enumerates leaves at the expected convention paths.
-- `/scaffold-knowledge <projectKey> dry-run` reports zero new writes after the initial pass on a healthy descriptor.
+## Moving global and project-local state
 
-Backward compatibility: omit `descriptorSchemaVersion` and keep `pseudoPackageDetection` as an object — commands will normalize to a single-rule array on read. This is the deprecated path; please migrate before the next major release.
+Changing storage mode is separate from upgrading the descriptor schema:
 
-## Tags
+1. Back up the descriptor, branch contexts, templates, and knowledge files.
+2. Update `opencodeProjectRootPath`, `branchHandoff.contextDirTemplate`, `branchHandoff.templatesDir`, and each `areas.*.areaAgentsPath`.
+3. Move the data while preserving the `branches/<name>/` structure.
+4. Update `.gitignore` if repo-local state should remain uncommitted.
+5. Run `/project-refresh <key>` and inspect alternate-context and helper-drift warnings.
 
-Optional `git tag` releases (e.g. `v0.3.0`) on `main` are documented in the root [`CHANGELOG.md`](../CHANGELOG.md). Tags are optional; day-to-day upgrades follow `git pull` + install script.
+The engine never merges private and shared branch roots automatically.
+
+## Runtime dependencies
+
+Artifact skills can share a central runtime:
+
+```bash
+bash bin/install-opencode-conductor.sh --with-runtime-deps
+```
+
+The installer selects an available Python 3.10 or newer. Set `OPENCODE_PYTHON_BOOTSTRAP` when the desired interpreter is not on a standard versioned command name.
+
+Add optional PDF conversion engines with:
+
+```bash
+bash bin/install-opencode-conductor.sh --with-runtime-deps --with-pdf-engines
+```
+
+System package installation is separate and explicit:
+
+```bash
+bash bin/install-opencode-conductor.sh --with-runtime-deps --with-system-deps
+```
+
+Dependency manifests in [`runtime/`](../runtime/) are the source of truth for requested packages and minimum Python versions.
+
+## Recovery
+
+Normal upgrades use a regular pull plus installer run. If a release explicitly announces rewritten Git history, preserve local work first and follow that announcement's recovery instructions; never reset an unreviewed working tree.

@@ -18,14 +18,12 @@ Provide structure for a full coding session using the handoff kit's lifecycle co
 
 ### Phase 1: Session start
 
-1. Run `/manual-refresh` or `/project-refresh` to load context
+1. Run `/manual-refresh` to load context. Use `/project-refresh` only in environments where the Bun tools are explicitly enabled and working.
 2. Review the refresh output:
-   - Check `handoff_mode` — if tracked, branch files should exist
-   - If `missing_branch_context` is **`true`**, run **`/project-bootstrap`** then **`/project-refresh`** or **`/manual-refresh`** again
-   - Read **`branch_context_status`** when present — partial trees (e.g. `PHASES.md` without readable MR/LOG) still need bootstrap to seed missing pieces
-   - Check `agents_stale_vs_branch` — re-read project **rules `AGENTS.md`** and active area **`KNOWLEDGE.md`** (or legacy area `AGENTS.md`) if true
+   - Check `handoff_mode` — if tracked, branch helper files are optional and listed under `existing_helpers`
+   - If `helper_drift` is non-empty, run `/project-helper` to recreate, relink, mark removed, or skip affected helpers
+   - Check `agents_stale_vs_branch` — re-read area `AGENTS.md` and relevant leaf `KNOWLEDGE.md` if true
 3. Review `next_steps` from refresh output for recommendations
-4. **Token discipline:** keep the latest **`## Handoff refresh result`** block in the session; until **`git rev-parse HEAD`** changes, **do not** re-run full `git log` / wide `git diff` for every follow-on command — cite the handoff block or confirm HEAD with a single shell check
 
 ### Phase 2: Active work
 
@@ -38,12 +36,19 @@ During the session, follow these checkpointing rules:
 - After resolving a tricky bug (capture the reasoning)
 
 **How to checkpoint:**
-- Run `/project-checkpoint` — appends to LOG.md with timestamp and summary
+- Run `/project-checkpoint` — appends to LOG.md with timestamp and summary, then reconciles completed active-phase checkpoints in `PHASES.md` when that file exists
 
 **Keep LOG.md useful:**
 - Record what was done, what was discovered, and what remains
 - Include verification status (tests passing? types clean?)
 - Note any decisions made and their rationale
+- Clarify branch lineage and the actual reviewed commit window:
+  - `integration_base`: resolved base branch and merge-base
+  - `parent_branch`: stacked branch or `none` / `unknown`
+  - `branch_delta`: total commits from integration base to `HEAD`
+  - `working_delta`: commits from parent/checkpoint to `HEAD`
+  - `reviewed_window`: the narrow range summarized by this checkpoint
+- On stacked branches, do not summarize inherited parent-branch commits as if they were new session work
 
 ### Phase 3: Session close
 

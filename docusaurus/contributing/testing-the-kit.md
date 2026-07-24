@@ -49,7 +49,7 @@ flowchart TD
 1. Pick a sample repo (greenfield is fine).
 2. Install the kit: `bash bin/install-opencode-conductor.sh`.
 3. Confirm OpenCode discovers the commands and skills.
-4. Confirm `permission.skill` policy in your `~/.config/opencode/opencode.json` matches `opencode.json.example`.
+4. Confirm `permission.skill` policy in your `$OPENCODE_HOME/opencode.json` contains the entries from `opencode.json.template`.
 
 ## 1. Initialize
 
@@ -109,7 +109,7 @@ Make a small code change. Run `/project-review <projectKey>`.
 Expected:
 
 - `## Preflight summary` block
-- Findings table with `F-xx` ids
+- Findings table with current three-digit namespaces and stable legacy identifiers
 - Suggested verifications derived from `## Verification scripts`
 
 Run `/project-update-mr <projectKey>` and confirm the MR `## OpenCode:` block refreshed. Run `/project-review-sync <projectKey>` and confirm only delta updates were applied.
@@ -150,7 +150,7 @@ If a command leaves you in a partially-changed state:
 
 - **Refused on dirty tree**: stash or commit, or accept the explicit kit-stash flow.
 - **`source_missing` on scaffold**: the package directory does not exist on this branch. Add the source first or pass `no-source-guard`.
-- **Drift `F-xx` finding**: pull from the integration base or use the single-file pull-up suggestion.
+- **Knowledge-drift finding**: pull from the integration base or use the single-file pull-up suggestion.
 - **Vocab grep hit on help-docs**: rename the offending term in source-derived content or pass `--no-vocab-grep` if intentional.
 
 ## What "done" looks like

@@ -1,11 +1,11 @@
 ---
 name: review-branch
-description: Orchestrate a branch review with context refresh, REVIEW.md generation, optional verification, and optional MR sync into OpenCode blocks
+description: Orchestrate a branch review with context refresh, review lifecycle detection, REVIEW.md generation or preserve-update, optional verification, and optional MR sync into OpenCode blocks
 ---
 
 ## What I do
 
-Guide a systematic branch review: refresh context, generate or update `REVIEW.md` (with `F-xx` findings triage), optionally run automated checks, then optionally align `MERGE_REQUEST.md` **`## OpenCode:`** sections — with **explicit decision points** so verification is never silent or mandatory.
+Guide a systematic branch review: refresh context, detect whether `REVIEW.md` is new/current/stale, generate or preserve-update a lean `REVIEW.md` (with `F/R/M###` findings triage), optionally run automated checks, then optionally align `MERGE_REQUEST.md` **`## OpenCode:`** sections - with **explicit decision points** so verification is never silent or mandatory.
 
 ## When to use me
 
@@ -17,35 +17,63 @@ Guide a systematic branch review: refresh context, generate or update `REVIEW.md
 
 ### 1. Gather context
 
-Run `/manual-refresh` (or `/project-refresh` if tools are available) to understand:
+Run `/manual-refresh` (or `/project-refresh` only when the Bun tools are explicitly enabled and working) to understand:
 
 - What branch you are on and what changed
 - Which areas are affected
-- Current branch context files (`MERGE_REQUEST.md`, `LOG.md`, `REVIEW.md` if present)
+- Current branch context files (`MERGE_REQUEST.md`, `LOG.md`, `PHASES.md` if present, `REVIEW.md` if present)
+- Review lifecycle state from refresh output when available: `review_present`, `review_state`, `reviewed_head`, `head_has_moved_since_review`, and open `F/R/M###` ids
 
-### 2. Generate or refresh the review artifact
+### 2. Choose review lifecycle action
+
+Treat `REVIEW.md` as the source of truth for review state. Treat `LOG.md` as an audit trail, not the decision authority.
+
+Use this state machine:
+
+| State | Action |
+| --- | --- |
+| `new_review` | Create `REVIEW.md`. |
+| `existing_current` | Continue triage by default; regenerate only if the user asks for refresh/replace. |
+| `existing_head_moved` | Run `/project-review` in preserve mode: keep existing triage, append only new findings for new risk. |
+| `existing_unknown_head` | Preserve cautiously, add review metadata, and append only high-confidence new findings. |
+
+Preserve legacy `F-xx` ids in existing artifacts without renumbering. Allocate new findings only from the three-digit `F`, `R`, and `M` namespaces.
+
+### 3. Gather review focus
+
+Ask once for extra focus only when the user has not already supplied it:
+
+```text
+Any specific review focus or extra context? Examples: security, migration safety, tests, performance, UX, API compatibility. Say "none" to use MR + LOG + diff only.
+```
+
+If `MERGE_REQUEST.md` already has clear acceptance criteria, phrase the prompt as "Any extra review focus beyond those?" Use the answer to bias prioritization, store it under `## Notes for reviewer`, and still report serious risks outside the focus.
+
+### 4. Generate or refresh the review artifact
 
 Run `/project-review`:
 
-- Prefer **Checklist + diff (full)** for shared / senior review on non-trivial branches (see `commands/project-review.md` in this kit).
-- If `REVIEW.md` already exists, choose **merge** vs full replace and **findings preserve** (default) vs **replace** so human triage is not lost.
+- Prefer **Lean findings** for normal branch review. Use **Full checklist + diff** only when the user explicitly needs a durable walkthrough for a large/shared review (see `commands/project-review.md` in this kit).
+- If `REVIEW.md` already exists, default to **preserve** so human triage is not lost. Replace only when explicitly requested.
+- Ensure generated artifacts include `OpenCode: review metadata` with `reviewed_head`, `reviewed_window`, `artifact_type`, `findings_merge_mode`, and `review_focus`.
+- Let `/project-review` append its compact `LOG.md` review audit entry when tracked context is writable.
 
-### 3. Human triage
+### 5. Human triage
 
 Edit `REVIEW.md`:
 
-- Update **`### Triage checklist (by Id)`** for each `F-xx`
-- Keep questions in the findings table scoped to **risks / follow-ups**, not every MR checkbox (checklist section holds acceptance)
+- Update **`### Triage checklist (by Id)`** for each `F/R/M###` item.
+- Keep findings scoped to **risks / follow-ups**, not every MR checkbox. Checklist sections exist only in full-review artifacts.
 
-### 4. Optional checkpoint
+### 6. Optional checkpoint
 
-Run `/project-checkpoint` with a short note (e.g. “review stopped at F-03”) so the next session can resume from `LOG.md`.
+Run `/project-checkpoint` with a short note (e.g. "review stopped at F003") so the next session can resume from `LOG.md`.
 
-### 5. Optional automated verification
+### 7. Optional automated verification
 
 Prefer deterministic recommendations from structured area knowledge before offering generic checks.
 
-1. Parse each changed area's **active area document** (descriptor: **`areaKnowledgePath`**, else sibling **`KNOWLEDGE.md`** next to **`areaAgentsPath`**, else **`areaAgentsPath`**) for a `## Verification scripts` block using the structured-knowledge-table schema (`Trigger | Command | When`).
+1. Parse each changed area's area-level `AGENTS.md` for a `## Verification scripts` block using the structured-knowledge-table schema (`Trigger | Command | When`).
 2. Match each row's `Trigger` glob against `git diff --name-only` for the current review window.
 3. Treat `(added or modified)` as an extra qualifier: trigger only when at least one matching file is added or modified.
 4. Dedupe matched `Command` values, preserving first-seen order.
@@ -53,8 +81,8 @@ Prefer deterministic recommendations from structured area knowledge before offer
 
 Fallback behavior when the block is absent for a changed area:
 
-- Emit one finding: `F-xx`, severity `Note`, question "Missing verification scripts block in the active area document for `<area>` (see `areaKnowledgePath` / sibling KNOWLEDGE / `areaAgentsPath` in `descriptor.json`)."
-- Suggested action: "Add `## Verification scripts` table or run `/scaffold-knowledge <projectKey>` to seed one."
+- Emit one finding: `M###`, severity `Note`, finding "Missing verification scripts block in <area>/AGENTS.md".
+- Suggested action: "Add `## Verification scripts` manually in the project-owned area rules, using `project-rules/<projectKey>/<area>/AGENTS.md` as the template source when available."
 - Offer generic checks as fallback only:
   - `/check-types` (per affected area or cwd)
   - `/run-tests`
@@ -62,20 +90,21 @@ Fallback behavior when the block is absent for a changed area:
 
 If a project's docs describe a single bundled script that runs multiple checks, offer it as one alternative. Never assume such a script exists.
 
-### 6. Optional MR alignment
+### 8. Optional MR alignment
 
 Ask whether to refresh MR machine blocks:
 
 - **`/project-update-mr`** — git facts + `OpenCode:` sections from `REVIEW.md` / `LOG.md`
-- **`/project-review-sync`** — lighter pass: merge MR checklist deltas into `REVIEW.md`, optional append-only `F-xx`, then refresh `OpenCode:` blocks — use when MR text or commits changed but a full `/project-review` pass is not needed
+- **`/project-review-sync`** - lighter pass: merge MR checklist deltas into full-review artifacts when present, optional append-only `F/R/M###`, then refresh `OpenCode:` blocks - use when MR text or commits changed but a full `/project-review` pass is not needed
 
 Skip both if the team keeps MR updates fully manual.
 
-### 7. Summary
+### 9. Summary
 
 Present:
 
-- Open vs resolved `F-xx` items
+- Review lifecycle state and whether `HEAD` moved since the previous review
+- Open vs resolved `F/R/M###` items
 - Verification outcome (or "skipped by user")
 - What changed in `MERGE_REQUEST.md` `OpenCode:` sections (or "not updated")
 - Next-step recommendation (never automatic):
@@ -90,7 +119,7 @@ Present:
 
 ## Senior Reviewer lens
 
-Apply this lens during step 2 (`/project-review`) and step 3 (human triage). Each cluster produces zero or more `F-xx` findings with severity + suggested action, populated into the existing `## Review findings / questions` table.
+Apply this lens during review artifact generation and human triage. Each cluster produces zero or more `F/R/M###` findings with severity + suggested action, populated into the existing `## Review findings` table.
 
 ### Correctness
 
@@ -125,9 +154,9 @@ Apply this lens during step 2 (`/project-review`) and step 3 (human triage). Eac
 
 ### Architecture impact
 
-- Does the change honor existing area / leaf boundaries from `AGENTS.md`?
+- Does the change honor existing area `AGENTS.md` and leaf `KNOWLEDGE.md` boundaries?
 - Any new cross-area imports / aliases? Any new public API surface? Any new shared data model?
-- Would a future agent reading the leaf `AGENTS.md` recognize this pattern, or does the file need an update?
+- Would a future agent reading the leaf `KNOWLEDGE.md` recognize this pattern, or does the file need an update?
 - Is the change biased toward a minimum durable change, or does it speculatively expand scope?
 
 ### DX / blast radius
@@ -140,14 +169,15 @@ Apply this lens during step 2 (`/project-review`) and step 3 (human triage). Eac
 
 ### Knowledge alignment
 
-- Does the change invalidate any `AGENTS.md` content? If yes, propose `/project-knowledge-refresh` and flag as `F-xx` "Knowledge stale".
-- Did the preflight in `/project-review` report `created` or `stale` leaves? Reflect those in findings or risks.
+- Does the change invalidate area `AGENTS.md` or leaf `KNOWLEDGE.md` content? If yes, propose `/project-knowledge-refresh` and flag as `M###` "Knowledge stale".
+- Did the preflight in `/project-review` report `missing` or `stale` leaves? Reflect those as `M###` findings or risks. `/project-review` is report-only and must not scaffold knowledge.
 
 ### Output mapping
 
 For every concern raised by the lenses above:
 
 - **Severity** = `Blocker | High | Medium | Low | Note` based on impact and likelihood.
+- **Kind / id** = `F###` for fixes, `R###` for refinements, `M###` for knowledge or `AGENTS.md` misalignment.
 - **Suggested action** = the smallest concrete next step (file, function, command).
 - **Triage** starts at `open`; humans flip to `valid | invalid | fixed | wontfix | followup`.
 

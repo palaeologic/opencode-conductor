@@ -1,6 +1,6 @@
 ---
 name: git-safety
-description: Standalone git safety primitive — refuse-on-dirty preflight, base-branch resolution, kit-stash naming convention, and stash-reminder hook for any command that touches git state; never auto-stashes, never runs destructive ops without per-step confirmation
+description: Standalone git safety primitive — refuse-on-dirty preflight, base-branch resolution, opencode-kit stash naming convention, and stash-reminder hook for any command that touches git state; never auto-stashes, never runs destructive ops without per-step confirmation
 ---
 
 ## What I do

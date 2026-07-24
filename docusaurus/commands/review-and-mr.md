@@ -10,11 +10,11 @@ Commands that produce review artifacts, refresh the merge-request, and keep delt
 ## `/project-review <projectKey>`
 
 - **Purpose**: run a structured review pass and produce `REVIEW.md` plus deterministic verification suggestions derived from area `## Verification scripts` tables.
-- **Frontmatter defaults**: `agent: plan`, `subtask: true`.
+- **Frontmatter default**: `subtask: true`.
 
 ### Output sections
 
-- `## Preflight summary` — drift findings, missing-block findings (`F-xx`).
+- `## Preflight summary` — drift and missing-block metadata/knowledge findings.
 - `## Findings` — table of issues with severity, scope, suggested fix.
 - `## Suggested verifications` — derived from structured-knowledge tables.
 - `## Mermaid` (opt-in) — review-flow or impact diagrams.
@@ -26,13 +26,13 @@ Commands that produce review artifacts, refresh the merge-request, and keep delt
 
 ## Preflight summary
 - drift: clean
-- missing-block: F-21 frontend AGENTS.md lacks ## Verification scripts
+- missing-block: M001 frontend AGENTS.md lacks ## Verification scripts
 
 ## Findings
 | id | severity | scope | summary |
 | --- | --- | --- | --- |
-| F-01 | warn | frontend/cards | dead branch in CardList |
-| F-02 | info | api/handlers | unused import |
+| F001 | warn | frontend/cards | dead branch in CardList |
+| F002 | info | api/handlers | unused import |
 
 ## Suggested verifications
 - bun run typecheck (frontend)

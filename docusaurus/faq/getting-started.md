@@ -22,18 +22,18 @@ flowchart LR
 
 ## Global vs project-local state — which should I pick?
 
-Default to **global** (state under `~/.config/opencode/projects/<key>/`). Choose project-local when:
+Default to **global** (state under `$OPENCODE_HOME/projects/<key>/`). Choose project-local when:
 
 - You need true isolation between checkouts.
-- You want to commit kit state to source control.
+- You want checkout-local state, whether ignored or committed.
 
-Bump `descriptorSchemaVersion` accordingly and follow `documentation/UPGRADING.md`.
+The descriptor remains under `$OPENCODE_HOME`; only its resolved data paths move into the repository.
 
 ## What does `/project-init` actually do?
 
 - Scans the repo for area candidates.
 - Drafts a `descriptor.json` with `pseudoPackageDetection` rules tailored to detected layouts.
-- Seeds `_templates/mr/` and project-level `AGENTS.md`.
+- Seeds `_templates/mr/`. Project guidance remains project-owned and can be seeded separately through the installer.
 - Refuses to overwrite an existing descriptor; requires explicit approval to write.
 
 ## See also

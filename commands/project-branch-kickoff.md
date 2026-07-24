@@ -1,16 +1,11 @@
 ---
-description: Scaffold a big project on an already-checked-out branch — phases, knowledge discovery, audit trail. Use for fresh branches (0 commits ahead) or retroactive context on long-lived branches (N commits ahead).
+description: Scaffold a big project on an already-checked-out empty / new feature branch — phases, knowledge discovery, audit trail
 subtask: false
 ---
 
-## Use cases (read first)
+Loads skills (when available): `branch-kickoff` (kickoff orchestration; loads `git-safety`), `plan-phases` (Senior Architect / PM lens for `PHASES.md`), `discover-knowledge` (Senior Architect lens for durable guidance).
 
-- **Fresh branch** — zero commits ahead of base (or only kit bookkeeping): full forward-looking scaffold; readiness gate passes quietly.
-- **Existing / retro branch** — many commits ahead with real work: same command scaffolds **branch context** (`MERGE_REQUEST.md`, `LOG.md`, `PHASES.md`) and knowledge proposals; phases should follow **diff vs baseline + MR**, not commit subjects alone (see `/project-phases`). **Lighter alternative:** `/project-refresh` → `/project-bootstrap` → individual commands if you want less ceremony.
-
-Loads skills (when available): `branch-kickoff` (kickoff orchestration; loads `git-safety`), `plan-phases` (Senior Architect / PM lens for `PHASES.md`), `discover-knowledge` (Senior Architect lens for package **`KNOWLEDGE.md`** / legacy `AGENTS.md`).
-
-For creating a new branch from base, use `/project-branch-new` first; for plain feature work without full kickoff, use `/project-bootstrap` directly.
+Use when you are already on a fresh feature branch (zero commits ahead of base, or only kit-bookkeeping commits) and want the full kickoff scaffold: selected helper setup / refresh, Phase plan (`PHASES.md`) drafting, knowledge discovery, and optional audit trail. For creating a new branch from base, use `/project-branch-new` first; for plain feature work, use `/project-bootstrap` directly.
 
 ## Argument parsing
 
@@ -22,7 +17,6 @@ For creating a new branch from base, use `/project-branch-new` first; for plain 
 - `no-source-guard` — bypass source-path existence guard in `/scaffold-knowledge`.
 - `no-mermaid` — skip mermaid prompts on every artifact created during this run.
 - `mode-hint-only` — do not run kickoff actions; return only a structured mode recommendation for demos.
-- **`retroactive`** — skip the readiness **confirm** prompt when `N > 0` commits ahead (treat as approved “retro scaffold”); safety preflight still runs. Use for scripted or trusted retro kickoffs.
 
 Fail closed on any other token. **Security rule:** never interpolate `$ARGUMENTS` or `$1` into `!`...`` shell-injection blocks.
 
@@ -43,19 +37,25 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
 
 1. **Project key resolution.**
    - If `$1` is provided, use it.
-   - Otherwise auto-detect by scanning `~/.config/opencode/projects/*/descriptor.json` and matching cwd against each `projectRootPath`. If exactly one matches, use that key. If zero or multiple match, prompt the user.
+   - Otherwise resolve the config root from `OPENCODE_HOME` (default `~/.config/opencode`), scan `<config-root>/projects/*/descriptor.json`, and match cwd against each `projectRootPath`. If exactly one matches, use that key. If zero or multiple match, prompt the user.
 
 2. **Load `skills/branch-kickoff`.** The skill loads `skills/git-safety` and runs:
    - **Safety preflight** — clean tree, attached HEAD, base resolution, stash reminder hook. Refuses on dirty.
-   - **Branch readiness gate** — confirm we are not on `main` / `master` (refuse with hint if so). Then:
-     - If **N = 0** commits ahead of base **or** commits are **only** kit bookkeeping (e.g. `LOG.md`, `MERGE_REQUEST.md`, template churn) → proceed **without** extra prompts.
-     - If **N > 0** with **real** product commits → prompt: `Branch is N commits ahead of base with real commits. This looks like a retroactive kickoff — proceed to scaffold branch context for an existing branch? (yes/no)` — **recommend Yes** and note that **`/project-phases`** will use **git diff vs baseline** and **`MERGE_REQUEST.md`**, not commit subject lines alone (especially when history is squash-heavy or `wip`-heavy).
-     - If the **`retroactive`** token is present on the command line, **skip** this confirmation and proceed as if the user answered **yes** (still respect a refusal from safety preflight).
-   - **Knowledge drift gate** — silent on 0 drifted package knowledge files; F-xx finding on 1–5; block-with-confirm on >5. Honors `no-preflight`. Count **`KNOWLEDGE.md`** where present, else legacy **`AGENTS.md`** per `skills/branch-kickoff/SKILL.md` § Knowledge drift gate.
+   - **Branch readiness gate** — confirm we are not on `main` / `master` (refuse with hint if so) and that we have either zero commits ahead of base or only kit-bookkeeping commits. If non-empty branch, prompt confirm: "Branch is N commits ahead of base; proceed with kickoff?" — recommend Yes only when commits are clearly bookkeeping (`HELPERS.json`, Progress log, Merge request context, Phase plan, etc.).
+   - **Knowledge drift gate** — silent on 0 drifted `AGENTS.md`/`KNOWLEDGE.md` files; `M###` finding on 1–5; block-with-confirm on >5. Honors `no-preflight`. See `skills/branch-kickoff/SKILL.md` § Knowledge drift gate.
    - **Big-project criteria check** — if none match, recommend lighter `/project-bootstrap` + `/scaffold-knowledge` and stop.
    - **Model policy** — apply per `skills/branch-kickoff/SKILL.md` § Model policy.
 
    If any gate refuses or is declined, abort with the remediation hint and emit no audit entry.
+
+   When presenting the big-project, mermaid, and model choices through a structured question UI, send `questions` as a native array of question objects, not a JSON-encoded string. See `skills/branch-kickoff/SKILL.md` § Kickoff confirmation prompts and `documentation/PATH_CONTRACT.md` § Interactive question prompts.
+
+2.1. **Seed material resolution.**
+   - Inspect the current user request and attachments for local file paths, `@file` mentions, pasted planning notes, issue/MR descriptions, or review reports.
+   - If local path(s) were mentioned, resolve them relative to cwd when needed, verify readability, and ask whether to use them as primary seed material for Phase plan (`PHASES.md`) and Merge request context (`MERGE_REQUEST.md`) when those helpers are selected unless the user explicitly said to use them. Recommend yes.
+   - If no seed material is detected, ask once: `Do you have a seed document, issue/MR description, or planning note to use before I draft phases and MR context?`
+   - Read accepted seed material before running phase/MR drafting. Pass it through to `/project-bootstrap`, `/project-phases`, and any MR narrative update as primary source material when those helpers are selected.
+   - Record the outcome as `seed_material: <paths|none declined|none unavailable>` in the kickoff banner and audit metadata. Do not draft generic phases or MR narrative while a mentioned seed document remains unread or unconfirmed.
 
 2.5. **Mode hint dry-run (optional).**
    - If `mode-hint-only` is present, stop here and emit:
@@ -63,36 +63,49 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
      - `recommended_mode_next: plan` when drift, readiness uncertainty, or unresolved scope is detected.
    - Include one `why:` line and exit without running bootstrap/refresh/phases/scaffold/audit.
 
-3. **Bootstrap or refresh.**
-   - Inspect the descriptor's branch-context folder (`branchHandoff.contextDirTemplate` expanded for the current branch).
-   - If the folder does not exist or `MERGE_REQUEST.md` / `LOG.md` are missing → run `/project-bootstrap <projectKey>`.
+3. **Helper bootstrap or refresh.**
+   - Run `/project-refresh <projectKey>` to inspect `HELPERS.json`, `existing_helpers`, `available_helpers`, and `helper_drift`.
+   - If helper drift exists, ask whether to repair it via `/project-helper <projectKey>` before continuing. Recommend repairing only helpers needed for this kickoff.
+   - Ask which kickoff helpers to create when missing, using plain-language labels:
+     - Phase plan (`PHASES.md`): recommended for kickoff because it captures stages, exit criteria, and risk gates.
+     - Progress log (`LOG.md`): recommended when the user wants an audit trail and future-session checkpoints.
+     - Merge request context (`MERGE_REQUEST.md`): recommended only when the user wants local MR narrative or `## OpenCode:` blocks.
+   - Run `/project-bootstrap <projectKey>` or `/project-helper <projectKey>` only for selected helpers. Do not create Progress log or Merge request context solely because kickoff can use them.
+   - If the user skips Progress log or Merge request context, continue and mark the corresponding audit target as `skipped`.
    - Otherwise → run `/project-knowledge-refresh <projectKey>` to surface durable-knowledge updates.
-   - **Recommendation in prompt:** bootstrap when descriptor / state is missing; refresh otherwise.
-   - **Token discipline:** After `/project-refresh` or `/manual-refresh`, **paste or restate** the `## Handoff refresh result` block into the kickoff transcript before the next chained step so the agent does **not** re-run identical `git diff` / `git log` probes unless `HEAD` changed.
 
 4. **Plan phases.** Load `skills/plan-phases` and draft `PHASES.md` per its template.
    - **Recommendation in prompt:** 3–7 phases, each ≤ ~1 working week; carry one big risk per phase; vertical slices over horizontal layers.
+   - Use accepted seed material as the primary source for the north star, phase ordering, already-complete work, open decisions, risks, and verification.
    - Pass `no-mermaid` through to `/project-phases` if the kickoff received it; otherwise the phases command applies its own mermaid policy (default ON when phases > 3).
 
 5. **Knowledge discovery.** Run `/scaffold-knowledge <projectKey> dry-run` first as the audit trail of what would change, then prompt to promote to discovery.
    - **Recommendation in prompt:** Dry-run first, then promote to Discovery — preserves auditability.
    - Pass `no-source-guard` through to `/scaffold-knowledge` if the kickoff received it; otherwise the source-path guard runs by default.
 
-6. **Mermaid policy hand-off.** The chained commands (`/project-phases`, `/project-knowledge-refresh`) apply their own mermaid policies as documented in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) § Mermaid policy. This kickoff command never injects mermaid into artifacts itself; it only orchestrates.
+6. **Mermaid policy hand-off.** The chained commands (`/project-phases`, `/project-knowledge-refresh`) apply their own mermaid policies as documented in `documentation/PATH_CONTRACT.md` § Mermaid policy. This kickoff command never injects mermaid into artifacts itself; it only orchestrates.
 
-7. **Audit trail.** Per `skills/branch-kickoff` § Audit trail, append:
-   - `LOG.md` block:
+7. **Audit trail.** Per `skills/branch-kickoff` § Audit trail, append only to helpers that exist or that the user explicitly chose to create:
+   - Progress log (`LOG.md`) block when the `log` helper exists:
      ```
      ### Kickoff <ISO timestamp>
      - command: /project-branch-kickoff
      - base: <base-branch>
      - new branch: <current-branch>
+     - integration_base: origin/<base> (<merge-base-short>)
+     - parent_branch: <remote/branch or none/unknown>
+     - branch_delta: <N> commits from integration base
+     - working_delta: <N> commits from parent/checkpoint to HEAD
+     - reviewed_window: <start-short>..<head-short>
      - model: <selected> (fallback: <fallback or none>)
      - mermaid: phases=<bool> review=<bool> mr=<bool>
+     - seed_material: <paths|none declined|none unavailable>
      - confirmations: bootstrap-or-refresh, plan-phases, scaffold-dry-run, scaffold-discovery
      - drift_finding: <count or none>
      ```
-   - `MERGE_REQUEST.md` `## OpenCode:` block with the same metadata; link to first phase if `PHASES.md` was newly created.
+   - On stacked branches, summarize the narrow `working_delta` and explicitly label the larger integration-base range as inherited history.
+   - Merge request context (`MERGE_REQUEST.md`) `## OpenCode:` block with the same metadata when the `merge_request` helper exists; link to first phase if Phase plan (`PHASES.md`) was newly created.
+   - If either helper is absent, do not create it silently; report `audit_log_path: skipped` or `audit_mr_path: skipped`.
 
    **Security rule:** audit fields are structured only. No PII, no free-text user prompts.
 
@@ -109,11 +122,12 @@ The last invocation produces "commits ahead of base" so the readiness gate (step
 - big_project_criteria_matched: <count> of 4
 - drift_finding: <count or none>
 - bootstrap_or_refresh: <bootstrap|refresh>
+- seed_material: <paths|none declined|none unavailable>
 - phases_drafted: <yes|no> (path: <path or n/a>)
 - scaffold_dry_run: <count of leaves preview>
 - scaffold_discovery: <count of leaves written>
-- audit_log_path: <path to LOG.md>
-- audit_mr_path: <path to MERGE_REQUEST.md>
+- audit_log_path: <path to LOG.md|skipped>
+- audit_mr_path: <path to MERGE_REQUEST.md|skipped>
 - next_step:
   - Open <path to PHASES.md> and confirm the active phase
   - <follow-up 2>

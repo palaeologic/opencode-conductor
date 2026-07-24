@@ -16,14 +16,10 @@ If `area` is omitted, detect from the current working directory by matching agai
 1. Determine area from argument or cwd.
 
 2. Identify the type-check command for the area:
-   - Look for `package.json` scripts: `typecheck`, `type-check`, `tsc`
-   - Common patterns:
-     - TypeScript (npm/yarn/pnpm): `npx tsc --noEmit`
-     - TypeScript (bun): `bun run typecheck`
-     - Python (mypy): `mypy .`
-     - Python (pyright): `pyright`
-     - Go: `go vet ./...`
-   - If a `Makefile` has a `typecheck` or `check` target, prefer that.
+   - Prefer matching commands from the area's `AGENTS.md` `## Verification scripts` table.
+   - Otherwise inspect project manifests, task files, CI, and contributor documentation for the canonical type-check command.
+   - Treat familiar type-checker names only as discovery hints, not authorization to invent a command.
+   - If multiple commands plausibly match, present them and ask; if none is project-backed, report that rather than guessing.
 
 3. Execute the command in the area's root directory.
 

@@ -1,26 +1,25 @@
 # Generic handoff rule (descriptor-driven)
 
-Use with `~/.config/opencode/projects/<projectKey>/descriptor.json`. OpenCode has **no lifecycle hooks**; continuity is **file + command** driven.
+Use with `$OPENCODE_HOME/projects/<projectKey>/descriptor.json` (`OPENCODE_HOME` defaults to `~/.config/opencode`). Continuity is **file + command** driven.
 
 ## MUST
 
 1. **Resolve project** from the active workspace: load the descriptor for the matching `projectKey` (see kit README for layout).
-2. **Resolve branch** with git; branch-local context lives only under  
-   `~/.config/opencode/projects/<projectKey>/branches/<branch-name>/`.
-3. **Never mix** `MERGE_REQUEST` / `MR` / `LOG` / `PHASES` across branches.
+2. **Resolve branch and context** with Git plus `branchHandoff.contextDirTemplate`. The descriptor may select private, shared-in-repository, or custom storage; never infer a second context root or merge contexts automatically.
+3. **Never mix** helper files (`MERGE_REQUEST.md`, `MR.md`, `LOG.md`, `PHASES.md`, `REVIEW.md`, `HELPERS.json`) across branches.
 4. **Modes**
-   - **tracked** (default): persistent `MERGE_REQUEST.md` (and optional `MR.md` per `mrFilenames`), append-only `LOG.md`, checkpoints.
+   - **tracked** (default): optional branch helpers selected from `branchHandoff.helpers` and tracked in branch-local `HELPERS.json`.
    - **lite**: no required branch files; refresh uses a **recent-commit git window** and minimal `reread_files` (project + area agents when present). Use for short or low-risk sessions.
-5. **Session start**: run `/project-refresh <projectKey>` (or `/manual-refresh <projectKey>` if tools are unavailable). If `missing_branch_context` and mode is **tracked**, run `/project-bootstrap <projectKey>` then refresh again.
+5. **Session start**: run `/project-refresh <projectKey>` (or `/manual-refresh <projectKey>` if wrappers are unavailable). If helper files are missing, moved, untracked, or intentionally absent, use `/project-helper <projectKey>` to create, relink, mark removed, or skip them. `/project-bootstrap` provides the same guarded creation flow through an activated wrapper or its manual fallback.
 6. **Before substantial work**: refresh again after branch switch, rebase, squash, or history rewrite.
-7. **Follow tool output**: obey `reread_files`, `changed_areas`, and boolean nudges (`log_append_recommended`, `mr_update_recommended`, `needs_checkpoint`).
+7. **Follow refresh output**: obey `reread_files`, `changed_areas`, helper drift, review-path partitions, synchronization state, and boolean nudges (`log_append_recommended`, `mr_update_recommended`, `needs_checkpoint`). `mr_update_recommended` is review-driven (a review helper with open/stale findings), not a per-change nudge; when acting on it, cite the triggering signal. Treat `narrative_drift_suspected` as an advisory only — surface it for a human decision and never auto-edit change-request narrative.
 8. **If `agents_stale_vs_branch` is true**: re-read project `AGENTS.md` carefully; shared conventions may have moved on `main` (or `baselineBranchForMaterialChanges`).
-9. **Logging (tracked only)**: append `LOG.md` after substantial work, verification, or refresh when `log_append_recommended` is true. Keep `LOG.md` append-only.
-10. **Promotion**: keep discoveries in branch `LOG.md` first; update shared package/area `AGENTS.md` only when durable and user-approved.
-11. **Refresh is read-only**: `/project-refresh` and `/manual-refresh` MUST only gather and report context. NEVER execute actions (run tests, make code changes, run commands) based on what you read during refresh. Wait for the user to tell you what to do next.
+9. **Logging (tracked only)**: append the helper with role `log` after substantial work, verification, or refresh when `log_append_recommended` is true. Keep progress logs append-only.
+10. **Promotion**: keep discoveries in the branch progress-log helper first. Project operating rules belong in project `AGENTS.md`; durable area/leaf facts belong in `KNOWLEDGE.md`. Promote only when stable and user-approved.
+11. **Refresh is read-only**: `/project-refresh` and `/manual-refresh` MUST only gather and report context. During refresh, NEVER run tests, make code changes, or run follow-up commands. If the user only asked for refresh, wait after reporting. If the user already requested follow-up work, continue after the refresh result is reported.
 12. **Structured output**: when executing `/project-refresh` or `/manual-refresh`, output the `## Handoff refresh result` structured block FIRST (as defined in the command template), then optionally add narrative. Never skip or reorganize the structured block.
 13. **Subtask handoff to main agent**: when a lifecycle command runs as a subtask (for example `/project-init`, `/project-bootstrap`, `/project-review`, `/project-checkpoint`, `/project-close`, `/project-phases`, `/project-knowledge-refresh`, `/scaffold-knowledge`), the main agent MUST restate the subtask's recommended next commands in plain text before waiting for user input.
-14. **Open generated artifacts in GUI**: after creating or updating a user-facing artifact file (for example `REVIEW.md`, `PHASES.md`, `MERGE_REQUEST.md`, `MR.md`, `LOG.md`, or scaffolded `AGENTS.md`), open that file in the OpenCode GUI in the same turn. If GUI-open is unavailable, return the exact path and tell the user to open it.
+14. **Surface generated artifacts**: after creating or updating a user-facing artifact, open it when the host supports file opening. Otherwise return the exact path.
 
 ## SHOULD
 
@@ -32,9 +31,9 @@ Use with `~/.config/opencode/projects/<projectKey>/descriptor.json`. OpenCode ha
 
 ## Models (optional)
 
-- Prefer `descriptor.subtaskModels` for role defaults (`refresh`, `bootstrap`, `checkpoint`, `close`, `knowledge`).
-- Register per-command `model` in `opencode.json` if markdown frontmatter does not support `model` in your OpenCode build (see README example).
-- Do not ask for a model on every subtask; ask only when starting a heavy knowledge pass or when no default is configured.
+- Use the active session model unless the local installation explicitly defines `descriptor.subtaskModels` or per-command routing.
+- Keep routing in deployment configuration, not shared upstream rules.
+- Do not ask for a model on every subtask; ask only when the user must make a meaningful cost or capability choice.
 
 ## Merge closure (tracked)
 

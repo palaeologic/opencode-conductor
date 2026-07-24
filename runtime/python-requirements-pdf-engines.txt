@@ -1,0 +1,12 @@
+# Optional PDF-generation engine dependencies (Python).
+#
+# These are NOT part of the default central runtime. They back specific
+# `convert-to-pdf --engine ...` choices. Install with:
+#   bash bin/install-opencode-conductor.sh --with-runtime-deps --with-pdf-engines
+# or directly:
+#   "$OPENCODE_HOME/bin/opencode-pip" install -r runtime/python-requirements-pdf-engines.txt
+#
+# Non-Python engines (pandoc, a LaTeX engine such as TinyTeX xelatex,
+# wkhtmltopdf, Chrome/Chromium, and the global mermaid-filter npm package)
+# are installed via the system package manager / npm, not from this file.
+weasyprint>=62.0

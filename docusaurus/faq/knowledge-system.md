@@ -36,7 +36,7 @@ Add structured-knowledge tables to area-level `AGENTS.md`:
 
 ## What if branches differ on master/main?
 
-The drift preflight will emit `F-xx` findings and recommend single-file pull-ups. The kit does not rebase for you.
+The drift preflight emits metadata/knowledge findings and recommends single-file pull-ups. The kit does not rebase for you.
 
 ## See also
 

@@ -3,9 +3,9 @@ description: Read-only kit state summary (working tree, HEAD/base, divergence, d
 subtask: true
 ---
 
-Loads skill (when available): `git-safety` for consistent preflight banner and kit-stash conventions.
+Loads skill (when available): `git-safety` for consistent preflight banner and `opencode-kit` stash conventions.
 
-Read-only command to answer "what does the kit think about my current branch state?" without mutating git or branch artifacts.
+Read-only command to answer "what does the kit think about my current branch state?" without mutating git, network refs, or branch artifacts.
 
 ## Arguments
 
@@ -34,9 +34,15 @@ Never interpolate `$ARGUMENTS` into shell-injection blocks.
 
 1. Load `skills/git-safety` and emit its banner.
 2. Derive current branch, base, and ahead/behind counts.
+   - Use the same terminology as refresh:
+     - `branch_sync_state: up_to_date|behind|ahead|diverged|no_upstream|unknown`
+     - `commits_ahead_upstream`
+     - `commits_behind_upstream`
+     - `remote_ref_may_be_stale` from `FETCH_HEAD` age when available.
+   - Do not fetch or pull; recommend `/project-pull-refresh <projectKey>` when remote refs may be stale or the branch is behind.
 3. If `no-preflight` is not present, run the same read-only drift check used by `/project-review`:
    - resolve base via `origin/HEAD` -> `main` -> `master`
-   - compute drift for paths ending in **`KNOWLEDGE.md`** or legacy package **`AGENTS.md`** between `merge-base(HEAD, origin/<base>)` and `origin/<base>` (same path set as `/project-review` drift preflight; project rules `AGENTS.md` at `opencodeProjectRootPath` is out of scope for this count)
+   - compute the Git-tracked `AGENTS.md`/`KNOWLEDGE.md` drift set between `merge-base(HEAD, origin/<base>)` and `origin/<base>`
    - do not write findings; summarize as state.
 4. List kit-managed stashes (`opencode-kit:` prefix) for current branch, with age hints.
 5. Read the latest 5 kickoff-related entries from branch `LOG.md` when available (`Kickoff` / `Stash` headers).
@@ -53,7 +59,10 @@ Never interpolate `$ARGUMENTS` into shell-injection blocks.
 ### HEAD and base
 - head: <attached branch | DETACHED>
 - base: <base branch or unresolved>
+- upstream_ref: <origin/branch|none|unknown>
+- branch_sync_state: <up_to_date|behind|ahead|diverged|no_upstream|unknown>
 - divergence: ahead <N>, behind <N>
+- remote_ref_may_be_stale: <true|false|unknown>
 
 ### Knowledge drift
 - preflight: <on|skipped(no-preflight)>

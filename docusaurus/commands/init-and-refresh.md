@@ -9,8 +9,8 @@ Commands that bring a project under conductor management and keep agent context 
 
 ## `/project-init <projectKey>`
 
-- **Purpose**: scan a repo, draft `descriptor.json`, seed templates and `AGENTS.md`.
-- **Frontmatter defaults**: `agent: plan`, `subtask: true`.
+- **Purpose**: scan a repo, draft `descriptor.json`, and seed branch-helper templates.
+- **Frontmatter default**: `subtask: false`.
 - **Arguments**: `$1` is the project key (used for state directory naming).
 - **Output**: structured proposal block, then on-approval write log.
 
@@ -33,14 +33,15 @@ Commands that bring a project under conductor management and keep agent context 
 - projectRootPath: ~/projects/my-app
 - opencodeProjectRootPath: ~/.config/opencode/projects/my-app
 - areas: frontend, api
-- writes: descriptor.json, _templates/mr/, AGENTS.md (project, area)
+- writes: descriptor.json, _templates/mr/
+- guidance: project-owned; optionally seed AGENTS.md through the installer
 - safety: containment-checked, secret scan clean
 ```
 
 ## `/project-refresh <projectKey>`
 
 - **Purpose**: refresh branch handoff state and surface drift.
-- **Frontmatter defaults**: `agent: plan`, `subtask: true`.
+- **Frontmatter default**: `subtask: true`.
 - **Arguments**: `$1` is the project key.
 - **Output**: `## Handoff refresh result` structured block.
 
@@ -82,6 +83,6 @@ flowchart TD
   has_ctx -- no --> bootstrap[Run /project-bootstrap]
   has_ctx -- yes --> drift[Check knowledge drift preflight]
   drift -- clean --> emit[Emit Handoff refresh result]
-  drift -- dirty --> finding[Emit F-xx finding and a pull-up suggestion]
+  drift -- dirty --> finding[Emit M-series finding and a pull-up suggestion]
   finding --> emit
 ```

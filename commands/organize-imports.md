@@ -15,20 +15,11 @@ Run the project's import organizer to sort, group, and clean up imports.
    - If omitted: run on files changed in the current branch (`git diff --name-only`)
 
 2. Identify the import organizer for the project:
-   - Look for dedicated tools: `organize-imports-cli`, `import-sort`, project-specific scripts
-   - Common patterns:
-     - ESLint with `eslint-plugin-import` sort rules: `npx eslint --fix --rule 'import/order: error'`
-     - Biome: `npx biome check --fix --formatter-enabled=false`
-     - Python (isort): `isort <target>`
-     - Go: `goimports -w <target>`
-   - If the project has a custom workspace script, prefer that.
+   - Prefer a project-provided script, task, editor configuration, CI command, or contributor-documented tool.
+   - Treat familiar organizer names only as discovery hints, not authorization to install or invoke an unconfigured tool.
+   - If multiple tools plausibly apply, present them and ask; if none is project-backed, report that rather than guessing.
 
-3. The tool enforces:
-   - Import grouping: externals → aliases → relatives
-   - Alphabetical sorting within groups
-   - Removal of unused imports
-   - Merging of duplicate imports from same module
-   - `import type` separation where applicable
+3. Let the selected project tool enforce its configured grouping, sorting, unused-import, duplicate-import, and type-import policies. Do not layer a separate ordering convention on top.
 
 4. Report results.
 

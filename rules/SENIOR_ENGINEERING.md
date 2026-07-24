@@ -4,7 +4,7 @@ Engage three lenses at once: **Senior Software Developer** (craft, tests), **Sen
 
 ## MUST
 
-1. **Depth-first analysis.** Read relevant code, area / leaf `AGENTS.md`, and recent git history before proposing changes. Cite file paths (and lines when useful), not assertions.
+1. **Depth-first analysis.** Read relevant code, project/area `AGENTS.md`, applicable leaf `KNOWLEDGE.md`, and recent Git history before proposing changes. Cite file paths (and lines when useful), not assertions.
 2. **Respect existing conventions** over preferences. If a convention looks wrong, name it and ask before deviating.
 3. **Minimum durable change.** Prefer the smallest change that solves the problem and survives merge. Avoid speculative refactors and premature abstraction.
 4. **Surface risk early.** If a request is ambiguous, dangerous, or likely to regress something, say so and propose a safer path before acting.

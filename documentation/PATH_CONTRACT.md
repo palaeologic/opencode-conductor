@@ -1,6 +1,6 @@
 # Path contract (kit tools vs descriptor)
 
-This document records **Phase 0** behavior for Conductor Bun tools in [`tools-off/_opencode_engine.ts`](../tools-off/_opencode_engine.ts) (loaded by `tools-off/opencode_*.ts`). The installer places these under **`~/.config/opencode/tools-off/`** so they are not mixed into **`tools/`**, where OpenCode may auto-register every module as a provider tool (problematic for Bedrock **`toolSpec.description`** validation). It matters for **global vs project-local durable state**: only fields that the engine reads from `descriptor.json` can move into the repo; the descriptor file location has a separate contract.
+This document records the behavior of the Conductor Bun tools in [`tools-off/_opencode_engine.ts`](../tools-off/_opencode_engine.ts) (loaded by `tools-off/opencode_*.ts`). The installer places them under **`$OPENCODE_HOME/tools-off/`** so they are not mixed into **`tools/`**, where some hosts auto-register every module as an exposed tool. It matters for **global vs project-local durable state**: only fields that the engine reads from `descriptor.json` can move into the repo; the descriptor file location has a separate contract.
 
 ## What the engine honors from `descriptor.json`
 
@@ -8,30 +8,57 @@ After loading the descriptor, **`opencode_bootstrap_branch`** and **`opencode_re
 
 - `branchHandoff.contextDirTemplate` — expanded with `{projectKey}` and `{branchName}`; `~/` is expanded to the user home directory.
 - `branchHandoff.templatesDir` — same expansion rules.
-- `branchHandoff` filenames (`mrFilenames`, `logFilename`, `phasesFilename`, template names).
-- `opencodeProjectRootPath` — for **rules** `AGENTS.md`, optional project-wide **`KNOWLEDGE.md`**, leaf **`KNOWLEDGE.md`**, area routing documents, staleness checks, and `reread_files`.
-- Each area’s **`areaAgentsPath`** (default) — path to that area’s **primary** durable document (typically `.../<area>/AGENTS.md`): stack, conventions, routing, and often **`## Verification scripts`**. Same `~/` expansion.
-- Each area’s **`areaKnowledgePath`** (optional) — explicit **second** area-level file when a team wants durable facts split out from **`areaAgentsPath`** (for example a dedicated `.../<area>/KNOWLEDGE.md`). If set, **`opencode_refresh_context`** reads it **before** the `areaAgentsPath` / sibling-`KNOWLEDGE.md` fallback chain.
-- **Refresh resolution when `areaKnowledgePath` is absent:** **`opencode_refresh_context`** prefers **`<dirname(areaAgentsPath)>/KNOWLEDGE.md`** when that **sibling** file exists (optional extra area knowledge beside `AGENTS.md`); otherwise uses **`areaAgentsPath`**.
+- `branchHandoff.helpers` — schema v3 helper registry for branch-local helper files, including filenames, template filenames, roles, and plain-language descriptions.
+- `branchHandoff.helperManifestFilename` — branch-local helper manifest filename, defaulting to `HELPERS.json`.
+- `projectAgentsPath` — project-root `AGENTS.md` used first for refresh `reread_files` and project-rule staleness checks.
+- `projectRootPath` — workspace membership, project-root `AGENTS.md` fallback, and source-relative path calculations.
+- `opencodeProjectRootPath` — for leaf `KNOWLEDGE.md` paths and legacy project-root `AGENTS.md` fallback.
+- Each area’s `areaAgentsPath` — same `~/` expansion.
+- `baselineBranchForMaterialChanges` — fallback integration branch if `origin/HEAD` is not configured.
 
-So **branch handoff files** (`MERGE_REQUEST.md`, `LOG.md`, …) and **durable knowledge** can live under **the git repo** (or any absolute path) as long as those JSON fields point there.
+So **branch helper files** (`MERGE_REQUEST.md`, `LOG.md`, `PHASES.md`, `REVIEW.md`, …), leaf `KNOWLEDGE.md` mirrors, and manually owned `AGENTS.md` rule files can live under **the git repo** (or any absolute path) as long as those JSON fields point there. The refresh engine resolves project-root rules in this order: `projectAgentsPath` → `<projectRootPath>/AGENTS.md` → `<opencodeProjectRootPath>/AGENTS.md`.
 
-### Rules vs package knowledge (filename split)
+## Branch helper registry and manifest
 
-- **`<opencodeProjectRootPath>/AGENTS.md`** — **session / kit rules** for the OpenCode project (Cursor-style operating instructions). Not the same document as package knowledge.
-- **`<opencodeProjectRootPath>/KNOWLEDGE.md`** *(optional)* — project-wide **durable facts** separate from rules (glossary, long-lived integration notes). When present, refresh includes it in `reread_files` immediately after rules `AGENTS.md`.
-- **`<...>/<area>/AGENTS.md`** *(default area anchor)* — area-level architecture, commands, conventions; the file **`/project-init`** drafts via **`areaAgentsPath`**.
-- **`<...>/KNOWLEDGE.md`** at **pseudo-package / leaf** paths (and optional sibling next to area `AGENTS.md`, or via **`areaKnowledgePath`**) — **durable module knowledge** (patterns, pitfalls, verification tables). Leaf convention avoids colliding with repo-root **`AGENTS.md`** when the kit is vendored **inside** an application repository.
+`descriptorSchemaVersion: 3` treats branch helper files as optional, independent documents. The descriptor declares what the project supports under `branchHandoff.helpers`; each branch records what it actually uses in `HELPERS.json`.
+
+Helper state is reconciled from three sources:
+
+- Descriptor support: the helper id exists under `branchHandoff.helpers`.
+- Branch tracking: the helper id exists in `HELPERS.json` and is not marked `removed`.
+- Filesystem reality: the helper file exists under the branch context folder.
+
+Refresh reports:
+
+- `supported_helpers` — helper ids declared in the descriptor.
+- `tracked_helpers` — helpers this branch intends to use.
+- `existing_helpers` — helper files found now.
+- `missing_helpers` — tracked helpers whose files are gone.
+- `untracked_helpers` — supported helper files found but not tracked yet.
+- `unsupported_helpers` — manifest entries or common helper files that the descriptor no longer supports.
+- `available_helpers` — supported helpers the branch has not opted into.
+- `helper_drift` — moved, missing, untracked, or unsupported helper states that need a user decision.
+- `removed_helpers` — helpers deliberately marked removed in the manifest.
+- `manifest_error` — malformed or unreadable manifest state; commands must preserve the file and ask the user to repair it.
+- `invalid_path` — a descriptor or manifest path failed containment or filename validation.
+
+Refresh must not silently recreate helper files. Use `/project-helper <projectKey>` to create, relink, mark removed, or skip helper files with plain-language prompts.
+
+Bootstrap preflights the complete selected helper set before writing. It refuses symbolic links, non-regular files, root escapes, missing declared templates, and invalid existing manifests. Missing helpers use exclusive creation with mode `0600`; the manifest uses a unique mode-`0600` temporary file and atomic replacement. If a later write fails, bootstrap removes only helper files created by that attempt. The manual fallback in `/project-bootstrap` follows the same contract.
+
+Schema v1 and v2 descriptors remain supported through an internal compatibility adapter. Their fixed `mrFilenames`, `logFilename`, `phasesFilename`, and `reviewFilename` fields are exposed to the rest of the engine as helper definitions. Existing branches without a helper manifest implicitly track helper files that already exist; upgrading does not require an immediate manifest rewrite.
 
 ## Descriptor file location (current limitation)
 
 `loadDescriptor(projectKey)` reads **only**:
 
-`~/.config/opencode/projects/<projectKey>/descriptor.json`
+`$OPENCODE_HOME/projects/<projectKey>/descriptor.json`
+
+`OPENCODE_HOME` defaults to `~/.config/opencode` when unset.
 
 There is **no** automatic discovery of `descriptor.json` inside the repo. Therefore:
 
-- **Project-local mode** in `/project-init` still **writes** `descriptor.json` under `~/.config/opencode/projects/<projectKey>/`.
+- **Project-local mode** in `/project-init` still **writes** `descriptor.json` under `$OPENCODE_HOME/projects/<projectKey>/`.
 - It sets **`opencodeProjectRootPath`**, **`branchHandoff.contextDirTemplate`**, **`templatesDir`**, and **`areaAgentsPath`** to paths under `<git-root>/.opencode-conductor/` (or `.opencode/` if chosen) so durable **data** lives beside the clone while the **control-plane** descriptor stays in OpenCode config.
 
 Changing this would require engine work (e.g. resolve descriptor from repo) and is out of scope unless product requirements demand it.
@@ -45,41 +72,27 @@ When the user chooses **project-local** state, generated paths use a single root
 | `opencodeProjectRootPath` | `<gitRoot>/<dir>` |
 | `branchHandoff.contextDirTemplate` | `<gitRoot>/<dir>/branches/{branchName}` |
 | `branchHandoff.templatesDir` | `<gitRoot>/<dir>/_templates/mr` |
-| `areas.*.areaAgentsPath` (default from `/project-init`) | `<gitRoot>/<dir>/<area>/AGENTS.md` — primary area document |
-| `areas.*.areaKnowledgePath` (optional) | `<gitRoot>/<dir>/<area>/KNOWLEDGE.md` or other explicit path — only when a team wants a **separate** area-level knowledge file; not emitted by init |
-| Refresh (no `areaKnowledgePath`) | Prefers sibling **`<dirname(areaAgentsPath)>/KNOWLEDGE.md`** if it exists, else **`areaAgentsPath`** |
+| `areas.*.areaAgentsPath` | `<projectRootPath>/<area>/AGENTS.md` by default; `<gitRoot>/<dir>/<area>/AGENTS.md` only when explicitly selected |
 
 `<gitRoot>` is written in the same style as `projectRootPath` (prefer `~/...` when the repo is under the user’s home directory; otherwise use an absolute path). **`{projectKey}`** appears only where the template already uses it today; the branch folder pattern uses **`branches/{branchName}`** directly under `<dir>` (no extra `projects/{projectKey}` segment under repo-local, to avoid redundant nesting).
 
 ## Commands that scan descriptors
 
-Slash commands that say “scan `~/.config/opencode/projects/*/descriptor.json`” remain correct: that is where **descriptor files** live. Branch folders are always resolved from the loaded descriptor as above.
+Slash commands scan `$OPENCODE_HOME/projects/*/descriptor.json`: that is where **descriptor files** live. Branch folders are always resolved from the loaded descriptor as above.
 
 ## Knowledge audience
 
-**Leaf `KNOWLEDGE.md`**, optional **project `KNOWLEDGE.md`**, optional **area `KNOWLEDGE.md`** (when used), and **area `AGENTS.md`** are **dual-audience**: agents load them during refresh and review preflight; humans use them for onboarding. Use short, factual prose, concrete paths, framework names, and verification steps. **Root `AGENTS.md`** under `opencodeProjectRootPath` is **rules-first** — do not use it as a substitute for durable knowledge files.
-
-## Descriptor pairs (why the same basename appears twice)
-
-`branchHandoff` often lists the same basename twice on purpose: **`mrFilenames`** names the file in the **branch context directory**; **`mrTemplateFilename`** names the file under **`templatesDir`** (often both `MERGE_REQUEST.md`). The same pattern applies to log and phases. **`refreshToolHeuristics.changedFilesAreaPrefixes`** may repeat the same roots as **`areas.*.pathPrefix`** — one drives git diff bucketing, the other names areas; keep them aligned when adding areas.
-
-## Refresh handoff block (tool + manual parity)
-
-**`/project-refresh`** (Bun tool) and **`/manual-refresh`** (no tools) both target the same **`## Handoff refresh result`** shape so Bedrock / tool-off sessions behave like the engine path:
-
-- **`missing_branch_context`** — boolean. In **tracked** mode, **`true`** when the primary `MERGE_REQUEST.md` and `LOG.md` cannot be read after optional template seeding — user should **`/project-bootstrap`** then refresh again (see `commands/project-refresh.md`, `commands/manual-refresh.md`).
-- **`opencode_refresh_context`** JSON may include **`branch_context_readable`** — per-file readability flags for MR / LOG / PHASES when the engine inspects disk.
-- Command markdown may surface the same diagnostics as **`branch_context_status`** sub-bullets for agents that only see the prose block; normalize field names per the command templates above.
+`AGENTS.md` rule files and leaf `KNOWLEDGE.md` files are **dual-audience by design**. The agent loads them deterministically during refresh and review preflight; humans read them as onboarding and reference material. Authors should therefore write for both consumers: short, factual prose with concrete file paths, framework names, and verification steps. The agent uses headings as cues; humans read the file top-to-bottom.
 
 ## Source-tree-mirror convention for leaf knowledge
 
-`descriptorSchemaVersion: 2` adopts a convention path for **leaf-level** package knowledge (a leaf is a package, module, or other meaningful sub-tree). The **canonical** filename is:
+Descriptor schema v2 and later adopt a convention path for **leaf-level** `KNOWLEDGE.md` files (a leaf is a package, module, or other meaningful sub-tree). The canonical location is:
 
 ```
 <opencodeProjectRootPath>/<rel>/KNOWLEDGE.md
 ```
 
-Legacy installs may still use **`AGENTS.md`** at the same path; the refresh engine reads **`KNOWLEDGE.md` first** when both could apply (see engine resolution).
+Legacy installs may use `AGENTS.md` at the same path; the refresh engine prefers `KNOWLEDGE.md` when both exist.
 
 where `<rel>` is the leaf's path **relative to `projectRootPath`**, derived from a `pseudoPackageDetection` rule's `pathPattern` up to and including the first `{packageName}` segment.
 
@@ -102,7 +115,7 @@ Given a `pseudoPackageDetection` rule with `pathPattern = P` and a detected `pac
 
 1. Let `S` be the longest prefix of `P` that ends with `{packageName}`. If `P` does not contain `{packageName}`, the rule is **area-level documentation only** and contributes no leaves.
 2. Substitute `N` for `{packageName}` in `S`. Call this `<rel>`.
-3. The convention path is `<opencodeProjectRootPath>/<rel>/KNOWLEDGE.md` (legacy: `AGENTS.md` at the same `<rel>`).
+3. The convention path is `<opencodeProjectRootPath>/<rel>/KNOWLEDGE.md`.
 
 `pathPattern` semantics:
 
@@ -116,21 +129,33 @@ Given a `pseudoPackageDetection` rule with `pathPattern = P` and a detected `pac
 - When multiple rules match a file, **longest matching stem wins**; ties broken by descriptor array order.
 - Same `packageName` in different `area`s is allowed and produces distinct convention paths.
 
-### Safety guardrails (apply to all auto-write operations)
+### Knowledge-write safety guardrails
 
 - **Package name normalization:** match `^[A-Za-z0-9_][A-Za-z0-9_-]*$`; reject anything else with `invalid_package_name`. Case-sensitive on disk; do not lowercase.
 - **Root containment:** every resolved write target MUST be a strict sub-path of `opencodeProjectRootPath` (global) or `<git-root>/<dir>` (project-local). Otherwise abort with `path_outside_root`.
-- **Symlink refusal:** before write, `lstat` the target; if the knowledge file exists as a symlink, abort with `symlink_refused`.
-- **Non-destructive writes:** if **`KNOWLEDGE.md`** (or legacy **`AGENTS.md`**) already exists, do not overwrite. Discovery treats it as already-tracked; preflight records it as `existing`.
+- **Leaf-only knowledge writes:** discovery/preflight auto-writes MUST target leaf `KNOWLEDGE.md` files only. Refuse project-root or top-layer targets such as `<opencodeProjectRootPath>/KNOWLEDGE.md`, `<opencodeProjectRootPath>/<area>/KNOWLEDGE.md`, and any `AGENTS.md` target with `top_layer_refused` or `legacy_agents_override` as appropriate.
+- **Symlink refusal:** before write, `lstat` the target; if `KNOWLEDGE.md` (or legacy `AGENTS.md`) exists as a symlink, abort with `symlink_refused`.
+- **Non-destructive writes:** if `KNOWLEDGE.md` already exists, do not overwrite. Discovery treats it as already-tracked; preflight records it as `existing`.
 - **No remote IO:** scaffolding is purely local; no network calls.
 
 ### Backward compatibility
 
-Legacy v1 descriptors keep `pseudoPackageDetection` as a single object; commands MUST normalize it to a single-rule array on read. v1 is deprecated and slated for removal in the next major release; see [`UPGRADING.md`](UPGRADING.md).
+Schema v1 descriptors may keep `pseudoPackageDetection` as a single object; commands MUST normalize it to a single-rule array on read. See [`UPGRADING.md`](UPGRADING.md) for the optional schema v3 migration.
+
+### Leaf template contract
+
+The canonical scaffold body for new leaf files lives at [`templates/knowledge/LEAF_KNOWLEDGE.md`](../templates/knowledge/LEAF_KNOWLEDGE.md). Commands render it with these placeholders:
+
+- `<packageName>` — detected leaf/package name.
+- `<areaName>` — descriptor area key.
+- `<sourceRelPath>` — source-tree relative path mirrored by the knowledge file.
+- `<aliasesJsonArray>` — JSON/YAML-compatible array of aliases from the matching rule, or `[]`.
+
+The template is intentionally sparse and dual-audience. It gives agents deterministic headings (`Purpose`, `Use When`, `Public Surface / Entry Points`, `Invariants`, `Verification`, `Known Pitfalls`) while giving humans a five-minute package orientation. Rich content should come from focused code reading or `/project-knowledge-refresh`, not from bulk discovery guesses.
 
 ## Structured-knowledge-table schema
 
-Area-level **`KNOWLEDGE.md`** (or legacy **`AGENTS.md`**) may contain structured tables that pair a diff trigger with a command. Future skills (e.g. verification-script synthesis, run-locally suggestions) consume these tables deterministically. The schema is shared so every consuming skill agrees on the format. **Verification rows:** copy command strings from the repo’s canonical source (MR `## Verification target`, CI, or README) — do not invent alternate Django / npm labels.
+Area-level `AGENTS.md` files may contain structured tables that pair a diff trigger with a command. Future skills (e.g. verification-script synthesis, run-locally suggestions) consume these tables deterministically. The schema is shared so every consuming skill agrees on the format.
 
 ### Block format
 
@@ -157,27 +182,153 @@ Area-level **`KNOWLEDGE.md`** (or legacy **`AGENTS.md`**) may contain structured
 
 ### Authoring rules
 
-- Place these blocks in the **area-level** document agents read for that area (typically **`<opencodeProjectRootPath>/<area>/AGENTS.md`** when using the default init shape), not project- or leaf-level. Triggers are area-scoped by convention. Teams using **`areaKnowledgePath`** or a sibling area **`KNOWLEDGE.md`** place the block in that file instead.
+- Place these blocks in **area-level** `AGENTS.md` (e.g. `<projectRootPath>/<area>/AGENTS.md` when committed in-repo, or `<opencodeProjectRootPath>/<area>/AGENTS.md` when project-local), not project- or leaf-level. Triggers are area-scoped by convention.
 - Keep rows focused: one row per (trigger × command) pair; do not bundle commands.
 - Never reference user inputs, branch names, or any non-static data in the `Command` cell.
 
+## Review filtering
+
+Descriptors may define an optional command-consumed field:
+
+```json
+"reviewIgnoredPathGlobs": ["**/generated/**", "**/*.snap"]
+```
+
+The engine and `/project-review` apply these git-style globs to changed files before generating findings or diff-summary rows. Ignored files are not reviewed for findings, but the generated `REVIEW.md` must list their count and paths under `## Scope` as `ignored_by_review_filter` so reviewers can see what was excluded. Refresh output includes `reviewable_changed_files_count`, `ignored_changed_files_count`, and bounded previews for both partitions.
+
+## Review lifecycle metadata
+
+`REVIEW.md` is the source of truth for branch review state. `/manual-refresh`, `/project-refresh`, `/project-review`, and `/project-review-sync` should inspect the branch-local `REVIEW.md` before deciding whether to create, continue, or preserve-update a review.
+
+Generated review artifacts should begin with:
+
+```markdown
+<!-- OpenCode: review metadata
+reviewed_window: <base-or-checkpoint>..<head>
+reviewed_head: <head-sha>
+branch: <branch-name>
+artifact_type: <lean_findings|diff_first|full_checklist_diff>
+findings_merge_mode: <new|preserve|replace>
+generated_at: <iso-8601>
+review_focus: <none|short summary>
+-->
+```
+
+Refresh commands report `review_present`, `review_path`, `review_state`, `reviewed_head`, `head_has_moved_since_review`, and `open_review_findings`. Valid `review_state` values are:
+
+| State | Meaning |
+| --- | --- |
+| `new_review` | No branch-local `REVIEW.md` exists. |
+| `existing_current` | Metadata `reviewed_head` matches current `HEAD`. |
+| `existing_head_moved` | Metadata `reviewed_head` differs from current `HEAD`. |
+| `existing_unknown_head` | `REVIEW.md` exists but metadata is absent or incomplete. |
+
+`LOG.md` may receive compact review audit entries, but those entries are orientation only; they must not override the artifact state in `REVIEW.md`.
+
+Open findings use `F###`, `R###`, and `M###` namespaces for implementation, review, and metadata/knowledge findings. Existing `F-xx` identifiers remain valid and must be preserved during refresh or review synchronization. New findings use the current namespaces without renumbering legacy rows.
+
+## Shared-branch sync status
+
+Refresh commands are read-only dashboards. `/manual-refresh` and `/project-refresh` MUST NOT run `git fetch`, `git pull`, or write handoff artifacts. They may inspect local refs and report shared-branch status with these fields:
+
+| Field | Meaning |
+| --- | --- |
+| `upstream_ref` | Current branch upstream, or `none` / `unknown`. |
+| `upstream_head` | Local SHA for `upstream_ref`, or `none` / `unknown`. |
+| `branch_sync_state` | `up_to_date`, `behind`, `ahead`, `diverged`, `no_upstream`, or `unknown`, computed from local refs. |
+| `commits_ahead_upstream` / `commits_behind_upstream` | Counts from `HEAD...@{upstream}` when available. |
+| `last_fetch_age_minutes` | Age of `FETCH_HEAD` when available. |
+| `remote_ref_may_be_stale` | `true` when local remote refs are probably stale; `unknown` when fetch age is unavailable. |
+| `branch_sync_stale_after_minutes` | Effective staleness threshold from the descriptor, default `60`. |
+| `unlogged_commit_source_hint` | `none`, `upstream_reachable`, `local_unpushed`, `mixed`, or `unknown` for checkpoint..HEAD commits. |
+| `reconciliation_recommended` | `log`, `phases`, `review`, `merge_request`, or `none`. |
+
+Use `/project-pull-refresh <projectKey>` for the explicit network-aware flow. It asks before `git fetch --prune` and `git pull --ff-only`, refuses dirty or diverged states, then runs the refresh procedure.
+
+## Branch context storage modes
+
+Exactly one branch context root is active per descriptor. Commands read only the descriptor-resolved `branchHandoff.contextDirTemplate`.
+
+| Mode | Context path | Sharing behavior |
+| --- | --- | --- |
+| `private` | `$OPENCODE_HOME/projects/<key>/branches/<branch>/` | Per-user default; no automatic coworker sharing. |
+| `shared-git` | `<projectRootPath>/.opencode-conductor/branches/<branch>/` | Repo-local artifacts can be committed with the feature branch. |
+| `shared-local` | Same repo-local path, usually gitignored | Sync out-of-band; less reliable than committed state. |
+| `custom` | Any other descriptor path | Team-owned convention. |
+
+Refresh reports `active_branch_context` and checks the inactive private/shared-git root for `MERGE_REQUEST.md`, `LOG.md`, `PHASES.md`, or `REVIEW.md`. If found, it reports `alternate_branch_context_detected` but MUST NOT merge the two roots automatically. Import/copy between roots is a deliberate human action.
+
+For 2-3 coworkers on one shared branch:
+
+- `LOG.md` is append-only; preserve all timestamped entries during conflict resolution.
+- `PHASES.md` is the current plan/status board; keep one branch captain for status changes unless explicitly agreed.
+- `REVIEW.md` is reviewer-owned while review is active; use preserve/sync flows after pulls.
+- `MERGE_REQUEST.md` should be updated through `/project-update-mr`; keep `## OpenCode:` blocks machine-owned.
+
 ## Frontmatter conventions
 
-Per OpenCode docs, command frontmatter accepts `description`, `agent`, `model`, `subtask`, `template`. The kit standardizes these defaults so command authors do not improvise:
+Command frontmatter carries the portable command contract. The shipped registry in `opencode.json.template` supplies matching runtime metadata:
 
-| Command type | `agent` | `subtask` | `model` |
-| --- | --- | --- | --- |
-| Kickoff (mutating, primary-context audit) | unset (current agent) | `false` | upstream: unset; fork: `claude-opus-4-7-thinking-xhigh` |
-| Review / advisory (long output) | `plan` | `true` | upstream: unset; fork: `claude-opus-4-7-thinking-xhigh` |
-| Read-only state | `plan` | `true` | unset (cheap session model is fine) |
-| Bootstrap / refresh (mutating, no audit needs) | unset | `false` | unset |
+| Command type | `subtask` | Routing |
+| --- | --- | --- |
+| Git-mutating branch lifecycle and guided initialization | `false` | active session |
+| Review, advisory, refresh, generated-document, helper, and verification flows | `true` | active session |
 
 Notes:
 
-- Frontmatter defaults replace most of the runtime "prompt user for model" flow. Users only see a prompt when they explicitly want to override.
-- `subtask: true` keeps long advisory output out of the primary context window.
-- `agent: plan` is appropriate for plan-first commands (read-mostly, mutating only after confirmation).
-- Upstream commands leave `model` unset; fork commands set the model in fork-side frontmatter at mirror time.
+- `subtask: true` keeps long advisory and structured helper output out of the primary context window.
+- `subtask: false` is reserved for git-mutating branch lifecycle commands and guided initialization flows that need main-session confirmations and audit continuity.
+- Shipped commands leave agent and model routing unset. Installations may configure explicit overrides locally.
+
+## Interactive question prompts
+
+When a host exposes a structured question UI, commands MUST pass `questions` as a native array of question objects. Do not JSON.stringify the array, wrap it in quotes, or place it inside a code fence. A JSON-encoded string fails the host schema with errors like "Expected array".
+
+Correct shape:
+
+```json
+{
+  "questions": [
+    {
+      "header": "Short decision label",
+      "question": "The actual question text.",
+      "options": [
+        {
+          "label": "Recommended choice (Recommended)",
+          "description": "One short impact statement."
+        },
+        {
+          "label": "Alternative choice",
+          "description": "One short trade-off statement."
+        }
+      ]
+    }
+  ]
+}
+```
+
+For multi-card prompts, keep the array small and ordered by dependency: seed-source decisions first, gate/continue decisions next, formatting choices next, execution-profile choices last. If schema validation fails, retry with corrected structured arguments before proceeding, or fall back to plain text and clearly state which decisions still need answers.
+
+## Seed material for generated artifacts
+
+Commands that generate `PHASES.md`, `MERGE_REQUEST.md`, `REVIEW.md`, or help docs MUST resolve seed material before drafting human-facing content.
+
+Seed material includes:
+
+- local file paths or `@file` mentions in the current user request,
+- attached files or pasted documents,
+- issue / MR / ticket descriptions that the user provides,
+- existing branch files that the command already reads (`MERGE_REQUEST.md`, `PHASES.md`, `LOG.md`, `REVIEW.md`).
+
+If the user mentions a local file path but does not explicitly say whether to use it, ask whether to use that file as primary seed material. Default to yes when the file exists and is within the project or configured knowledge roots. If the user clearly says to use the file, read it without an extra confirmation.
+
+If no seed material is detected before a kickoff or first-time phase/MR draft, ask once whether the user has a seed document, issue/MR description, or planning note to provide. Continue without one only after the user declines or the command is running in an explicit non-interactive / hint-only mode.
+
+Generated artifacts must make the seed decision auditable:
+
+- If seed material is used, cite path(s) or stable external identifiers in the artifact or audit metadata, not full pasted content.
+- If no seed material is used, say so in the command result so the user knows the draft is intentionally generic.
+- Do not write a generic phase plan or MR narrative while a mentioned seed document remains unread or unconfirmed.
 
 ## Security rules
 
@@ -200,19 +351,19 @@ OpenCode's `!`...`` shell-injection captures fixed read-only command output into
 
 ### 3. Stash messages: structured fields only
 
-Kit-managed stash messages carry only the fields defined by the kit-stash convention (command, original branch, ISO timestamp). Never embed file lists, commit subjects, or content previews in the stash message.
+Kit-managed stash messages carry only the fields defined by the `opencode-kit` stash convention (command, original branch, ISO timestamp). Never embed file lists, commit subjects, or content previews in the stash message.
 
 ### 4. No skill recursion
 
 Commands load skills (1 level deep). Skills do not load other skills. The single documented exception is `skills/git-safety` being loaded as a foundational primitive from another skill (no further recursion). This keeps the dependency graph flat and makes audit traces predictable.
 
-### 5. Provider-switch trust boundary
+### 5. Execution-profile trust boundary
 
-Switching the model provider mid-flow shifts the trust boundary. Commands that prompt for a model surface the provider explicitly when it differs from the session and recommend staying on the session provider unless the user has a specific reason to switch.
+Switching execution profiles or external services mid-flow may shift the trust boundary. Commands surface that change explicitly and recommend retaining the current session profile unless the user has a specific reason to switch.
 
 ### 6. Pre-write secret scan (extended by future plans)
 
-Any command that writes durable knowledge (`KNOWLEDGE.md`, legacy `AGENTS.md`, `descriptor.json`, generated docs) runs a regex check before the write. Patterns to refuse:
+Any command that writes durable knowledge (`KNOWLEDGE.md`, `AGENTS.md`, `descriptor.json`, generated docs) runs a regex check before the write. Patterns to refuse:
 
 - AWS access keys: `AKIA[0-9A-Z]{16}`
 - JSON Web Tokens: `eyJ[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+`
@@ -248,7 +399,7 @@ All mermaid prompts:
 
 ## Audit trail contract
 
-Mutating commands (kickoff, scaffold, refresh, review, update-mr) append structured metadata to `LOG.md` and, when the command operates in a branch context, an `## OpenCode:` block to `MERGE_REQUEST.md`.
+Audit behavior is command-owned, not automatic. Checkpoint and close flows append the progress-log helper when it exists. Review writes the review helper, and change-request update/sync commands own their `## OpenCode:` blocks. Kickoff records only the mutations its command contract names. Scaffold writes approved knowledge targets. Refresh is always read-only and never appends audit state.
 
 ### `LOG.md` block shape
 
@@ -259,7 +410,7 @@ Mutating commands (kickoff, scaffold, refresh, review, update-mr) append structu
 - <field>: <value>
 ```
 
-Activities used by this release: `Kickoff`, `Stash`. Future plans add `Review`, `Refresh`, etc.
+Activity names are defined by the command that owns the write; commands must not fabricate a successful audit entry before the corresponding mutation succeeds.
 
 ### `MERGE_REQUEST.md` `## OpenCode:` block
 
@@ -280,6 +431,33 @@ Audit writes happen at the end of a command's flow, after the work has succeeded
 
 `LOG.md` is append-only. Rotation at >100KB is tracked in `documentation/ROADMAP.md`; until then, users may manually trim older entries.
 
+### Branch lineage and commit windows
+
+Every `LOG.md` kickoff, checkpoint, or session-close entry should make the reviewed commit window explicit. This is especially important for stacked branches, where `origin/<base>..HEAD` may include a large inherited branch and only the top slice belongs to the current effort.
+
+Recommended fields:
+
+```
+- integration_base: origin/<main|master> (<merge-base-short>)
+- parent_branch: <remote/branch or none/unknown>
+- branch_delta: <N> commits from integration base
+- working_delta: <N> commits from parent/checkpoint to HEAD
+- reviewed_window: <start-short>..<head-short>
+- reviewed_through: <head-sha>
+- commit_source: <local_session|pulled_upstream|mixed|unknown>
+```
+
+Semantics:
+
+- `integration_base` is the resolved repository base (`origin/HEAD` -> `main` -> `master`) plus the merge-base with `HEAD`.
+- `parent_branch` is the stacked branch or previous feature branch when known from local refs, upstream tracking, branch naming, user context, or an existing `LOG.md` entry. Use `none` for a direct base branch and `unknown` when unsure.
+- `branch_delta` is the total commits from integration base to `HEAD`.
+- `working_delta` is the commits from the last checkpoint, known parent branch, or explicit reviewed window start to `HEAD`.
+- `reviewed_window` is the range summarized by the entry. Prefer the narrow, actionable range over the full integration-base range on stacked branches.
+- `commit_source` records whether checkpointed commits are local session work, pulled/shared upstream work, mixed, or unknown.
+
+When `branch_delta` and `working_delta` differ materially, say so in the summary. Do not imply that inherited commits are new work for the current checkpoint.
+
 ## Kit-stash convention
 
 Defined in detail in `skills/git-safety/SKILL.md`. Summary:
@@ -295,37 +473,38 @@ The kit never auto-stashes. Commands that need a stash always ask.
 
 ## Knowledge across branches
 
-**`KNOWLEDGE.md`** (and legacy **`AGENTS.md`**) describe durable package knowledge (architecture, conventions, invariants). Two storage modes affect how knowledge moves between branches:
+Project/area `AGENTS.md` and area/leaf `KNOWLEDGE.md` files carry durable guidance. Whether knowledge moves between branches is determined by **Git tracking**, not by `conductorStateLocation` alone. A project-local root may be ignored or committed.
 
-| Mode | Where files live | Per-branch behavior | Drift preflight applies? |
+| Tracking mode | Typical location | Per-branch behavior | Drift preflight applies? |
 | --- | --- | --- | --- |
-| **Project-local** | `<git-root>/.opencode-conductor/...` (or `.opencode/`) | Knowledge is stable across branches; not part of the working-tree diff | No (no per-branch drift to compute) |
-| **Committed-in-repo** | `<repo>/<area>/KNOWLEDGE.md` (alongside source; legacy `AGENTS.md`) | Knowledge moves with the branch; visible in diffs and PRs | Yes |
+| **Outside Git** | `$OPENCODE_HOME/projects/<key>/...` | Stable across branch switches in one clone | No |
+| **Repo-local, ignored or untracked** | `<git-root>/.opencode-conductor/...` (or `.opencode/`) | Stable locally; shared only out of band | No |
+| **Git-tracked** | Source-adjacent files or a committed repo-local state root | Moves with branches; visible in diffs and change requests | Yes |
 
 ### Recommendation
 
-- Use **project-local** for fast-moving forks where knowledge needs to stay stable across many in-flight branches and should not pollute PR diffs.
-- Use **committed-in-repo** for shared kits, vendor-neutral upstream, or any project where per-branch self-consistency of knowledge is desirable.
+- Use **global or ignored repo-local** storage when knowledge should stay stable across in-flight branches and remain out of change-request diffs.
+- Use **Git-tracked** storage when per-branch self-consistency and shared review are desirable.
 
-The choice is set during `/project-bootstrap` and recorded in the descriptor; switching modes mid-project is expensive and rare.
+The location is selected during `/project-init`; its project-local `.gitignore` choice controls whether repo-local state is private or tracked. Individual descriptor overrides can mix locations, so commands evaluate actual Git-tracked paths rather than assuming from the location label.
 
 ### Drift behavior (committed mode)
 
-`/project-knowledge-refresh` and `/project-review` run a knowledge-drift preflight by default:
+`/project-knowledge-refresh` and `/project-review` run a knowledge-drift preflight for Git-tracked knowledge by default:
 
 1. Resolve the integration base via `origin/HEAD` → `main` → `master`.
 2. `git fetch origin <base>` (read-only; cached for 5 minutes per session, fixed).
-3. Compute the symmetric diff of **`KNOWLEDGE.md` and `**/AGENTS.md`** paths between `merge-base(HEAD, origin/<base>)` and `origin/<base>` (include both patterns until legacy trees are migrated).
-4. Emit `F-xx` finding "Knowledge drift vs base: <files>" if drift exists.
-5. Recommend rebase, or `git checkout <base> -- <path>` for a single-file pull-up.
+3. Compute the symmetric diff of `AGENTS.md` / `KNOWLEDGE.md` files between `merge-base(HEAD, origin/<base>)` and `origin/<base>`.
+4. Emit an `M###` drift finding if drift exists because drift is knowledge/rules misalignment.
+5. Recommend rebase, or `git checkout <base> -- <AGENTS.md path>` for a single-file pull-up.
 
 The preflight is **silent on no drift**. The `--no-preflight` flag bypasses cleanly for CI / batch scenarios.
 
-### Source-path guard (project-local mode)
+### Source-path guard
 
-`/scaffold-knowledge` verifies the leaf source directory exists in the current working tree before writing a leaf-level **`KNOWLEDGE.md`**. Skip + log on miss; bypass with `--no-source-guard`. Prevents "ghost knowledge" — durable files about packages absent from the current branch.
+`/scaffold-knowledge` verifies the leaf source directory exists in the current working tree before writing a leaf-level `KNOWLEDGE.md`. Skip + log on miss; bypass with `--no-source-guard`. Prevents "ghost knowledge" — durable files about packages absent from the current branch.
 
-## Package knowledge merge playbook (KNOWLEDGE.md / legacy AGENTS.md)
+## AGENTS.md / KNOWLEDGE.md conflict playbook
 
 Knowledge bullets are typically additive, so merges are common. The kit never auto-resolves conflicts.
 

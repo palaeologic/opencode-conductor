@@ -1,20 +1,23 @@
 # Code Quality Standards
 
-Universal quality rules harvested from industry best practices. Apply to all source files.
+General quality defaults. Project guidance, established conventions, and configured linters/type-checkers take precedence.
 
 ## Control flow
 
 - Prefer early returns over deep nesting — exit error/edge cases first.
 - Avoid `else` after a `return`; use flat sequential guards.
-- Keep function bodies under ~40 lines; extract helpers for complex logic.
+- Prefer short, focused function bodies; extract helpers when a function becomes hard to scan or test.
 - Use exhaustive `switch` with `never` default for discriminated unions.
 
-## TypeScript
+## JavaScript and TypeScript
+
+- Apply these rules to both browser and Node code.
 
 - Prefer `const` assertions and discriminated unions over `enum`.
 - Use `satisfies` over `as` for type narrowing — preserves inference while asserting shape.
 - Use `import type` for type-only imports.
 - Avoid `any` — use `unknown` and narrow with type guards when the type is truly dynamic.
+- Avoid unsafe type assertions and non-null assertions. If unavoidable, prefer narrow exceptions such as `as const` and `as unknown`, and keep usage local and justified.
 - Prefer `readonly` arrays and properties for data that should not be mutated after creation.
 - Keep generics simple (max 2-3 type params); extract type aliases for complex ones.
 
@@ -22,25 +25,15 @@ Universal quality rules harvested from industry best practices. Apply to all sou
 
 - Booleans: prefix with `is`, `has`, `should`, `can`, `will` (e.g. `isLoading`, `hasPermission`).
 - Event handlers: prefix with `handle` (component) or `on` (prop callback).
-- Custom hooks: prefix with `use`.
 - Constants: `UPPER_SNAKE_CASE` for true compile-time constants; `camelCase` for runtime values.
 - Types/interfaces: `PascalCase` — no `I` prefix.
 
 ## Functions
 
-- Limit parameters to 3; use an options object beyond that.
-- Prefer named exports over default exports (improves refactoring and tree-shaking).
+- Prefer small parameter lists; use an options object when a call needs several related values.
+- Prefer named exports for reusable modules when project conventions allow; follow existing default-export patterns where they are already established.
 - Extract magic numbers and strings into named constants at file/module scope.
 - Pure functions should be side-effect free — move side effects to callers or dedicated effect handlers.
-
-## React patterns
-
-- Prefer composition over inheritance — use render props or compound components.
-- Memoize expensive computations with `useMemo`; memoize callbacks with `useCallback` only when passed to child components that re-render.
-- Avoid inline object/array literals in JSX props (causes unnecessary re-renders).
-- Keep components focused — one responsibility per component.
-- Extract business logic into custom hooks; keep components as thin UI shells.
-- Prefer controlled components over uncontrolled for form state.
 
 ## Error handling
 
@@ -52,8 +45,14 @@ Universal quality rules harvested from industry best practices. Apply to all sou
 ## Imports and modules
 
 - Group imports: external libs → internal aliases → relative.
-- Remove unused imports — enforce via eslint `no-unused-imports`.
-- One module = one responsibility; avoid "utils" grab-bag files exceeding 200 lines.
+- Remove unused imports using the project's configured lint or compiler rules.
+- Merge duplicate imports from the same module when safe.
+- Keep modules focused; split a generic utilities collection when its responsibilities or ownership become unclear.
+- Respect project package and module boundaries; do not cross package boundaries with relative imports.
+- Do not import from `node_modules` internals, absolute filesystem paths, `index` barrels, `/src`, `/lib`, or similar unstable internal paths unless explicitly allowed.
+- Normalize import paths instead of leaving redundant traversal segments.
+- For OpenCode artifact skills, use the central runtime under `$OPENCODE_HOME` (default `~/.config/opencode`): `opencode-python`, `opencode-pip`, `opencode-node`, and `opencode-npm`.
+- Do not run `pip install`, `pip install --break-system-packages`, or plain `npm install` from a project repo to satisfy OpenCode skill dependencies. Rerun `bash bin/install-opencode-conductor.sh --with-runtime-deps` from the conductor repo, or use the central runtime wrappers.
 
 ## Testing
 
@@ -65,12 +64,13 @@ Universal quality rules harvested from industry best practices. Apply to all sou
 
 ## Clean up after yourself
 
-- MUST remove unused imports and variables after every change — never leave dead code behind.
-- MUST remove unused function parameters unless required by an interface contract.
+- Remove unused imports and variables after every change — never leave dead code behind.
+- Remove unused function parameters unless required by an interface contract.
 - If you add code, verify nothing became unused as a result. If you remove code, clean up orphaned imports.
 
-## Git and commits
+## Commits
 
+- Follow project commit conventions when defined (see project `AGENTS.md`).
 - Atomic commits — one logical change per commit.
-- Commit messages: imperative mood, under 72 chars, reference ticket/issue if available.
 - Never commit secrets, `.env` files, or build artifacts.
+- See `CORE.md` § "Git operations require explicit consent" for consent rules.

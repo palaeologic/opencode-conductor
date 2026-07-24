@@ -1,0 +1,215 @@
+"""
+Helper for running LibreOffice (soffice) in environments where AF_UNIX
+sockets may be blocked (e.g., sandboxed VMs). Detects the restriction
+at runtime and applies an LD_PRELOAD shim if needed.
+
+Usage:
+    from office.soffice import run_soffice, get_soffice_env
+
+    result = run_soffice(["--headless", "--convert-to", "pdf", "input.docx"])
+"""
+
+import os
+import shutil
+import socket
+import stat
+import subprocess
+import tempfile
+from pathlib import Path
+
+
+def resolve_soffice() -> str:
+    configured = os.environ.get("OPENCODE_SOFFICE")
+    candidates: list[Path] = []
+
+    if configured:
+        candidates.append(Path(configured).expanduser())
+
+    for binary in ("soffice", "libreoffice"):
+        found = shutil.which(binary)
+        if found:
+            candidates.append(Path(found))
+
+    candidates.append(Path("/Applications/LibreOffice.app/Contents/MacOS/soffice"))
+
+    for candidate in candidates:
+        if candidate.exists() and os.access(candidate, os.X_OK):
+            return str(candidate)
+
+    return "soffice"
+
+
+def get_soffice_env() -> dict:
+    env = os.environ.copy()
+    env["SAL_USE_VCLPLUGIN"] = "svp"
+
+    if _needs_shim():
+        shim = _ensure_shim()
+        env["LD_PRELOAD"] = str(shim)
+
+    return env
+
+
+def run_soffice(args: list[str], **kwargs) -> subprocess.CompletedProcess:
+    env = get_soffice_env()
+    return subprocess.run([resolve_soffice()] + args, env=env, **kwargs)
+
+
+_SHIM_DIR = Path(os.environ.get("OPENCODE_HOME") or Path.home() / ".config" / "opencode") / "cache" / "libreoffice-shim"
+_SHIM_SO = _SHIM_DIR / "lo_socket_shim.so"
+
+
+def _needs_shim() -> bool:
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.close()
+        return False
+    except OSError:
+        return True
+
+
+def _ensure_shim() -> Path:
+    try:
+        cache_stat = _SHIM_DIR.lstat()
+        if stat.S_ISLNK(cache_stat.st_mode) or not stat.S_ISDIR(cache_stat.st_mode):
+            raise RuntimeError(f"Unsafe LibreOffice shim cache path: {_SHIM_DIR}")
+    except FileNotFoundError:
+        pass
+    _SHIM_DIR.mkdir(parents=True, exist_ok=True, mode=0o700)
+    os.chmod(_SHIM_DIR, 0o700)
+    try:
+        shim_stat = _SHIM_SO.lstat()
+        owner_id = getattr(os, "getuid", lambda: shim_stat.st_uid)()
+        if stat.S_ISREG(shim_stat.st_mode) and shim_stat.st_uid == owner_id and not (shim_stat.st_mode & 0o022):
+            return _SHIM_SO
+    except FileNotFoundError:
+        pass
+
+    source_fd, source_name = tempfile.mkstemp(prefix="lo_socket_shim.", suffix=".c", dir=_SHIM_DIR)
+    output_fd, output_name = tempfile.mkstemp(prefix="lo_socket_shim.", suffix=".so", dir=_SHIM_DIR)
+    os.close(output_fd)
+    Path(output_name).unlink()
+    try:
+        with os.fdopen(source_fd, "w", encoding="utf-8") as source:
+            source.write(_SHIM_SOURCE)
+        subprocess.run(
+            ["gcc", "-shared", "-fPIC", "-o", output_name, source_name, "-ldl"],
+            check=True,
+            capture_output=True,
+        )
+        os.chmod(output_name, 0o600)
+        os.replace(output_name, _SHIM_SO)
+    finally:
+        Path(source_name).unlink(missing_ok=True)
+        Path(output_name).unlink(missing_ok=True)
+    return _SHIM_SO
+
+
+_SHIM_SOURCE = r"""
+#define _GNU_SOURCE
+#include <dlfcn.h>
+#include <errno.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+static int (*real_socket)(int, int, int);
+static int (*real_socketpair)(int, int, int, int[2]);
+static int (*real_listen)(int, int);
+static int (*real_accept)(int, struct sockaddr *, socklen_t *);
+static int (*real_close)(int);
+static int (*real_read)(int, void *, size_t);
+
+static int is_shimmed[1024];
+static int peer_of[1024];
+static int wake_r[1024];
+static int wake_w[1024];
+static int listener_fd = -1;
+
+__attribute__((constructor))
+static void init(void) {
+    real_socket     = dlsym(RTLD_NEXT, "socket");
+    real_socketpair = dlsym(RTLD_NEXT, "socketpair");
+    real_listen     = dlsym(RTLD_NEXT, "listen");
+    real_accept     = dlsym(RTLD_NEXT, "accept");
+    real_close      = dlsym(RTLD_NEXT, "close");
+    real_read       = dlsym(RTLD_NEXT, "read");
+    for (int i = 0; i < 1024; i++) {
+        peer_of[i] = -1;
+        wake_r[i]  = -1;
+        wake_w[i]  = -1;
+    }
+}
+
+int socket(int domain, int type, int protocol) {
+    if (domain == AF_UNIX) {
+        int fd = real_socket(domain, type, protocol);
+        if (fd >= 0) return fd;
+        int sv[2];
+        if (real_socketpair(domain, type, protocol, sv) == 0) {
+            if (sv[0] >= 0 && sv[0] < 1024) {
+                is_shimmed[sv[0]] = 1;
+                peer_of[sv[0]]    = sv[1];
+                int wp[2];
+                if (pipe(wp) == 0) {
+                    wake_r[sv[0]] = wp[0];
+                    wake_w[sv[0]] = wp[1];
+                }
+            }
+            return sv[0];
+        }
+        errno = EPERM;
+        return -1;
+    }
+    return real_socket(domain, type, protocol);
+}
+
+int listen(int sockfd, int backlog) {
+    if (sockfd >= 0 && sockfd < 1024 && is_shimmed[sockfd]) {
+        listener_fd = sockfd;
+        return 0;
+    }
+    return real_listen(sockfd, backlog);
+}
+
+int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
+    if (sockfd >= 0 && sockfd < 1024 && is_shimmed[sockfd]) {
+        if (wake_r[sockfd] >= 0) {
+            char buf;
+            real_read(wake_r[sockfd], &buf, 1);
+        }
+        errno = ECONNABORTED;
+        return -1;
+    }
+    return real_accept(sockfd, addr, addrlen);
+}
+
+int close(int fd) {
+    if (fd >= 0 && fd < 1024 && is_shimmed[fd]) {
+        int was_listener = (fd == listener_fd);
+        is_shimmed[fd] = 0;
+
+        if (wake_w[fd] >= 0) {
+            char c = 0;
+            write(wake_w[fd], &c, 1);
+            real_close(wake_w[fd]);
+            wake_w[fd] = -1;
+        }
+        if (wake_r[fd] >= 0) { real_close(wake_r[fd]); wake_r[fd]  = -1; }
+        if (peer_of[fd] >= 0) { real_close(peer_of[fd]); peer_of[fd] = -1; }
+
+        if (was_listener)
+            _exit(0);
+    }
+    return real_close(fd);
+}
+"""
+
+
+if __name__ == "__main__":
+    import sys
+
+    result = run_soffice(sys.argv[1:])
+    sys.exit(result.returncode)

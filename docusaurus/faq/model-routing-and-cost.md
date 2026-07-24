@@ -7,7 +7,7 @@ sidebar_position: 8
 
 ## Which model do you recommend for kickoff?
 
-The latest reasoning-capable model your provider offers. Kickoff explicitly prompts you to pick one — it does not guess. Forks may preload a recommendation; upstream stays vendor-neutral.
+The active session model. Installations may configure an override, but shipped commands do not recommend or pin a named model.
 
 ## How does the cost analysis hold post-v2.1?
 

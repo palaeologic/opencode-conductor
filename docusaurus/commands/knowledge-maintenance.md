@@ -9,12 +9,12 @@ Commands that create, refresh, and curate durable knowledge across the project.
 
 ## `/scaffold-knowledge <projectKey> [list|dry-run]`
 
-- **Purpose**: create or preview convention-path `AGENTS.md` files.
-- **Frontmatter defaults**: `agent: plan`, `subtask: true`.
+- **Purpose**: create or preview convention-path leaf `KNOWLEDGE.md` files.
+- **Frontmatter default**: `subtask: true`.
 
 ### Modes
 
-- (default) — apply mode; writes new `AGENTS.md` files for areas/leaves not yet present.
+- (default) — apply mode; writes new leaf `KNOWLEDGE.md` files that are not yet present.
 - `list` — read-only enumeration.
 - `dry-run` — preview proposed paths and contents without writing.
 
@@ -40,14 +40,14 @@ Commands that create, refresh, and curate durable knowledge across the project.
 ## `/project-knowledge-refresh <projectKey>`
 
 - **Purpose**: proposal-first knowledge refresh; emits proposed edits before mutating.
-- **Frontmatter defaults**: `agent: plan`, `subtask: true`.
+- **Frontmatter default**: `subtask: true`.
 
 ### Workflow
 
 ```mermaid
 flowchart LR
   Run[/project-knowledge-refresh/] --> Drift[Drift preflight]
-  Drift --> Diff[Diff against current AGENTS.md]
+  Drift --> Diff[Diff against current knowledge]
   Diff --> Proposal[Emit proposal block]
   Proposal --> Approve{User approves?}
   Approve -- yes --> Write[Apply edits]
@@ -64,7 +64,7 @@ flowchart LR
 - area: frontend
 - leaves to update: 2
 - new sections: ## Verification scripts (frontend)
-- drift: F-12 stale frontend AGENTS.md vs origin/main
+- drift: M001 stale frontend AGENTS.md vs origin/main
 ```
 
 ## `/project-cleanup-candidates <projectKey>`

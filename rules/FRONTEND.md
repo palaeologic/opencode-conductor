@@ -1,6 +1,6 @@
 # Frontend Rules
 
-Apply these rules to frontend code unless a project-specific layer refines them.
+This module is optional. Apply only to relevant frontend stacks, and let project guidance, established conventions, and configured tooling take precedence.
 
 ## Imports and boundaries
 
@@ -40,12 +40,12 @@ Apply these rules to frontend code unless a project-specific layer refines them.
 
 ## File organization
 
-- `.tsx` files MUST export only React components — this enables React Fast Refresh (HMR).
+- When the project's Fast Refresh tooling requires component-only modules, keep non-component exports out of `.tsx` component files.
 - Types and interfaces: export from `types.ts` (co-located with the feature).
 - Zod schemas and validation: export from `schemas.ts`.
 - Utility functions and helpers: export from `helpers.ts` or `helpers.tsx`.
 - Hooks: export from `hooks.ts` or `hooks.tsx`. If a hook is large (>50 lines), place it in its own file under `hooks/` (e.g. `hooks/use_data_fetcher.ts`).
-- Do NOT mix component exports with non-component exports in `.tsx` files.
+- Follow the project's component-module boundaries; do not impose this layout on stacks whose tooling uses a different convention.
 
 ## Implementation behavior
 

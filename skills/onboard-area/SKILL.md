@@ -20,11 +20,11 @@ Provide a structured approach to understanding a new or unfamiliar area of the c
 
 Read the knowledge files in order (stop if a level doesn't exist):
 
-1. **Project AGENTS.md** — `~/.config/opencode/projects/<key>/AGENTS.md`
-2. **Area AGENTS.md** — `~/.config/opencode/projects/<key>/<area>/AGENTS.md`
-3. **Package AGENTS.md** — deeper package-level files if they exist
+1. **Project AGENTS.md** — `<projectRootPath>/AGENTS.md` (loaded via `descriptor.projectAgentsPath`; lives in the project repo)
+2. **Area AGENTS.md** — `<projectRootPath>/<area>/AGENTS.md` (loaded via `descriptor.areas[<area>].areaAgentsPath`; lives in the project repo)
+3. **Leaf KNOWLEDGE.md** — package / module-level files at the source-tree-mirror convention path; read legacy package `AGENTS.md` only when no `KNOWLEDGE.md` exists
 
-Each level adds specificity. The project level gives architecture; the area level gives conventions; the package level gives implementation details.
+Each level adds specificity. The project level gives architecture; the area level gives conventions; the leaf level gives implementation details.
 
 ### 2. Scan key files
 

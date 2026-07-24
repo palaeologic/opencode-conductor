@@ -10,7 +10,7 @@ Commands that own the lifecycle of a working branch from creation to exploration
 ## `/project-branch-new [<branch>]`
 
 - **Purpose**: create a new branch with an explicit, audited git flow.
-- **Frontmatter defaults**: `agent: build`, `subtask: false` (primary-context audit).
+- **Frontmatter default**: `subtask: false` (primary-context confirmations and audit).
 - **Arguments**: `$1` optional branch name; if omitted, command prompts for one.
 
 ### Per-step guard rails
@@ -56,13 +56,13 @@ sequenceDiagram
 ## `/project-branch-kickoff [<projectKey>]`
 
 - **Purpose**: orchestrate bootstrap-or-refresh, plan-phases, and scaffold-knowledge in one auditable run.
-- **Frontmatter defaults**: `agent: plan`, `subtask: false`.
+- **Frontmatter default**: `subtask: false`.
 - **Arguments**: `$1` optional project key; falls back to descriptor lookup.
 
 ### Behavior
 
 1. Refuses on `main`/`master`.
-2. Prompts for model.
+2. Uses the active session model unless the user explicitly requests a local override.
 3. Runs knowledge-drift preflight (silent-on by default).
 4. Runs bootstrap or refresh as appropriate.
 5. Drafts `PHASES.md` via `plan-phases` skill (mermaid prompt when phases > 3).
@@ -85,7 +85,7 @@ sequenceDiagram
 ## `/project-branch-explore [<branch>]`
 
 - **Purpose**: produce an `EXPLORE_GUIDE.md` for trying a feature branch in the browser, without browser automation.
-- **Frontmatter defaults**: `agent: plan`, `subtask: true`.
+- **Frontmatter default**: `subtask: false`.
 - **Arguments**: `$1` optional branch.
 
 ### Output shape
@@ -123,7 +123,7 @@ sequenceDiagram
 ## `/project-state`
 
 - **Purpose**: read-only sectioned snapshot of git state, descriptor presence, kit-stash entries, drift, and recent audit.
-- **Frontmatter defaults**: `agent: plan`, `subtask: true`.
+- **Frontmatter default**: `subtask: true`.
 
 Use `/project-state` whenever you want a no-write status check.
 

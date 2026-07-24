@@ -5,7 +5,7 @@ description: Decision tree for verifying code changes — detects affected areas
 
 ## What I do
 
-Automatically determine which verification steps are needed based on what changed, then execute them in the right order. Acts as a smart dispatcher for `/check-types`, `/run-tests`, and `/lint-fix`.
+Automatically determine which verification steps are needed based on what changed, then execute them in the right order. Prefer deterministic area `## Verification scripts` tables when present, then fall back to `/check-types`, `/run-tests`, and `/lint-fix`.
 
 ## When to use me
 
@@ -25,9 +25,17 @@ git diff --name-only HEAD
 
 Map changed files to project areas using the descriptor's area paths. If multiple areas are affected, verify each.
 
+For each affected area, first read the area's `AGENTS.md` and parse a `## Verification scripts` table when present:
+
+- Match each `Trigger` glob against the changed files.
+- Honor the `(added or modified)` qualifier exactly.
+- Dedupe matching `Command` values in first-seen order.
+- If at least one command matches, run those commands as the primary verification plan for that area.
+- If no table exists or no rows match, use the generic fallback steps below.
+
 ### 2. Type check first
 
-Run `/check-types` for each affected area.
+Run `/check-types` for each affected area when no structured verification command already covers type checking.
 
 **If types fail:**
 - Report errors clearly
@@ -36,7 +44,7 @@ Run `/check-types` for each affected area.
 
 ### 3. Run tests
 
-Run `/run-tests` for each affected area.
+Run `/run-tests` for each affected area when no structured verification command already covers the relevant tests.
 
 **Scoping strategy:**
 - If <5 files changed: try to identify directly related test files
@@ -51,7 +59,7 @@ Run `/run-tests` for each affected area.
 
 ### 4. Lint
 
-Run `/lint-fix` on changed files.
+Run `/lint-fix` on changed files when no structured verification command already covers linting.
 
 - Auto-fix what can be fixed
 - Report remaining issues with rule names

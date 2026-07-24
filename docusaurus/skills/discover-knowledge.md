@@ -5,7 +5,7 @@ sidebar_position: 5
 
 # discover-knowledge
 
-Skill responsible for translating project files into convention-path `AGENTS.md` content.
+Skill responsible for translating project files into convention-path leaf `KNOWLEDGE.md` content and proposal-first durable guidance.
 
 ## What it does
 
@@ -23,7 +23,7 @@ flowchart LR
   R --> S[Stem derivation]
   S --> W[Walk source tree]
   W --> L[Leaf candidate set]
-  L --> P[Propose AGENTS.md per leaf]
+  L --> P[Propose KNOWLEDGE.md per leaf]
 ```
 
 ## Outputs

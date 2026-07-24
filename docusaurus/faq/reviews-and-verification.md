@@ -24,13 +24,13 @@ Because there is no row whose trigger glob matches the changed paths. Add a row:
 | `frontend/eslint-plugin-*/**/*` | `bun run setup-lint` | rebuild lint plugin |
 ```
 
-## What is the missing-block `F-xx` finding?
+## What is the missing verification-block finding?
 
 A finding emitted when an area's `AGENTS.md` lacks an expected block (e.g., `## Verification scripts`). It does not block review; it tells you the block is missing so review suggestions can become richer.
 
 ## What is the knowledge-drift preflight?
 
-A diff of `AGENTS.md` files against the integration base, run before review and refresh flows. It emits `F-xx` findings for stale knowledge and suggests single-file pull-ups.
+A diff of guidance and knowledge files against the integration base, run before review and refresh flows. It emits metadata/knowledge findings for stale knowledge and suggests single-file pull-ups.
 
 ## When does mermaid get added to `REVIEW.md` / `PHASES.md` / `MERGE_REQUEST.md`?
 

@@ -5,46 +5,47 @@ sidebar_position: 1
 
 # Skills
 
-Skills are on-demand procedural lenses. They live in `skills/<name>/SKILL.md` and are loaded by the agent when relevant. Skills do not load other skills (the only foundational primitive is `git-safety`).
+Skills are on-demand procedural guides in `skills/<name>/SKILL.md`. They keep specialized instructions out of the default context until a task needs them.
 
-OpenCode platform reference: [opencode.ai/docs/skills](https://opencode.ai/docs/skills).
+## Engineering and lifecycle
 
-## Catalog
+| Skill | Purpose |
+| --- | --- |
+| `git-safety` | Preconditions and confirmation boundaries for Git mutation |
+| `branch-kickoff` | Structured startup for larger feature branches |
+| `branch-explore` | Manual exploration guide from branch evidence |
+| `session-lifecycle` | Refresh, checkpoint, and close decisions |
+| `discover-knowledge` | Project, area, and leaf knowledge discovery |
+| `onboard-area` | Build a mental model of an unfamiliar code area |
+| `plan-phases` | Draft staged deliverables and exit criteria |
+| `review-branch` | Evidence-driven review orchestration |
+| `verify-changes` | Select and sequence type, test, and lint checks |
+| `systematic-debugging` | Reproduction, isolation, hypothesis, and root cause |
+| `refactor-safely` | Incremental refactoring with verification gates |
+| `write-tests` | Test-boundary and assertion selection |
+| `add-feature-module` | Discover and extend a project's feature/module pattern |
+| `debug-gql-query` | Trace and diagnose graph query behavior |
+| `playwright-e2e` | Browser end-to-end test planning and execution |
+| `help-docs-author` | Source-backed end-user documentation workflow |
 
-| Skill | Loaded by | Mutates state | Recommended permission |
-| --- | --- | --- | --- |
-| [git-safety](./git-safety.md) | mutating commands | indirectly (via stash) | `ask` |
-| [branch-kickoff](./branch-kickoff.md) | `/project-branch-kickoff` | yes | `ask` |
-| [branch-explore](./branch-explore.md) | `/project-branch-explore` | yes (EXPLORE_GUIDE.md) | `ask` |
-| [discover-knowledge](./discover-knowledge.md) | scaffold + review flows | yes (AGENTS.md) | `ask` |
-| [plan-phases](./plan-phases.md) | kickoff + on demand | yes (PHASES.md) | `ask` |
-| [review-branch](./review-branch.md) | `/project-review` | yes (REVIEW.md) | `ask` |
-| [help-docs-author](./help-docs-author.md) | `/project-help-docs` | yes (out-of-repo) | `ask` |
-| [onboard-area](./onboard-area.md) | on demand | no | `allow` |
-| [refactor-safely](./refactor-safely.md) | on demand | no | `allow` |
-| [session-lifecycle](./session-lifecycle.md) | on demand | yes (LOG.md) | `ask` |
-| [systematic-debugging](./systematic-debugging.md) | on demand | no | `allow` |
-| [verify-changes](./verify-changes.md) | on demand | no | `allow` |
-| [write-tests](./write-tests.md) | on demand | yes (test files) | `ask` |
+## Artifact creation
 
-## Loading model
+| Skill | Purpose |
+| --- | --- |
+| `canvas-design` | Create polished visual compositions |
+| `convert-to-pdf` | Convert supported source formats to PDF |
+| `docx` | Create and edit Word-compatible documents |
+| `pdf` | Read, create, transform, and inspect PDFs |
+| `pptx` | Create and edit presentation decks |
+| `xlsx` | Create, analyze, and edit workbooks |
+| `slack-gif-creator` | Create compact chat-friendly animated GIFs |
 
-```mermaid
-flowchart LR
-  Cmd[Slash command runs]
-  Agent[Agent inspects task]
-  Match[Skill name match?]
-  Cmd --> Agent --> Match
-  Match -- yes --> Load[Load SKILL.md]
-  Match -- no --> Skip[Continue without skill]
-  Load --> Apply[Apply procedural guidance]
-  Apply --> Audit[Emit audit if mutating]
-```
+Artifact skills share the optional central runtime installed with `--with-runtime-deps`.
 
-## Skill vs command vs rule
+## Choosing the right mechanism
 
-- **Skill**: on-demand procedural lens, agent-loaded, has frontmatter (`name`, `description`).
-- **Command**: user-invokable slash command with frontmatter and argument handling.
-- **Rule**: always-on guidance loaded at every turn.
+- A rule applies whenever enabled.
+- A skill loads only when relevant.
+- A command is explicitly invoked by the user.
 
-If a behavior should apply *every* time, write a rule. If it should apply only when relevant, write a skill. If a user should explicitly trigger it, write a command.
+Skills should remain focused, state their mutations, and avoid recursively loading other skills. `git-safety` is the documented foundational exception for workflows that may mutate Git state.

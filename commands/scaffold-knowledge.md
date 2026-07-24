@@ -33,7 +33,7 @@ This command generates **`KNOWLEDGE.md`** files for detected project areas and *
 
 1. **Resolve projectKey and mode**: parse `$ARGUMENTS`. The first token is `projectKey`; the optional second token is `list` or `dry-run` (omit for discovery). If `projectKey` is missing, auto-detect from cwd by matching against known descriptors.
 
-2. **Load descriptor**: read `~/.config/opencode/projects/<projectKey>/descriptor.json` to get `projectRootPath`, `opencodeProjectRootPath`, `areas`, `pseudoPackageDetection`, and optional `trackedKnowledgeTargets.sharedPackageKnowledge`.
+2. **Load descriptor**: resolve `OPENCODE_HOME` (default `~/.config/opencode`) and read `<config-root>/projects/<projectKey>/descriptor.json` to get `projectRootPath`, `opencodeProjectRootPath`, `areas`, `pseudoPackageDetection`, and optional `trackedKnowledgeTargets.sharedPackageKnowledge`.
 
 3. **Normalize `pseudoPackageDetection`**:
    - If absent or empty: skip leaf discovery (proceed to area-only scaffolding below).
@@ -49,7 +49,7 @@ This command generates **`KNOWLEDGE.md`** files for detected project areas and *
    - For each surviving leaf, derive the convention path per the **stem derivation contract** in [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md): `<opencodeProjectRootPath>/<rel>/KNOWLEDGE.md`.
    - Resolve overrides: if `sharedPackageKnowledge[packageName]` is set, that path wins (may still be `.md` knowledge file).
    - Apply safety guardrails: verify root containment under `opencodeProjectRootPath`; refuse symlinks (`lstat` -> if symlink at target, mark `symlink_refused`).
-   - **Source-path existence guard (default on):** for every candidate leaf, resolve the leaf's expected source directory under `projectRootPath` (the path the leaf's stem mirrors) and verify it exists in the **current working tree** (`git ls-tree --name-only HEAD <leaf-source-rel>` non-empty, or `test -d <abs-leaf-source>`). If missing, classify the leaf as `skipped` with reason `source_missing` and **do not write** a knowledge file for it. Prevents "ghost knowledge" — durable files about packages absent on the current branch (matters in project-local storage where knowledge is shared across branches). Pass `no-source-guard` (in `$ARGUMENTS`, e.g. `/scaffold-knowledge <projectKey> discovery no-source-guard`) to bypass; useful when intentionally staging knowledge ahead of the source landing.
+   - **Source-path existence guard (default on):** for every candidate leaf, resolve the leaf's expected source directory under `projectRootPath` (the path the leaf's stem mirrors) and verify it exists in the **current working tree** (`git ls-tree --name-only HEAD <leaf-source-rel>` non-empty, or `test -d <abs-leaf-source>`). If missing, classify the leaf as `skipped` with reason `source_missing` and **do not write** a knowledge file for it. This prevents "ghost knowledge" about packages absent on the current branch, especially when global or ignored repo-local knowledge is shared across branches. Pass `no-source-guard` (in `$ARGUMENTS`, e.g. `/scaffold-knowledge <projectKey> discovery no-source-guard`) to bypass; useful when intentionally staging knowledge ahead of the source landing.
 
 5. **Classify each leaf**:
    - `existing` — **`KNOWLEDGE.md`** (or legacy sibling **`AGENTS.md`** at the same stem) already present at the resolved path.

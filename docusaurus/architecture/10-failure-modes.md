@@ -17,6 +17,6 @@ flowchart TD
   B -->|no| C{Context missing?}
   C -->|yes| R2[Bootstrap flow]
   C -->|no| D{Knowledge drift?}
-  D -->|yes| R3[Emit F-xx drift finding]
+  D -->|yes| R3[Emit M-series drift finding]
   D -->|no| E[Normal execution]
 ```

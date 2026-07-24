@@ -16,13 +16,10 @@ If `area` is omitted, detect from cwd and match against descriptor areas.
 1. Determine area from argument or cwd.
 
 2. Identify the lint command for the area:
-   - Look for `package.json` scripts: `lint`, `lint:fix`
-   - Common patterns:
-     - ESLint: `npx eslint --fix <target>`
-     - Biome: `npx biome check --fix <target>`
-     - Ruff (Python): `ruff check --fix <target>`
-     - golangci-lint: `golangci-lint run --fix`
-   - If a `Makefile` has a `lint` or `lint-fix` target, prefer that.
+   - Prefer matching commands from the area's `AGENTS.md` `## Verification scripts` table.
+   - Otherwise inspect project manifests, task files, CI, and contributor documentation for the canonical fix-capable lint command.
+   - Treat familiar linter names only as discovery hints, not authorization to invent a command.
+   - If multiple commands plausibly match, present them and ask; if none is project-backed, report that rather than guessing.
 
 3. If `--path` provided, scope to that file or directory.
 4. Execute the lint-fix command.
@@ -50,3 +47,4 @@ If `area` is omitted, detect from cwd and match against descriptor areas.
 - Report unfixable issues clearly with rule names
 - If lint config is missing or broken, report the config error
 - Respect ignore files (`.eslintignore`, `.prettierignore`, etc.)
+- Validate the requested scope is inside the workspace before invoking a fix-capable command.

@@ -12,10 +12,10 @@ Welcome to the OpenCode Conductor user manual. This site is the human-facing tut
 
 Modern AI coding agents are powerful but stateless. They forget what they learned five minutes ago, repeat work, and produce inconsistent durable artifacts (READMEs, AGENTS.md, MR descriptions, audit logs). The Conductor adds a thin, deterministic control plane on top of OpenCode that:
 
-- Persists project knowledge in a predictable hierarchy of `AGENTS.md` files.
-- Persists branch and session knowledge in `MERGE_REQUEST.md`, `LOG.md`, and optional `PHASES.md`.
-- Routes commands to the right model with the right `subtask` semantics for cost vs. context fidelity.
-- Refuses unsafe writes, enforces vendor neutrality upstream, and emits structured audit blocks every time the agent mutates state.
+- Keeps project operating rules in `AGENTS.md` and durable area/leaf facts in `KNOWLEDGE.md`.
+- Persists selected branch and session context through a descriptor-defined helper registry.
+- Uses the active session model unless a local installation explicitly configures routing.
+- Refuses unsafe writes, keeps shared assets project-neutral, and gives each mutating command an explicit output and recovery contract.
 - Surfaces drift early — in branch kickoff, in reviews, and on branch return.
 
 You operate it through a small set of slash commands and a set of always-on rules and on-demand skills.
@@ -40,7 +40,7 @@ flowchart LR
   subgraph Data[Data plane]
     ProjAgents[project AGENTS.md]
     AreaAgents[area AGENTS.md]
-    LeafAgents[leaf AGENTS.md]
+    LeafKnowledge[leaf KNOWLEDGE.md]
     Desc[descriptor.json]
   end
 
@@ -64,7 +64,7 @@ opencode-conductor/
 ├── README.md                 # Top-level entry, command tables
 ├── CHANGELOG.md              # Release notes
 ├── SECURITY.md               # Security policy
-├── opencode.json.example     # Example permission/skill config
+├── opencode.json.template    # Installable command/skill/rule config
 ├── bin/                      # Install scripts
 ├── commands/                 # User-invokable slash commands
 ├── skills/                   # On-demand procedural skills

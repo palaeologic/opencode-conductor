@@ -13,7 +13,7 @@ This command refreshes canonical `## OpenCode:` blocks and supports append/regen
 
 If `$ARGUMENTS` is provided, use it as `projectKey`. Otherwise auto-detect:
 1. Get cwd via `pwd` or workspace root.
-2. Scan `~/.config/opencode/projects/*/descriptor.json` files.
+2. Resolve the config root from `OPENCODE_HOME` (default `~/.config/opencode`) and scan `<config-root>/projects/*/descriptor.json`.
 3. Match cwd against each descriptor's `projectRootPath`.
 4. If exactly one matches, use that `projectKey`. If zero or multiple match, ask the user.
 
@@ -34,7 +34,7 @@ Use exact canonical headings for machine-maintained content:
 
 If older drifted OpenCode headings exist (for example dated update titles, `Review triage summary`, `Git facts`), migrate their machine content into the canonical headings and stop writing to the drifted names.
 
-**Legacy operational headings** (no `OpenCode:` prefix) — older kit names: `## Scope status`, `## Files/areas touched`, `## Verification status`, `## Risks and reviewer focus`, `## Next steps`. **Deprecation:** teams should migrate content into the canonical `OpenCode:` sections in [templates/mr/MERGE_REQUEST.md](templates/mr/MERGE_REQUEST.md). Until then, if a legacy heading **exists verbatim** in the file, you may refresh it **in addition to** canonical OpenCode blocks; if absent, do not create legacy sections.
+**Legacy operational headings** (no `OpenCode:` prefix) — older kit names: `## Scope status`, `## Files/areas touched`, `## Verification status`, `## Risks and reviewer focus`, `## Next steps`. **Deprecation:** teams should migrate content into the canonical `OpenCode:` sections in [templates/mr/MERGE_REQUEST.md](../templates/mr/MERGE_REQUEST.md). Until then, if a legacy heading **exists verbatim** in the file, you may refresh it **in addition to** canonical OpenCode blocks; if absent, do not create legacy sections.
 
 ## Protected narrative (never overwrite body text)
 
@@ -47,16 +47,16 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
 1. Resolve branch and descriptor.
 2. Run refresh context (tool path or manual fallback) to get:
    - branch, checkpoint/head, changed areas/files, recommendations.
-3. Read branch files from `branches/<branch-name>/`:
-   - `MERGE_REQUEST.md` (required target)
-   - `LOG.md` (latest entries)
-   - `REVIEW.md` if present
-   - `PHASES.md` if present
-   - `MR.md` if present
+3. Read branch helper files from `branches/<branch-name>/` according to `HELPERS.json` and `branchHandoff.helpers`:
+   - Merge request context (`MERGE_REQUEST.md`) is the target for this command.
+   - Progress log (`LOG.md`) is optional context for checkpoints.
+   - Review notes (`REVIEW.md`) are optional context for open findings.
+   - Phase plan (`PHASES.md`) is optional context for scope and progress.
+   - Other merge request helpers such as `MR.md` are optional when supported by the descriptor.
+   If Merge request context is missing, explain why it helps and ask whether to create it with `/project-helper` or stop.
 4. Compute a concise git summary since checkpoint/merge-base:
    - changed files count and primary areas
    - notable adds/deletes/renames
-4.5. **Default mode hint (after reading MR).** If `## Goal`, `## In scope`, and `## Acceptance criteria` already contain **substantive, non-placeholder** narrative (typical after `/project-bootstrap` paste-ingest or manual authoring), **tell the user before the menu**: `Narrative sections look filled — recommend **A** to refresh ## OpenCode: blocks from git only; use **D** only if you need to ingest or replace pasted MR/issue/testing text.` Still print the full four-option menu below verbatim (do not remove **D**).
 5. Ask user whether to:
    - Print the menu **exactly** as the fenced block below, preserving all four lettered options. Do not paraphrase, renumber, omit option **D**, or collapse the choices into prose.
 
@@ -71,7 +71,7 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
 6. Update `MERGE_REQUEST.md` according to chosen mode(s):
    - **Primary (always target when present or when using stock template):**
     - `## OpenCode: review status` — refresh with git summary, areas touched, checkpoint range, optional next steps from `LOG.md` / recommendations. **If the heading is missing**, insert it **after** the last protected narrative section (typically after `## Notes`) and before other `OpenCode:` blocks; do not duplicate.
-     - `## OpenCode: open findings (from REVIEW.md)` — when `REVIEW.md` contains `## Review findings / questions` and/or triage by `F-xx`, summarize **still-open** vs **resolved** items here for MR readers. If `REVIEW.md` is missing, set a one-line placeholder. **If the heading is missing**, create it after `## OpenCode: review status`.
+     - `## OpenCode: open findings (from REVIEW.md)` — when `REVIEW.md` contains `## Review findings` and/or triage by `F/R/M###`, summarize **still-open** vs **resolved** items here for MR readers. If `REVIEW.md` is missing, set a one-line placeholder. **If the heading is missing**, create it after `## OpenCode: review status`.
    - **Legacy (optional, transitional):** If any of these headings exist **exactly**, refresh their bodies from the same facts; otherwise **omit** (do not add new legacy sections):
      - `## Scope status`
      - `## Files/areas touched`
@@ -93,10 +93,11 @@ Also preserve if present (alternate MR shapes): `## Context`, `## Goals`, `## De
 
 ## Promotion from `REVIEW.md`
 
-When `REVIEW.md` includes `## Review findings / questions` and/or `### Triage checklist (by Id)`:
-- Populate or refresh **`## OpenCode: open findings (from REVIEW.md)`** with a compact list: open `F-xx` items, severity, one-line question; optionally separate “Resolved since last update”.
+When `REVIEW.md` includes `## Review findings` and/or `### Triage checklist (by Id)`:
+- Populate or refresh **`## OpenCode: open findings (from REVIEW.md)`** with a compact list: open `F/R/M###` items, severity, one-line finding; optionally separate "Resolved since last update".
 - Do not copy the entire `REVIEW.md` into the MR; keep the block scannable.
-- If triage checklist lines in `REVIEW.md` are preserved/merged during related review flows, enforce checkbox normalization: `- [ ] F-xx — <state>` for `open`, `- [x] F-xx — <state>` for `valid|invalid|fixed|wontfix|followup`; restore missing checkbox markers (for example `- F-02 — valid` -> `- [x] F-02 — valid`) without changing the state token.
+- If triage checklist lines in `REVIEW.md` are preserved/merged during related review flows, enforce checkbox normalization: `- [ ] X### - <state>` for `open`, `- [x] X### - <state>` for `valid|invalid|fixed|wontfix|followup`, where `X` is `F`, `R`, or `M`; restore missing checkbox markers (for example `- M002 - valid` -> `- [x] M002 - valid`) without changing the state token.
+- If `REVIEW.md` contains legacy `F-xx` ids, preserve and summarize their current triage state alongside newer ids without renumbering them.
 
 ## Output format (MUST use exactly)
 
@@ -118,6 +119,6 @@ After the structured block, show the updated MR content inline.
 
 - Do not execute tests or code changes.
 - Prefer merging over destructive rewrite.
-- If `MERGE_REQUEST.md` is missing, create from template first, then update.
+- If Merge request context (`MERGE_REQUEST.md`) is missing, do not create it silently. Ask the user to create it with `/project-helper` or stop.
 - Keep updates deterministic and grounded in branch files + git facts.
 - Prefer **`## OpenCode:`** headings for all new automated MR content.

@@ -125,7 +125,7 @@ flowchart LR
   Run[Knowledge-aware command] --> Drift[Drift preflight]
   Drift --> Diff[git diff base..HEAD knowledge paths]
   Diff --> Stale{Stale on this branch?}
-  Stale -- yes --> Find[Emit F-xx finding]
+  Stale -- yes --> Find[Emit M-series knowledge finding]
   Stale -- no --> Ok[Continue]
   Find --> Suggest[Suggest single-file pull-up]
 ```

@@ -9,7 +9,7 @@ Loads skill: `discover-knowledge` (when available) for the Senior Architect lens
 
 If `$ARGUMENTS` is provided, use the first token as `projectKey`. Otherwise auto-detect:
 1. Get cwd via `pwd` or workspace root.
-2. Scan `~/.config/opencode/projects/*/descriptor.json` files.
+2. Resolve the config root from `OPENCODE_HOME` (default `~/.config/opencode`) and scan `<config-root>/projects/*/descriptor.json`.
 3. Match cwd against each descriptor's `projectRootPath`.
 4. If exactly one matches, use that `projectKey`. If zero or multiple match, ask the user.
 
@@ -25,8 +25,8 @@ Run before any work in the Workflow section. Goal: detect when the current branc
    - `MERGE_POINT = git merge-base HEAD origin/<base>`
    - From `origin/<base>` and from `$MERGE_POINT`, list tracked files whose names end with **`KNOWLEDGE.md`** or **`AGENTS.md`** (union paths). A portable approach: `git ls-tree -r --name-only origin/<base>` (and the same for `$MERGE_POINT`) then filter with `grep -E '(KNOWLEDGE|AGENTS)\\.md$'` or equivalent.
    - For every file in either set, compare `git rev-parse origin/<base>:<path>` to `git rev-parse $MERGE_POINT:<path>`; differing or one-sided entries form the **drift set**.
-4. **Skip the preflight entirely** when storage mode is project-local (per [`documentation/PATH_CONTRACT.md`](../documentation/PATH_CONTRACT.md) § Knowledge across branches). The drift preflight only meaningfully applies to committed-in-repo storage.
-5. **Emit a single `F-xx` finding** (severity `Medium`) of the form:
+4. Do not infer drift behavior from `conductorStateLocation`. Compare only files represented by Git blobs in the two refs. Global or ignored/untracked knowledge naturally contributes no paths; project-local knowledge committed to Git participates normally.
+5. **Emit a single metadata/knowledge finding** using the next available `M###` id (severity `Medium`) of the form:
 
    ```
    Knowledge drift vs base: <count> file(s) changed in origin/<base> since merge-base.
@@ -42,7 +42,7 @@ The drift preflight does not write or modify files; it only reads and reports. I
 
 ## Workflow
 
-1. Run `opencode_refresh_context` with `projectKey: <resolved projectKey>`. Capture `changed_areas`, `changed_files_preview`, and `reread_files`.
+1. Run `opencode_refresh_context` when the wrapper has been explicitly activated; otherwise run `/manual-refresh` with the same project key. Capture `changed_areas`, the reviewable and ignored changed-file previews, and `reread_files`.
 2. Resolve **knowledge files to consider for promotion** by combining:
    - Each path from `reread_files` that points to **`KNOWLEDGE.md`** or legacy **`AGENTS.md`**.
    - Each entry of `trackedKnowledgeTargets.sharedPackageKnowledge` (overrides) whose package maps to a `changed_areas` entry.
@@ -72,7 +72,7 @@ Keep in branch `LOG.md` instead when:
 Never promote:
 
 - Secrets, tokens, or environment-specific paths.
-- Vendor- or customer-specific guidance into upstream-neutral files (forks may carry such guidance in their own files).
+- Organization-, product-, or customer-specific guidance into neutral shared files (separate overlays may carry such guidance).
 - Unverified or "maybe" conclusions.
 
 Placement:
@@ -84,5 +84,5 @@ Placement:
 ## Constraints
 
 - Default: branch `LOG.md` absorbs exploration; promotion is opt-in.
-- Prefer the model configured under `descriptor.subtaskModels.knowledge` when registering this command in `opencode.json` (see README).
+- Use the active session model unless the installation explicitly configures an override.
 - Do not auto-create knowledge files here — that is `/scaffold-knowledge`'s job. This command **proposes** edits to **existing** files (or proposes creating one if a leaf is detected and no file exists at the convention path; the user explicitly approves before any write).

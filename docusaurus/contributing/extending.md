@@ -41,7 +41,6 @@ Suppose you want a `/project-status-summary` command that prints a one-line heal
 ```markdown
 ---
 description: One-line summary of the project's kit health
-agent: plan
 subtask: true
 ---
 ```
